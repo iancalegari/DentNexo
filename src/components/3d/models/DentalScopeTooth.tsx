@@ -20,7 +20,7 @@ const TOOTH_LAYER_COLORS = {
 };
 
 export const DentalScopeTooth: React.FC<DentalScopeToothProps> = ({ fdi }) => {
-  const { activeToothFdi, toothViewMode, activePathologyId } = useAnatomyStore();
+  const { activeToothFdi, toothViewMode, activePathologyId, selectedStructureId } = useAnatomyStore();
   const currentFdi = fdi || activeToothFdi || '36';
 
   // Dentes decíduos (51 a 85) utilizam os modelos anatômicos homólogos proporcionais
@@ -39,6 +39,8 @@ export const DentalScopeTooth: React.FC<DentalScopeToothProps> = ({ fdi }) => {
     const center = new THREE.Vector3();
     box.getCenter(center);
     clone.position.sub(center);
+
+    const isSelectedPdl = selectedStructureId === 'ligamento_periodontal';
 
     clone.traverse((child) => {
       if (!(child instanceof THREE.Mesh)) return;
@@ -65,27 +67,44 @@ export const DentalScopeTooth: React.FC<DentalScopeToothProps> = ({ fdi }) => {
 
       if (toothViewMode === 'external') {
         // Visão Externa: Esmalte e Cemento visíveis, camadas internas protegidas
-        if (isPulp || isCanal || isDentinCoronal || isDentinRadicular || isPdl) {
+        if (isPulp || isCanal || isDentinCoronal || isDentinRadicular) {
           visible = false;
+        } else if (isPdl) {
+          visible = isSelectedPdl;
+          if (isSelectedPdl) {
+            color = themeTokens.colors.brandCyan;
+            emissive = '#00C9F6';
+            emissiveIntensity = 0.85;
+            transparent = true;
+            opacity = 0.9;
+          }
         } else if (isCementum) {
           color = TOOTH_LAYER_COLORS.cementum;
           roughness = 0.65;
+          if (isSelectedPdl) {
+            transparent = true;
+            opacity = 0.35;
+          }
         } else if (isEnamel) {
           color = TOOTH_LAYER_COLORS.enamel;
           roughness = 0.2;
           metalness = 0.05;
+          if (isSelectedPdl) {
+            transparent = true;
+            opacity = 0.35;
+          }
         }
       } else if (toothViewMode === 'cross_section') {
         // Corte Didático: Esmalte e cemento translúcidos, polpa e canais destacados
         if (isEnamel) {
           color = TOOTH_LAYER_COLORS.enamel;
           transparent = true;
-          opacity = 0.32;
+          opacity = isSelectedPdl ? 0.2 : 0.32;
           roughness = 0.2;
         } else if (isCementum) {
           color = TOOTH_LAYER_COLORS.cementum;
           transparent = true;
-          opacity = 0.4;
+          opacity = isSelectedPdl ? 0.25 : 0.4;
           roughness = 0.6;
         } else if (isDentinCoronal) {
           color = TOOTH_LAYER_COLORS.dentinCoronal;
@@ -94,9 +113,11 @@ export const DentalScopeTooth: React.FC<DentalScopeToothProps> = ({ fdi }) => {
           color = TOOTH_LAYER_COLORS.dentinRadicular;
           roughness = 0.58;
         } else if (isPdl) {
-          color = TOOTH_LAYER_COLORS.pdl;
+          color = isSelectedPdl ? themeTokens.colors.brandCyan : TOOTH_LAYER_COLORS.pdl;
+          emissive = isSelectedPdl ? '#00C9F6' : '#000000';
+          emissiveIntensity = isSelectedPdl ? 0.85 : 0;
           transparent = true;
-          opacity = 0.5;
+          opacity = isSelectedPdl ? 0.95 : 0.5;
         } else if (isPulp) {
           color = TOOTH_LAYER_COLORS.pulp;
           emissive = '#991B1B';
@@ -152,7 +173,7 @@ export const DentalScopeTooth: React.FC<DentalScopeToothProps> = ({ fdi }) => {
     });
 
     return clone;
-  }, [scene, toothViewMode]);
+  }, [scene, toothViewMode, selectedStructureId]);
 
   const toothScale: [number, number, number] = isDeciduous ? [2.1, 2.1, 2.1] : [2.6, 2.6, 2.6];
 

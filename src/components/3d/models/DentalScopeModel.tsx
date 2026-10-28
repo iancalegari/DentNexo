@@ -8,6 +8,7 @@ import {
   getMuscleBumpTexture,
   getGingivaBumpTexture,
 } from '@/utils/proceduralTextures';
+import { PeriodontalLigaments } from './PeriodontalLigaments';
 
 // Paleta Anatômica Calibrada com tons orgânicos realistas de alta fidelidade
 const ANATOMY_PALETTE = {
@@ -526,20 +527,24 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
 
         if (isTargetSystem) {
           // O sistema anatômico foco fica em destaque total com opacidade 100%
+          const isLpoSelected = selectedStructureId === 'ligamento_periodontal';
+          const isGingivaTranslucent = focusedSystem === 'oral_tissue' && isLpoSelected && isGingiva;
+
           const highlightColor = isSelected ? cyanColor : (isHovered ? hoverColor : defaultColor);
           const highlightEmissive = isSelected ? cyanEmissive : (isHovered ? hoverEmissive : defaultEmissive);
           const highlightIntensity = isSelected ? 0.6 : (isHovered ? 0.3 : defaultEmissiveIntensity);
+          const targetOpacity = isGingivaTranslucent ? 0.22 : 1.0;
 
           material.color.copy(highlightColor);
           material.roughness = defaultRoughness;
           material.metalness = defaultMetalness;
-          material.transparent = false;
-          material.opacity = 1.0;
+          material.transparent = isGingivaTranslucent;
+          material.opacity = targetOpacity;
           material.emissive.copy(highlightEmissive);
           material.emissiveIntensity = highlightIntensity;
-          material.depthWrite = true;
+          material.depthWrite = !isGingivaTranslucent;
           material.side = THREE.FrontSide;
-          mesh.castShadow = true;
+          mesh.castShadow = !isGingivaTranslucent;
           mesh.receiveShadow = true;
           mesh.visible = true;
         } else {
@@ -554,12 +559,12 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
               shouldShowGhost = true;
             }
           } else if (focusedSystem === 'oral_tissue') {
-            // Em periodonto: dentes ficam a 70% e ossos alveolares a 20%
+            // Em periodonto: dentes ficam a 40% (se LPO) ou 70%, e ossos alveolares a 10% (se LPO) ou 20%
             if (category === 'dental') {
-              ghostOpacity = 0.70;
+              ghostOpacity = selectedStructureId === 'ligamento_periodontal' ? 0.40 : 0.70;
               shouldShowGhost = true;
             } else if (category === 'skeletal') {
-              ghostOpacity = 0.20;
+              ghostOpacity = selectedStructureId === 'ligamento_periodontal' ? 0.10 : 0.20;
               shouldShowGhost = true;
             }
           } else if (focusedSystem === 'muscular') {
@@ -652,17 +657,33 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
         targetEmissiveIntensity = 0.25;
       }
 
-      const catOpacity = opacities[category as keyof typeof opacities] ?? 1.0;
+      let catOpacity = opacities[category as keyof typeof opacities] ?? 1.0;
+      let isTranslucentLpo = false;
+
+      // Se o ligamento periodontal estiver selecionado no modo geral, tornar osso e gengiva translúcidos
+      if (selectedStructureId === 'ligamento_periodontal') {
+        if (isGingiva) {
+          catOpacity = 0.22;
+          isTranslucentLpo = true;
+        } else if (category === 'skeletal') {
+          catOpacity = 0.10;
+          isTranslucentLpo = true;
+        } else if (category === 'dental') {
+          catOpacity = 0.40;
+          isTranslucentLpo = true;
+        }
+      }
+
       material.color.copy(targetColor);
       material.roughness = defaultRoughness;
       material.metalness = defaultMetalness;
       material.emissive.copy(targetEmissive);
       material.emissiveIntensity = targetEmissiveIntensity;
-      material.transparent = catOpacity < 1.0 || name.includes('sinus');
+      material.transparent = isTranslucentLpo || catOpacity < 1.0 || name.includes('sinus');
       material.opacity = name.includes('sinus') ? 0.65 : catOpacity;
-      material.depthWrite = catOpacity >= 0.9 && !name.includes('sinus');
+      material.depthWrite = !isTranslucentLpo && catOpacity >= 0.9 && !name.includes('sinus');
       material.side = THREE.FrontSide;
-      mesh.castShadow = catOpacity > 0.5 && !name.includes('sinus');
+      mesh.castShadow = !isTranslucentLpo && catOpacity > 0.5 && !name.includes('sinus');
       mesh.receiveShadow = catOpacity > 0.5;
     }
   }, [
@@ -737,6 +758,7 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
       <primitive object={coreClone} />
       {!archesOnlyMode && <primitive object={contextClone} />}
       {!archesOnlyMode && <primitive object={neuroClone} />}
+      <PeriodontalLigaments archesOnlyMode={archesOnlyMode} />
     </group>
   );
 };
