@@ -94,36 +94,30 @@ export const SystemFocusView: React.FC<SystemFocusViewProps> = ({
       {structuresList.length > 0 && (
         <Paper
           elevation={4}
-          onWheel={(e) => {
-            if (e.deltaY !== 0) {
-              e.currentTarget.scrollLeft += e.deltaY;
-            }
-          }}
           sx={{
             position: 'absolute',
-            top: 14,
+            top: 12,
             left: '50%',
             transform: 'translateX(-50%)',
             zIndex: 1000,
             backgroundColor: 'rgba(15, 23, 42, 0.94)',
             backdropFilter: 'blur(16px)',
             border: `1px solid ${themeTokens.colors.borderSubtle}`,
-            borderRadius: '24px',
-            px: 2,
+            borderRadius: '16px',
+            px: 1.5,
             py: 0.6,
             display: 'flex',
+            flexWrap: 'wrap',
             alignItems: 'center',
-            gap: 0.8,
+            justifyContent: 'center',
+            gap: 0.6,
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
-            maxWidth: 'calc(100% - 400px)',
-            overflowX: 'auto',
-            scrollbarWidth: 'none',
-            '&::-webkit-scrollbar': { display: 'none' },
+            maxWidth: infoPanelOpen ? 'calc(100% - 410px)' : 660,
           }}
         >
           <Typography
             sx={{
-              fontSize: '0.74rem',
+              fontSize: '0.72rem',
               fontWeight: 700,
               color: '#94A3B8',
               mr: 0.5,
@@ -147,7 +141,8 @@ export const SystemFocusView: React.FC<SystemFocusViewProps> = ({
                 }}
                 sx={{
                   fontWeight: 700,
-                  fontSize: '0.78rem',
+                  fontSize: '0.73rem',
+                  height: '26px',
                   cursor: 'pointer',
                   flexShrink: 0,
                   backgroundColor: isSelected
@@ -172,8 +167,8 @@ export const SystemFocusView: React.FC<SystemFocusViewProps> = ({
       {/* Visualizador 3D com a câmera livre e iluminação clínica */}
       <AnatomyViewer3D />
 
-      {/* Controles Flutuantes de Camadas (posicionados abaixo da barra de estruturas, recolhidos por padrão) */}
-      <LayerControls top={66} defaultExpanded={false} />
+      {/* Controles Flutuantes de Camadas (posicionados abaixo da barra de 2 linhas, recolhidos por padrão) */}
+      <LayerControls top={96} defaultExpanded={false} />
 
       {/* Controles Flutuantes de Câmera */}
       <CameraControls />

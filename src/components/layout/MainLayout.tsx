@@ -13,15 +13,32 @@ import { useAnatomyStore } from '@/stores/useAnatomyStore';
 
 export const MainLayout: React.FC = () => {
   const location = useLocation();
-  const { surfaceExplorationMode, setSurfaceExplorationMode, resetCamera } = useAnatomyStore();
+  const {
+    surfaceExplorationMode,
+    setSurfaceExplorationMode,
+    setSelectedStructure,
+    setInfoPanelOpen,
+    isolateStructure,
+    resetCamera,
+  } = useAnatomyStore();
+
+  const prevPathRef = React.useRef(location.pathname);
 
   React.useEffect(() => {
-    // Ao navegar para qualquer rota fora de /dental, desativar o modo de exploração isolada de dente e restaurar crânio/arcadas
-    if (location.pathname !== '/dental' && surfaceExplorationMode) {
-      setSurfaceExplorationMode(false);
+    if (prevPathRef.current !== location.pathname) {
+      // Ao trocar de aba/página, limpar a seleção para não carregar dentes marcados para Patologias, Atlas, etc.
+      setSelectedStructure(null);
+      isolateStructure(null);
+      setInfoPanelOpen(false);
+
+      if (location.pathname !== '/dental') {
+        setSurfaceExplorationMode(false);
+      }
+
       resetCamera();
+      prevPathRef.current = location.pathname;
     }
-  }, [location.pathname, surfaceExplorationMode, setSurfaceExplorationMode, resetCamera]);
+  }, [location.pathname, setSelectedStructure, isolateStructure, setInfoPanelOpen, setSurfaceExplorationMode, resetCamera]);
 
   const getSectionTitle = () => {
     switch (location.pathname) {
