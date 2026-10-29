@@ -1,0 +1,39 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Roteamento SPA (React Router v7) — evita erro 404 ao atualizar qualquer rota (/atlas, /dental, /anesthesia, /quiz, etc.)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Cache imutável de bundles Vite com hash
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Modelos Anatômicos 3D (.glb)
+[[headers]]
+  for = "/models/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+# Vozes Neurais Kokoro TTS Pré-Renderizadas (.mp3)
+[[headers]]
+  for = "/audio/tts/*"
+  [headers.values]
+    Content-Type = "audio/mpeg"
+    Cache-Control = "public, max-age=604800"
+
+# Cabeçalhos seguros compatíveis com WebGL/Meshopt WASM, Google Fonts e widget LivePix
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+

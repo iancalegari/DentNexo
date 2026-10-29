@@ -25,6 +25,8 @@ import PsychologyIcon from '@mui/icons-material/Psychology';
 import BloodtypeIcon from '@mui/icons-material/Bloodtype';
 import ScienceIcon from '@mui/icons-material/Science';
 import HealingIcon from '@mui/icons-material/Healing';
+import OpenWithIcon from '@mui/icons-material/OpenWith';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 
 import { useAnatomyStore } from '@/stores/useAnatomyStore';
 import { LayerOpacity, LayerVisibility } from '@/types/anatomy';
@@ -36,11 +38,24 @@ interface LayerControlsProps {
 }
 
 export const LayerControls: React.FC<LayerControlsProps> = ({
-  top = 16,
+  top = 12,
   defaultExpanded = true,
 }) => {
-  const [expanded, setExpanded] = useState<boolean>(defaultExpanded);
-  const { layers, opacities, toggleLayer, setLayerOpacity } = useAnatomyStore();
+  const [expanded, setExpanded] = useState<boolean>(() => {
+    if (!defaultExpanded) return false;
+    if (typeof window !== 'undefined' && (window.innerWidth < 1024 || window.innerHeight < 760)) {
+      return false;
+    }
+    return true;
+  });
+  const {
+    layers,
+    opacities,
+    explosionFactor,
+    toggleLayer,
+    setLayerOpacity,
+    setExplosionFactor,
+  } = useAnatomyStore();
 
   const layerItems: {
     key: keyof LayerVisibility;
@@ -63,14 +78,18 @@ export const LayerControls: React.FC<LayerControlsProps> = ({
       sx={{
         position: 'absolute',
         top,
-        left: 16,
-        zIndex: 1000,
+        left: { xs: 10, sm: 14 },
+        zIndex: 1100,
         backgroundColor: themeTokens.colors.bgOverlay,
         backdropFilter: 'blur(10px)',
         border: `1px solid ${themeTokens.colors.borderSubtle}`,
         borderRadius: `${themeTokens.borderRadius.md}px`,
-        p: 1.2,
-        width: expanded ? 260 : 'auto',
+        px: 1.2,
+        py: expanded ? 1.1 : 0.7,
+        width: expanded ? 252 : 'fit-content',
+        maxWidth: 'calc(100vw - 20px)',
+        maxHeight: 'calc(100% - 70px)',
+        overflowY: expanded ? 'auto' : 'hidden',
         boxShadow: themeTokens.shadows.elevated,
       }}
     >
@@ -79,13 +98,22 @@ export const LayerControls: React.FC<LayerControlsProps> = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
+          gap: 0.8,
           cursor: 'pointer',
         }}
         onClick={() => setExpanded(!expanded)}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
           <LayersIcon fontSize="small" sx={{ color: themeTokens.colors.brandCyan }} />
-          <Typography variant="subtitle2" sx={{ fontWeight: 700, fontSize: '0.8rem', color: themeTokens.colors.textPrimary }}>
+          <Typography
+            variant="subtitle2"
+            sx={{
+              fontWeight: 700,
+              fontSize: '0.78rem',
+              color: themeTokens.colors.textPrimary,
+              whiteSpace: 'nowrap',
+            }}
+          >
             Camadas Anatômicas
           </Typography>
         </Box>
@@ -94,7 +122,7 @@ export const LayerControls: React.FC<LayerControlsProps> = ({
         </IconButton>
       </Box>
 
-      <Collapse in={expanded}>
+      <Collapse in={expanded} unmountOnExit>
         <Divider sx={{ my: 1, borderColor: themeTokens.colors.borderSubtle }} />
         <Stack spacing={1}>
           {layerItems.map((layer) => {
@@ -146,6 +174,97 @@ export const LayerControls: React.FC<LayerControlsProps> = ({
             );
           })}
         </Stack>
+
+        {/* Controle de Dissecação 3D — Modo Vista Explodida do Crânio (0% a 100%) */}
+        <Divider sx={{ my: 1.2, borderColor: themeTokens.colors.borderSubtle }} />
+        <Box
+          sx={{
+            px: 0.6,
+            py: 0.6,
+            borderRadius: '8px',
+            backgroundColor:
+              explosionFactor > 0 ? 'rgba(0, 201, 246, 0.08)' : 'rgba(255, 255, 255, 0.02)',
+            border:
+              explosionFactor > 0
+                ? '1px solid rgba(0, 201, 246, 0.28)'
+                : '1px solid transparent',
+            transition: 'all 0.2s ease',
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
+              <OpenWithIcon
+                sx={{
+                  fontSize: '0.95rem',
+                  color: explosionFactor > 0 ? themeTokens.colors.brandCyan : '#94A3B8',
+                }}
+              />
+              <Typography
+                variant="body2"
+                sx={{
+                  fontSize: '0.76rem',
+                  fontWeight: 700,
+                  color: explosionFactor > 0 ? themeTokens.colors.brandCyan : themeTokens.colors.textPrimary,
+                }}
+              >
+                Vista Explodida
+              </Typography>
+            </Box>
+
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4 }}>
+              <Typography
+                sx={{
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  color: explosionFactor > 0 ? themeTokens.colors.brandCyan : themeTokens.colors.textMuted,
+                  fontVariantNumeric: 'tabular-nums',
+                }}
+              >
+                {Math.round(explosionFactor * 100)}%
+              </Typography>
+              {explosionFactor > 0 && (
+                <Tooltip title="Remontar crânio (0%)">
+                  <IconButton
+                    size="small"
+                    onClick={() => setExplosionFactor(0)}
+                    sx={{ p: 0.2, color: themeTokens.colors.brandCyan }}
+                  >
+                    <RestartAltIcon sx={{ fontSize: '0.95rem' }} />
+                  </IconButton>
+                </Tooltip>
+              )}
+            </Box>
+          </Box>
+
+          <Box sx={{ px: 0.8 }}>
+            <Slider
+              size="small"
+              value={Math.round(explosionFactor * 100)}
+              min={0}
+              max={100}
+              step={1}
+              onChange={(_, val) => setExplosionFactor((val as number) / 100)}
+              sx={{
+                color: themeTokens.colors.brandCyan,
+                height: 4,
+                '& .MuiSlider-thumb': {
+                  width: 12,
+                  height: 12,
+                },
+              }}
+            />
+          </Box>
+          <Typography
+            sx={{
+              fontSize: '0.66rem',
+              color: themeTokens.colors.textMuted,
+              lineHeight: 1.25,
+              px: 0.4,
+            }}
+          >
+            Afasta os ossos cranianos revelando suturas e seios paranasais internos.
+          </Typography>
+        </Box>
       </Collapse>
     </Paper>
   );

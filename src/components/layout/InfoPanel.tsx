@@ -12,6 +12,8 @@ import {
   Paper,
   TextField,
   CircularProgress,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 
 // EXCLUSIVAMENTE ÍCONES DO MATERIAL UI
@@ -39,6 +41,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 export const InfoPanel: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const theme = useTheme();
+  const isMobileOverlay = useMediaQuery(theme.breakpoints.down('md'));
   const {
     selectedStructureId,
     isolatedStructureId,
@@ -128,6 +132,7 @@ export const InfoPanel: React.FC = () => {
     setTtsLoading(true);
 
     ttsService.speak({
+      audioId: structure.id,
       text: textParts,
       onStart: () => {
         setIsSpeaking(true);
@@ -172,126 +177,69 @@ export const InfoPanel: React.FC = () => {
     setNotesVersion((v) => v + 1);
   };
 
-  // Na tela de Questionários/Quiz ou Patologias Odontológicas, NUNCA exibir o painel lateral nem o botão Detalhes
-  if (location.pathname.startsWith('/quiz') || location.pathname.startsWith('/pathologies')) {
+  // Na tela de Questionários/Quiz, Patologias, Anestesia ou Favoritos, não exibir o painel lateral
+  if (
+    location.pathname.startsWith('/quiz') ||
+    location.pathname.startsWith('/pathologies') ||
+    location.pathname.startsWith('/anesthesia') ||
+    location.pathname.startsWith('/favorites')
+  ) {
     return null;
   }
 
   if (!infoPanelOpen) {
-    // Em "Dentro do Dente", não exibir o botão flutuante "Detalhes"
-    if (surfaceExplorationMode) {
-      return null;
-    }
-
-    return (
-      <Box sx={{ position: 'absolute', top: '50%', right: 0, transform: 'translateY(-50%)', zIndex: 1000 }}>
-        <Tooltip title="Abrir painel de informações anatômicas" placement="left">
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={<CenterFocusStrongIcon />}
-            onClick={() => setInfoPanelOpen(true)}
-            sx={{
-              backgroundColor: themeTokens.colors.bgElevated,
-              borderColor: themeTokens.colors.borderSubtle,
-              color: themeTokens.colors.brandCyan,
-              border: `1px solid ${themeTokens.colors.borderSubtle}`,
-              borderRight: 'none',
-              borderTopRightRadius: 0,
-              borderBottomRightRadius: 0,
-              borderTopLeftRadius: '8px',
-              borderBottomLeftRadius: '8px',
-              boxShadow: '-3px 4px 16px rgba(0, 0, 0, 0.45)',
-              py: 0.9,
-              px: 1.4,
-              fontWeight: 700,
-              letterSpacing: '0.02em',
-              transition: 'all 0.18s ease',
-              '&:hover': {
-                backgroundColor: themeTokens.colors.bgSecondary,
-                borderColor: themeTokens.colors.brandCyan,
-                transform: 'translateX(-2px)',
-              },
-            }}
-          >
-            Detalhes
-          </Button>
-        </Tooltip>
-      </Box>
-    );
+    return null;
   }
 
-  return (
-    <Drawer
-      anchor="right"
-      variant="persistent"
-      open={infoPanelOpen}
-      sx={{
-        width: 380,
-        flexShrink: 0,
-        '& .MuiDrawer-paper': {
-          width: 380,
-          top: 60,
-          height: 'calc(100vh - 60px)',
-          backgroundColor: themeTokens.colors.bgSecondary,
-          borderLeft: `1px solid ${themeTokens.colors.borderSubtle}`,
-          p: 0,
-          display: 'flex',
-          flexDirection: 'column',
-        },
-      }}
-    >
-      {structure ? (
-        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-          {/* Cabeçalho do Painel */}
-          <Box sx={{ p: 2, borderBottom: `1px solid ${themeTokens.colors.borderSubtle}`, backgroundColor: themeTokens.colors.bgElevated }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-              <Box>
-                {structure.fdiNotation && (
-                  <Chip
-                    label={`FDI ${structure.fdiNotation}`}
-                    size="small"
-                    sx={{
-                      backgroundColor: 'rgba(0, 201, 246, 0.15)',
-                      color: themeTokens.colors.brandCyan,
-                      border: `1px solid ${themeTokens.colors.brandCyan}`,
-                      fontWeight: 700,
-                      mb: 0.5,
-                    }}
-                  />
-                )}
-                <Typography variant="h4" sx={{ fontWeight: 800, color: themeTokens.colors.textPrimary }}>
-                  {structure.name}
-                </Typography>
-                <Typography variant="body2" sx={{ fontStyle: 'italic', color: themeTokens.colors.brandCyan }}>
-                  {structure.scientificName}
-                </Typography>
-              </Box>
+  const panelBody = structure ? (
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+      {/* Cabeçalho do Painel */}
+      <Box sx={{ p: { xs: 1.5, lg: 2 }, borderBottom: `1px solid ${themeTokens.colors.borderSubtle}`, backgroundColor: themeTokens.colors.bgElevated, flexShrink: 0 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+          <Box sx={{ minWidth: 0, pr: 1 }}>
+            {structure.fdiNotation && (
+              <Chip
+                label={`FDI ${structure.fdiNotation}`}
+                size="small"
+                sx={{
+                  backgroundColor: 'rgba(0, 201, 246, 0.15)',
+                  color: themeTokens.colors.brandCyan,
+                  border: `1px solid ${themeTokens.colors.brandCyan}`,
+                  fontWeight: 700,
+                  mb: 0.5,
+                }}
+              />
+            )}
+            <Typography variant="h4" sx={{ fontWeight: 800, fontSize: { xs: '1.02rem', lg: '1.15rem' }, color: themeTokens.colors.textPrimary }}>
+              {structure.name}
+            </Typography>
+            <Typography variant="body2" sx={{ fontStyle: 'italic', color: themeTokens.colors.brandCyan, fontSize: '0.8rem' }}>
+              {structure.scientificName}
+            </Typography>
+          </Box>
 
-              <Box sx={{ display: 'flex', gap: 0.5 }}>
-                <Tooltip title={isFavorite ? 'Remover dos favoritos' : 'Salvar como favorito'}>
-                  <IconButton size="small" onClick={handleToggleFavorite}>
-                    {isFavorite ? (
-                      <BookmarkIcon fontSize="small" sx={{ color: themeTokens.colors.brandCyan }} />
-                    ) : (
-                      <BookmarkBorderIcon fontSize="small" />
-                    )}
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Fechar painel e desmarcar estrutura">
-                  <IconButton
-                    size="small"
-                    onClick={() => {
-                      setInfoPanelOpen(false);
-                      setSelectedStructure(null);
-                      isolateStructure(null);
-                    }}
-                  >
-                    <CloseIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-            </Box>
+          <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
+            <Tooltip title={isFavorite ? 'Remover dos favoritos' : 'Salvar como favorito'}>
+              <IconButton size="small" onClick={handleToggleFavorite}>
+                {isFavorite ? (
+                  <BookmarkIcon fontSize="small" sx={{ color: themeTokens.colors.brandCyan }} />
+                ) : (
+                  <BookmarkBorderIcon fontSize="small" />
+                )}
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Fechar painel">
+              <IconButton
+                size="small"
+                onClick={() => {
+                  setInfoPanelOpen(false);
+                }}
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        </Box>
 
             {/* Ações Anatômicas Rápidas */}
             <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
@@ -300,7 +248,12 @@ export const InfoPanel: React.FC = () => {
                 size="small"
                 fullWidth
                 startIcon={<HighlightIcon fontSize="small" />}
-                onClick={() => isolateStructure(structure.id)}
+                onClick={() => {
+                  isolateStructure(structure.id);
+                  if (isMobileOverlay) {
+                    setInfoPanelOpen(false);
+                  }
+                }}
                 sx={{ fontSize: '0.75rem', py: 0.4 }}
               >
                 {isIsolated ? 'Restaurar' : 'Isolar'}
@@ -728,7 +681,50 @@ export const InfoPanel: React.FC = () => {
             Clique em qualquer elemento do modelo 3D, selecione um dente no odontograma ou utilize a barra de busca para inspecionar informações anatômicas fundamentadas.
           </Typography>
         </Box>
-      )}
-    </Drawer>
+      );
+
+  if (isMobileOverlay) {
+    return (
+      <Drawer
+        anchor="right"
+        variant="temporary"
+        open={infoPanelOpen}
+        onClose={() => setInfoPanelOpen(false)}
+        sx={{
+          zIndex: 1300,
+          '& .MuiDrawer-paper': {
+            width: { xs: '92vw', sm: 365 },
+            maxWidth: 390,
+            height: '100dvh',
+            backgroundColor: themeTokens.colors.bgSecondary,
+            borderLeft: `1px solid ${themeTokens.colors.borderSubtle}`,
+            backgroundImage: 'none',
+            p: 0,
+            display: 'flex',
+            flexDirection: 'column',
+          },
+        }}
+      >
+        {panelBody}
+      </Drawer>
+    );
+  }
+
+  return (
+    <Box
+      component="aside"
+      sx={{
+        width: { md: 315, lg: 345, xl: 380 },
+        height: '100%',
+        flexShrink: 0,
+        backgroundColor: themeTokens.colors.bgSecondary,
+        borderLeft: `1px solid ${themeTokens.colors.borderSubtle}`,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}
+    >
+      {panelBody}
+    </Box>
   );
 };

@@ -1,0 +1,23 @@
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/models/*.glb
+  Content-Type: model/gltf-binary
+  Cache-Control: public, max-age=604800
+
+/models/dental-scope/*.glb
+  Content-Type: model/gltf-binary
+  Cache-Control: public, max-age=604800
+
+/models/dental-scope/teeth/*.glb
+  Content-Type: model/gltf-binary
+  Cache-Control: public, max-age=604800
+
+/audio/tts/*.mp3
+  Content-Type: audio/mpeg
+  Cache-Control: public, max-age=604800
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+

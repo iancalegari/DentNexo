@@ -4,13 +4,19 @@ import { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import * as THREE from 'three';
 import { useAnatomyStore } from '@/stores/useAnatomyStore';
 import { getToothFaceCameraPreset } from '@/data/dental/surfaceFeaturesData';
+import { ANESTHESIA_MAP } from '@/data/clinical/anesthesiaData';
 
 interface CameraManagerProps {
   controlsRef: React.RefObject<OrbitControlsImpl | null>;
   archesOnlyMode?: boolean;
+  teethLineupMode?: boolean;
 }
 
-export const CameraManager: React.FC<CameraManagerProps> = ({ controlsRef, archesOnlyMode = false }) => {
+export const CameraManager: React.FC<CameraManagerProps> = ({
+  controlsRef,
+  archesOnlyMode = false,
+  teethLineupMode = false,
+}) => {
   const { camera } = useThree();
   const {
     cameraPreset,
@@ -18,6 +24,8 @@ export const CameraManager: React.FC<CameraManagerProps> = ({ controlsRef, arche
     surfaceExplorationMode,
     activeToothFdi,
     activeToothFace,
+    activeAnesthesiaId,
+    anesthesiaFocusKey,
   } = useAnatomyStore();
 
   const targetY = archesOnlyMode ? 0.3 : 1.2;
@@ -66,9 +74,24 @@ export const CameraManager: React.FC<CameraManagerProps> = ({ controlsRef, arche
     }
   }, [surfaceExplorationMode, activeToothFdi, activeToothFace]);
 
+  // Animação dedicada de enquadramento clínico para Bloqueios Anestésicos 3D
+  useEffect(() => {
+    if (!activeAnesthesiaId || surfaceExplorationMode) return;
+    const tech = ANESTHESIA_MAP[activeAnesthesiaId];
+    if (!tech) return;
+    const nextPos = new THREE.Vector3(...tech.cameraView.position);
+    const nextLookAt = new THREE.Vector3(...tech.cameraView.lookAt);
+    initiateTransition(nextPos, nextLookAt);
+  }, [activeAnesthesiaId, anesthesiaFocusKey, surfaceExplorationMode]);
+
   // Mapear presets gerais de câmera para enquadramento completo e panorâmico do crânio
   useEffect(() => {
     if (surfaceExplorationMode) return;
+
+    if (teethLineupMode) {
+      initiateTransition(new THREE.Vector3(0, 1.0, 17.5), new THREE.Vector3(0, 1.0, 0));
+      return;
+    }
 
     const nextPos = new THREE.Vector3();
     const nextLookAt = new THREE.Vector3(0, targetY, 0);
@@ -109,7 +132,7 @@ export const CameraManager: React.FC<CameraManagerProps> = ({ controlsRef, arche
     }
 
     initiateTransition(nextPos, nextLookAt);
-  }, [cameraPreset, surfaceExplorationMode, cameraResetKey, archesOnlyMode, targetY]);
+  }, [cameraPreset, surfaceExplorationMode, cameraResetKey, archesOnlyMode, teethLineupMode, targetY]);
 
   // Transição suave determinística (sem lutar com o OrbitControls e garantindo 60 FPS)
   useFrame((_, delta) => {

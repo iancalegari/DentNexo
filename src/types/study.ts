@@ -25,13 +25,17 @@ export interface SavedView {
   createdAt: string;
 }
 
+export type QuizDifficulty = 'basico' | 'intermediario' | 'avancado';
+
 export interface QuizQuestion {
   id: string;
   question: string;
   explanation: string;
   category: 'anatomia_geral' | 'dentes' | 'nervos_vasos' | 'patologias' | 'periodonto';
-  difficulty: 'basico' | 'intermediario' | 'avancado';
+  difficulty: QuizDifficulty;
   type: 'multiple_choice' | 'structure_identification';
+  /** Modo de cena 3D para a questão: 'teeth_lineup' exibe todos os 32 dentes enfileirados em 3D */
+  sceneMode?: 'full_anatomy' | 'teeth_lineup';
   options?: {
     id: string;
     text: string;
@@ -42,6 +46,7 @@ export interface QuizQuestion {
 }
 
 export interface QuizResult {
+  difficulty?: QuizDifficulty;
   totalQuestions: number;
   correctAnswers: number;
   percentage: number;

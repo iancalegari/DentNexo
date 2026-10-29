@@ -1,10 +1,13 @@
 import React, { useRef, useState, useEffect, Suspense } from 'react';
-import { Canvas } from '@react-three/fiber';
+import * as THREE from 'three';
+import { Canvas, events } from '@react-three/fiber';
 import { OrbitControls, GizmoHelper, GizmoViewport } from '@react-three/drei';
 import { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
-import { Box, Typography, Button, CircularProgress, Paper, Chip, Tooltip } from '@mui/material';
+import { Box, Typography, Button, CircularProgress, Paper, Chip, Tooltip, IconButton, useMediaQuery } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import CloseIcon from '@mui/icons-material/Close';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import HighlightIcon from '@mui/icons-material/Highlight';
 
 import { useAnatomyStore } from '@/stores/useAnatomyStore';
 import { anatomicalStructures } from '@/data/anatomy/structures';
@@ -12,10 +15,20 @@ import { SceneLighting } from './SceneLighting';
 import { CameraManager } from './CameraManager';
 import { DentalScopeModel } from './models/DentalScopeModel';
 import { DentalScopeTooth } from './models/DentalScopeTooth';
+import { TeethLineup3D } from './models/TeethLineup3D';
 import { PathologyOverlays } from './models/PathologyOverlays';
 import { SurfaceLandmarkMarker } from './SurfaceLandmarkMarker';
 import { SurfaceAnatomyPanel } from '@/features/dental/SurfaceAnatomyPanel';
 import { themeTokens } from '@/theme/tokens';
+
+const isObjectVisibleInHierarchy = (obj: THREE.Object3D | null): boolean => {
+  let cur: THREE.Object3D | null = obj;
+  while (cur) {
+    if (!cur.visible) return false;
+    cur = cur.parent;
+  }
+  return true;
+};
 
 /**
  * Fallback de carregamento para os modelos GLB
@@ -30,6 +43,10 @@ const LoadingFallback: React.FC = () => (
 interface AnatomyViewer3DProps {
   soloToothMode?: boolean;
   archesOnlyMode?: boolean;
+  teethLineupMode?: boolean;
+  quizTargetId?: string | null;
+  quizAnswered?: boolean;
+  hideSelectionBadge?: boolean;
   hideCredits?: boolean;
   hideGizmo?: boolean;
 }
@@ -37,6 +54,10 @@ interface AnatomyViewer3DProps {
 export const AnatomyViewer3D: React.FC<AnatomyViewer3DProps> = ({
   soloToothMode = false,
   archesOnlyMode = false,
+  teethLineupMode = false,
+  quizTargetId = null,
+  quizAnswered = false,
+  hideSelectionBadge = false,
   hideCredits = false,
   hideGizmo = false,
 }) => {
@@ -46,11 +67,15 @@ export const AnatomyViewer3D: React.FC<AnatomyViewer3DProps> = ({
     hiddenStructureIds,
     unhideStructure,
     selectedStructureId,
+    isolatedStructureId,
     setSelectedStructure,
     isolateStructure,
+    infoPanelOpen,
     setInfoPanelOpen,
     surfaceExplorationMode,
   } = useAnatomyStore();
+
+  const isCompactCanvas = useMediaQuery('(max-width: 899px), (max-height: 700px)');
 
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
   const [isInteracting, setIsInteracting] = useState<boolean>(false);
@@ -120,6 +145,7 @@ export const AnatomyViewer3D: React.FC<AnatomyViewer3DProps> = ({
         position: 'relative',
         backgroundColor: xrayMode ? '#040d16' : '#0B0F14',
         overflow: 'hidden',
+        touchAction: 'none',
         transition: 'background-color 0.4s ease',
         cursor: isInteracting ? 'grabbing' : 'grab',
       }}
@@ -138,6 +164,10 @@ export const AnatomyViewer3D: React.FC<AnatomyViewer3DProps> = ({
           preserveDrawingBuffer: true,
           powerPreference: 'high-performance',
         }}
+        events={(store) => ({
+          ...events(store),
+          filter: (intersections) => intersections.filter((hit) => isObjectVisibleInHierarchy(hit.object)),
+        })}
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
         onPointerMissed={handlePointerMissed}
@@ -146,13 +176,17 @@ export const AnatomyViewer3D: React.FC<AnatomyViewer3DProps> = ({
         <SceneLighting xrayMode={xrayMode} />
 
         {/* Gerenciador de Animação e Presets de Câmera */}
-        <CameraManager controlsRef={controlsRef} archesOnlyMode={archesOnlyMode} />
+        <CameraManager
+          controlsRef={controlsRef}
+          archesOnlyMode={archesOnlyMode}
+          teethLineupMode={teethLineupMode}
+        />
 
         {/* Rotação Livre 360° em todos os eixos sem travas restritivas */}
         <OrbitControls
           ref={controlsRef}
           makeDefault
-          target={[0, archesOnlyMode ? 0.3 : 1.2, 0]}
+          target={[0, teethLineupMode ? 1.0 : archesOnlyMode ? 0.3 : 1.2, 0]}
           enableDamping
           dampingFactor={0.06}
           rotateSpeed={0.85}
@@ -166,9 +200,9 @@ export const AnatomyViewer3D: React.FC<AnatomyViewer3DProps> = ({
           screenSpacePanning={true}
         />
 
-        {/* Gizmo de Orientação Anatômica XYZ (se não estiver desativado na visualização) */}
-        {!hideGizmo && (
-          <GizmoHelper alignment="bottom-left" margin={[80, 145]}>
+        {/* Gizmo de Orientação Anatômica XYZ (oculto automaticamente em telas compactas/mobile) */}
+        {!hideGizmo && !isCompactCanvas && (
+          <GizmoHelper alignment="bottom-left" margin={[74, 130]}>
             <GizmoViewport
               axisColors={['#EF4444', '#10B981', '#38BDF8']}
               labelColor="#FFFFFF"
@@ -181,6 +215,10 @@ export const AnatomyViewer3D: React.FC<AnatomyViewer3DProps> = ({
           <Suspense fallback={<LoadingFallback />}>
             <DentalScopeTooth />
             <PathologyOverlays isSoloTooth={true} />
+          </Suspense>
+        ) : teethLineupMode ? (
+          <Suspense fallback={<LoadingFallback />}>
+            <TeethLineup3D targetStructureId={quizTargetId} quizAnswered={quizAnswered} />
           </Suspense>
         ) : (
           <group position={[0, -0.2, 0]}>
@@ -210,12 +248,13 @@ export const AnatomyViewer3D: React.FC<AnatomyViewer3DProps> = ({
           onClick={() => hiddenStructureIds.forEach((id) => unhideStructure(id))}
           sx={{
             position: 'absolute',
-            bottom: 95,
-            left: 24,
+            bottom: { xs: 92, sm: 98, lg: 84 },
+            left: { xs: 10, sm: 16, lg: 20 },
+            maxWidth: 'calc(100% - 20px)',
             zIndex: 100,
             backgroundColor: '#059669',
             color: '#FFFFFF',
-            fontSize: '0.76rem',
+            fontSize: { xs: '0.7rem', sm: '0.75rem' },
             fontWeight: 700,
             textTransform: 'none',
             borderRadius: '8px',
@@ -223,23 +262,27 @@ export const AnatomyViewer3D: React.FC<AnatomyViewer3DProps> = ({
             '&:hover': { backgroundColor: '#047857' },
           }}
         >
-          {hiddenStructureIds.length} estrutura(s) oculta(s) • Reexibir Tudo
+          {hiddenStructureIds.length} oculta(s) • Reexibir Tudo
         </Button>
       )}
 
-      {/* Indicador HUD de Navegação */}
+      {/* Indicador HUD de Navegação (exibido apenas em desktops amplos para não colidir com controles mobile) */}
       <Box
         sx={{
           position: 'absolute',
-          bottom: 24,
-          left: 24,
+          bottom: 16,
+          left: 16,
           zIndex: 100,
+          display: { xs: 'none', xl: 'block' },
+          '@media (max-height: 700px)': {
+            display: 'none',
+          },
           backgroundColor: 'rgba(11, 15, 20, 0.78)',
           backdropFilter: 'blur(8px)',
           border: '1px solid rgba(41, 52, 66, 0.65)',
           borderRadius: '8px',
-          px: 1.8,
-          py: 0.9,
+          px: 1.5,
+          py: 0.75,
           pointerEvents: 'none',
           userSelect: 'none',
           boxShadow: '0 4px 16px rgba(0, 0, 0, 0.5)',
@@ -250,7 +293,7 @@ export const AnatomyViewer3D: React.FC<AnatomyViewer3DProps> = ({
         <Typography
           sx={{
             fontFamily: themeTokens.typography.fontFamily,
-            fontSize: '0.82rem',
+            fontSize: '0.78rem',
             fontWeight: 700,
             color: '#86EFAC',
             letterSpacing: '0.01em',
@@ -262,34 +305,34 @@ export const AnatomyViewer3D: React.FC<AnatomyViewer3DProps> = ({
         <Typography
           sx={{
             fontFamily: themeTokens.typography.fontFamily,
-            fontSize: '0.74rem',
+            fontSize: '0.7rem',
             fontWeight: 500,
             color: '#94A3B8',
             lineHeight: 1.3,
-            mt: 0.2,
+            mt: 0.15,
           }}
         >
           Roda ou pinça: zoom • botão direito: menu de ações
         </Typography>
       </Box>
 
-      {/* Referência da Origem dos Modelos 3D (se não estiver desativada na visualização) */}
+      {/* Referência da Origem dos Modelos 3D (discreta no canto inferior direito) */}
       {!hideCredits && (
         <Box
           sx={{
             position: 'absolute',
-            bottom: 24,
-            right: 24,
+            bottom: 20,
+            right: 20,
             zIndex: 100,
-            backgroundColor: 'rgba(11, 15, 20, 0.75)',
-            backdropFilter: 'blur(8px)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            borderRadius: '6px',
-            px: 1.2,
-            py: 0.45,
-            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.4)',
+            backgroundColor: 'rgba(11, 15, 20, 0.42)',
+            backdropFilter: 'blur(4px)',
+            border: '1px solid rgba(255, 255, 255, 0.04)',
+            borderRadius: '5px',
+            px: 1,
+            py: 0.35,
             transition: 'opacity 0.2s ease',
-            opacity: isInteracting ? 0.25 : 0.85,
+            opacity: isInteracting ? 0.18 : 0.55,
+            '&:hover': { opacity: 0.88 },
             display: { xs: 'none', md: 'block' },
           }}
         >
@@ -297,11 +340,11 @@ export const AnatomyViewer3D: React.FC<AnatomyViewer3DProps> = ({
             variant="caption"
             sx={{
               fontFamily: themeTokens.typography.fontFamily,
-              fontSize: '0.65rem',
-              color: '#64748B',
+              fontSize: '0.62rem',
+              color: '#526071',
               display: 'flex',
               alignItems: 'center',
-              gap: 0.5,
+              gap: 0.4,
               lineHeight: 1.2,
             }}
           >
@@ -312,10 +355,11 @@ export const AnatomyViewer3D: React.FC<AnatomyViewer3DProps> = ({
               target="_blank"
               rel="noopener noreferrer"
               sx={{
-                color: '#38BDF8',
+                color: '#64748B',
                 textDecoration: 'none',
-                fontWeight: 600,
-                '&:hover': { textDecoration: 'underline', color: themeTokens.colors.brandCyan },
+                fontWeight: 500,
+                transition: 'color 0.15s ease',
+                '&:hover': { textDecoration: 'underline', color: '#94A3B8' },
               }}
             >
               Dental Scope / BodyParts3D & Z-Anatomy (CC BY-SA 4.0)
@@ -324,42 +368,125 @@ export const AnatomyViewer3D: React.FC<AnatomyViewer3DProps> = ({
         </Box>
       )}
 
-      {/* Badge Flutuante de Estrutura Selecionada com Botão Rápido de Desmarcar (posicionado acima da barra de câmera) */}
-      {selectedStructureId && !surfaceExplorationMode && (
+      {/* Badge Flutuante de Estrutura Selecionada com Ações Rápidas (Isolar, Info e Desmarcar) */}
+      {selectedStructureId && !surfaceExplorationMode && !hideSelectionBadge && (
         <Paper
           elevation={4}
           sx={{
             position: 'absolute',
-            bottom: 74,
+            bottom: { xs: 50, sm: 58, lg: 64 },
             left: '50%',
             transform: 'translateX(-50%)',
+            maxWidth: 'calc(100% - 16px)',
             zIndex: 100,
             backgroundColor: 'rgba(15, 23, 42, 0.92)',
             backdropFilter: 'blur(10px)',
             border: '1px solid rgba(56, 189, 248, 0.45)',
             borderRadius: '24px',
-            px: 2,
-            py: 0.8,
+            px: { xs: 1.1, sm: 1.7 },
+            py: { xs: 0.45, sm: 0.65 },
             display: 'flex',
             alignItems: 'center',
-            gap: 1.5,
+            gap: { xs: 0.6, sm: 1.0 },
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.55)',
             transition: 'opacity 0.2s ease',
             opacity: isInteracting ? 0.35 : 1.0,
           }}
         >
-          <Box sx={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#00C9F6' }} />
+          <Box sx={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#00C9F6', flexShrink: 0 }} />
           <Typography
             variant="caption"
             sx={{
               color: '#F8FAFC',
               fontWeight: 700,
-              fontSize: '0.82rem',
+              fontSize: { xs: '0.74rem', sm: '0.82rem' },
               whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              minWidth: 0,
             }}
           >
             {selectedStructure?.name || selectedStructureId}
           </Typography>
+
+          {!soloToothMode && !teethLineupMode && (
+            <Chip
+              icon={
+                <HighlightIcon
+                  sx={{
+                    fontSize: '13px !important',
+                    color: isolatedStructureId === selectedStructureId ? '#071018 !important' : '#FDE047 !important',
+                  }}
+                />
+              }
+              label={isolatedStructureId === selectedStructureId ? 'Restaurar' : 'Isolar'}
+              size="small"
+              onClick={() => isolateStructure(selectedStructureId)}
+              sx={{
+                height: 22,
+                fontSize: '0.7rem',
+                fontWeight: 700,
+                flexShrink: 0,
+                backgroundColor:
+                  isolatedStructureId === selectedStructureId
+                    ? themeTokens.colors.brandCyan
+                    : 'rgba(250, 204, 21, 0.16)',
+                color: isolatedStructureId === selectedStructureId ? '#071018' : '#FEF08A',
+                border:
+                  isolatedStructureId === selectedStructureId
+                    ? `1px solid ${themeTokens.colors.brandCyan}`
+                    : '1px solid rgba(250, 204, 21, 0.4)',
+                cursor: 'pointer',
+                '&:hover': {
+                  backgroundColor:
+                    isolatedStructureId === selectedStructureId
+                      ? '#38DDF8'
+                      : 'rgba(250, 204, 21, 0.28)',
+                },
+              }}
+            />
+          )}
+
+          {!infoPanelOpen && (
+            <Chip
+              icon={<InfoOutlinedIcon sx={{ fontSize: '13px !important', color: '#38BDF8 !important' }} />}
+              label="Info"
+              size="small"
+              onClick={() => setInfoPanelOpen(true)}
+              sx={{
+                height: 22,
+                fontSize: '0.7rem',
+                fontWeight: 700,
+                flexShrink: 0,
+                backgroundColor: 'rgba(0, 201, 246, 0.16)',
+                color: '#38BDF8',
+                border: '1px solid rgba(0, 201, 246, 0.38)',
+                cursor: 'pointer',
+              }}
+            />
+          )}
+
+          {/* No celular exibe botão compacto X; em telas maiores exibe Chip Desmarcar */}
+          <IconButton
+            size="small"
+            onClick={() => {
+              setSelectedStructure(null);
+              isolateStructure(null);
+              setInfoPanelOpen(false);
+            }}
+            sx={{
+              display: { xs: 'inline-flex', sm: 'none' },
+              p: 0.35,
+              flexShrink: 0,
+              backgroundColor: 'rgba(239, 68, 68, 0.18)',
+              color: '#FCA5A5',
+              border: '1px solid rgba(239, 68, 68, 0.35)',
+              '&:hover': { backgroundColor: 'rgba(239, 68, 68, 0.35)' },
+            }}
+          >
+            <CloseIcon sx={{ fontSize: 13 }} />
+          </IconButton>
+
           <Tooltip title="Desmarcar seleção (ou clique no espaço vazio / pressione Esc)">
             <Chip
               label="Desmarcar"
@@ -375,9 +502,11 @@ export const AnatomyViewer3D: React.FC<AnatomyViewer3DProps> = ({
                 setInfoPanelOpen(false);
               }}
               sx={{
+                display: { xs: 'none', sm: 'inline-flex' },
                 height: 22,
-                fontSize: '0.72rem',
+                fontSize: '0.7rem',
                 fontWeight: 600,
+                flexShrink: 0,
                 backgroundColor: 'rgba(239, 68, 68, 0.18)',
                 color: '#FCA5A5',
                 border: '1px solid rgba(239, 68, 68, 0.35)',

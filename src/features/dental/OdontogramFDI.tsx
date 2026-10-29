@@ -6,7 +6,11 @@ import {
   Tabs,
   Tab,
   Tooltip,
+  IconButton,
+  Collapse,
 } from '@mui/material';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 import { useAnatomyStore } from '@/stores/useAnatomyStore';
 import { permanentTeethData } from '@/data/dental/teethData';
@@ -105,8 +109,13 @@ const getToothTypeIcon = (fdi: string, isSelected: boolean) => {
   return <IncisorIcon isSelected={isSelected} />;
 };
 
-export const OdontogramFDI: React.FC = () => {
+interface OdontogramFDIProps {
+  allowDeciduous?: boolean;
+}
+
+export const OdontogramFDI: React.FC<OdontogramFDIProps> = ({ allowDeciduous = true }) => {
   const [dentition, setDentition] = useState<'permanent' | 'deciduous'>('permanent');
+  const [collapsed, setCollapsed] = useState<boolean>(false);
   const {
     activeToothFdi,
     surfaceExplorationMode,
@@ -114,6 +123,15 @@ export const OdontogramFDI: React.FC = () => {
     setSelectedStructure,
     setInfoPanelOpen,
   } = useAnatomyStore();
+
+  const canShowDeciduous = allowDeciduous && !surfaceExplorationMode;
+  const effectiveDentition = canShowDeciduous ? dentition : 'permanent';
+
+  React.useEffect(() => {
+    if (!canShowDeciduous && dentition === 'deciduous') {
+      setDentition('permanent');
+    }
+  }, [canShowDeciduous, dentition]);
 
   // Dentição Permanente (ISO 3950)
   // Arco Superior: 18 a 11 (Quadrante 1) | 21 a 28 (Quadrante 2)
@@ -133,8 +151,9 @@ export const OdontogramFDI: React.FC = () => {
   const handleSelectTooth = (fdi: string) => {
     setActiveToothFdi(fdi);
     setSelectedStructure(`dente_${fdi}`);
-    // Ao clicar em algum dente no odontograma, abre o painel de Detalhes
-    setInfoPanelOpen(true);
+    if (typeof window === 'undefined' || window.innerWidth >= 900) {
+      setInfoPanelOpen(true);
+    }
   };
 
   const renderToothCard = (fdi: string) => {
@@ -151,13 +170,18 @@ export const OdontogramFDI: React.FC = () => {
         <Box
           onClick={() => handleSelectTooth(fdi)}
           sx={{
-            width: { xs: 29, sm: 34, md: 38 },
-            height: { xs: 52, sm: 58, md: 64 },
+            width: { xs: 28, sm: 32, md: 34, xl: 38 },
+            height: { xs: 44, sm: 48, md: 50, xl: 58 },
+            '@media (max-height: 800px)': {
+              width: 31,
+              height: 42,
+              py: 0.4,
+            },
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'space-between',
-            py: { xs: 0.6, sm: 0.8 },
+            py: { xs: 0.45, sm: 0.6 },
             borderRadius: '6px',
             cursor: 'pointer',
             backgroundColor: isSelected ? '#155E75' : 'rgba(255, 255, 255, 0.02)',
@@ -182,10 +206,14 @@ export const OdontogramFDI: React.FC = () => {
               alignItems: 'center',
               justifyContent: 'center',
               color: isSelected ? '#38BDF8' : '#64748B',
-              mt: 0.2,
+              mt: 0.1,
               '& svg': {
-                width: { xs: 16, sm: 18, md: 20 },
-                height: { xs: 16, sm: 18, md: 20 },
+                width: { xs: 14, sm: 16, xl: 19 },
+                height: { xs: 14, sm: 16, xl: 19 },
+                '@media (max-height: 800px)': {
+                  width: 15,
+                  height: 15,
+                },
               },
             }}
           >
@@ -196,7 +224,10 @@ export const OdontogramFDI: React.FC = () => {
           <Typography
             sx={{
               fontWeight: 800,
-              fontSize: { xs: '0.72rem', sm: '0.78rem', md: '0.84rem' },
+              fontSize: { xs: '0.68rem', sm: '0.74rem', xl: '0.82rem' },
+              '@media (max-height: 800px)': {
+                fontSize: '0.7rem',
+              },
               lineHeight: 1,
               color: isSelected ? '#FFFFFF' : '#CBD5E1',
             }}
@@ -212,151 +243,179 @@ export const OdontogramFDI: React.FC = () => {
     <Paper
       elevation={2}
       sx={{
-        p: 2,
+        px: { xs: 1.1, sm: 1.5 },
+        py: { xs: 0.8, sm: 1.0 },
+        '@media (max-height: 800px)': {
+          py: 0.65,
+        },
         backgroundColor: themeTokens.colors.bgSecondary,
         border: `1px solid ${themeTokens.colors.borderSubtle}`,
         borderRadius: 2,
       }}
     >
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5, flexWrap: 'wrap', gap: 1 }}>
-        <Box>
-          <Typography variant="subtitle1" sx={{ fontWeight: 800, color: themeTokens.colors.textPrimary }}>
-            Odontograma Interativo FDI (ISO 3950)
-          </Typography>
-          <Typography variant="caption" sx={{ color: themeTokens.colors.textMuted }}>
-            Clique em qualquer dente para visualizar a anatomia 3D individual e a explicação clínica completa no painel à direita.
-          </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: collapsed ? 0 : 0.8, flexWrap: 'wrap', gap: 0.8 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8, minWidth: 0 }}>
+          <IconButton
+            size="small"
+            onClick={() => setCollapsed(!collapsed)}
+            sx={{ p: 0.3, color: themeTokens.colors.brandCyan }}
+            title={collapsed ? 'Expandir Odontograma' : 'Recolher Odontograma'}
+          >
+            {collapsed ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+          </IconButton>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography
+              variant="subtitle1"
+              onClick={() => setCollapsed(!collapsed)}
+              sx={{
+                fontWeight: 800,
+                fontSize: { xs: '0.8rem', sm: '0.88rem' },
+                lineHeight: 1.2,
+                color: themeTokens.colors.textPrimary,
+                cursor: 'pointer',
+              }}
+            >
+              Odontograma FDI (ISO 3950) {collapsed ? `• Dente ${activeToothFdi}` : ''}
+            </Typography>
+            <Typography
+              variant="caption"
+              sx={{
+                color: themeTokens.colors.textMuted,
+                display: { xs: 'none', xl: 'block' },
+                '@media (max-height: 820px)': {
+                  display: 'none',
+                },
+              }}
+            >
+              Clique em qualquer dente para visualizar a anatomia 3D individual e a explicação clínica completa no painel à direita.
+            </Typography>
+          </Box>
         </Box>
 
-        <Tabs
-          value={surfaceExplorationMode ? 'permanent' : dentition}
-          onChange={(_, val) => setDentition(val)}
-          sx={{
-            minHeight: 30,
-            '& .MuiTab-root': {
-              minHeight: 30,
-              py: 0.3,
-              px: 1.2,
-              fontSize: '0.75rem',
-              fontWeight: 700,
-            },
-          }}
-        >
-          <Tab value="permanent" label="Permanente (32 dentes)" />
-          {!surfaceExplorationMode && <Tab value="deciduous" label="Decídua (20 dentes)" />}
-        </Tabs>
+        {!collapsed && (
+          <Tabs
+            value={effectiveDentition}
+            onChange={(_, val) => setDentition(val)}
+            sx={{
+              minHeight: 28,
+              '& .MuiTab-root': {
+                minHeight: 28,
+                py: 0.2,
+                px: { xs: 0.9, sm: 1.2 },
+                fontSize: { xs: '0.7rem', sm: '0.74rem' },
+                fontWeight: 700,
+              },
+            }}
+          >
+            <Tab value="permanent" label="Permanente (32)" />
+            {canShowDeciduous && <Tab value="deciduous" label="Decídua (20)" />}
+          </Tabs>
+        )}
       </Box>
 
       {/* Grid Odontograma no Formato Fiel (Upper / Lower com Divisor Central) */}
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 0.8,
-          p: 1.5,
-          backgroundColor: '#0F1722',
-          borderRadius: 1.5,
-          border: `1px solid ${themeTokens.colors.borderSubtle}`,
-          overflowX: 'auto',
-          width: '100%',
-        }}
-      >
-        {(surfaceExplorationMode || dentition === 'permanent') ? (
-          <Box sx={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', minWidth: 'max-content' }}>
-            {/* LINHA SUPERIOR (UPPER): 18 a 11 | 21 a 28 */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <Box sx={{ display: 'flex', gap: 0.5 }}>{q1.map(renderToothCard)}</Box>
-              <Box sx={{ width: '2px', height: 46, backgroundColor: 'rgba(0, 201, 246, 0.4)', mx: 0.6 }} />
-              <Box sx={{ display: 'flex', gap: 0.5 }}>{q2.map(renderToothCard)}</Box>
-            </Box>
-
-            {/* DIVISOR CENTRAL (UPPER / LOWER) */}
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                width: '100%',
-                my: 0.8,
-              }}
-            >
-              <Box sx={{ flex: 1, height: '1px', backgroundColor: 'rgba(255, 255, 255, 0.12)' }} />
-              <Box sx={{ px: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <Typography
-                  variant="caption"
-                  sx={{
-                    fontSize: '0.66rem',
-                    fontWeight: 700,
-                    color: '#94A3B8',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.08em',
-                    lineHeight: 1.1,
-                  }}
-                >
-                  Upper
-                </Typography>
-                <Typography
-                  variant="caption"
-                  sx={{
-                    fontSize: '0.66rem',
-                    fontWeight: 700,
-                    color: '#94A3B8',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.08em',
-                    lineHeight: 1.1,
-                  }}
-                >
-                  Lower
-                </Typography>
+      <Collapse in={!collapsed} unmountOnExit>
+        <Box
+          sx={{
+            display: 'flex',
+            p: { xs: 0.8, sm: 1.0 },
+            '@media (max-height: 800px)': {
+              p: 0.7,
+            },
+            backgroundColor: '#0F1722',
+            borderRadius: 1.5,
+            border: `1px solid ${themeTokens.colors.borderSubtle}`,
+            overflowX: 'auto',
+            WebkitOverflowScrolling: 'touch',
+            width: '100%',
+          }}
+        >
+          {effectiveDentition === 'permanent' ? (
+            <Box sx={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', minWidth: 'max-content', mx: 'auto' }}>
+              {/* LINHA SUPERIOR (UPPER): 18 a 11 | 21 a 28 */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.45 }}>
+                <Box sx={{ display: 'flex', gap: 0.45 }}>{q1.map(renderToothCard)}</Box>
+                <Box sx={{ width: '2px', height: 38, backgroundColor: 'rgba(0, 201, 246, 0.4)', mx: 0.5 }} />
+                <Box sx={{ display: 'flex', gap: 0.45 }}>{q2.map(renderToothCard)}</Box>
               </Box>
-              <Box sx={{ flex: 1, height: '1px', backgroundColor: 'rgba(255, 255, 255, 0.12)' }} />
-            </Box>
 
-            {/* LINHA INFERIOR (LOWER): 48 a 41 | 31 a 38 */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <Box sx={{ display: 'flex', gap: 0.5 }}>{q4.map(renderToothCard)}</Box>
-              <Box sx={{ width: '2px', height: 46, backgroundColor: 'rgba(0, 201, 246, 0.4)', mx: 0.6 }} />
-              <Box sx={{ display: 'flex', gap: 0.5 }}>{q3.map(renderToothCard)}</Box>
-            </Box>
-          </Box>
-        ) : (
-          <Box sx={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', minWidth: 'max-content' }}>
-            {/* Dentição Decídua Superior: 55 a 51 | 61 a 65 */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <Box sx={{ display: 'flex', gap: 0.5 }}>{q5.map(renderToothCard)}</Box>
-              <Box sx={{ width: '2px', height: 46, backgroundColor: 'rgba(0, 201, 246, 0.4)', mx: 0.6 }} />
-              <Box sx={{ display: 'flex', gap: 0.5 }}>{q6.map(renderToothCard)}</Box>
-            </Box>
-
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                width: '100%',
-                my: 0.8,
-              }}
-            >
-              <Box sx={{ flex: 1, height: '1px', backgroundColor: 'rgba(255, 255, 255, 0.12)' }} />
-              <Box sx={{ px: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <Typography variant="caption" sx={{ fontSize: '0.66rem', fontWeight: 700, color: '#94A3B8' }}>
-                  Decíduo Superior
-                </Typography>
-                <Typography variant="caption" sx={{ fontSize: '0.66rem', fontWeight: 700, color: '#94A3B8' }}>
-                  Decíduo Inferior
-                </Typography>
+              {/* DIVISOR CENTRAL (UPPER / LOWER) */}
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  width: '100%',
+                  my: 0.45,
+                  '@media (max-height: 800px)': {
+                    my: 0.25,
+                  },
+                }}
+              >
+                <Box sx={{ flex: 1, height: '1px', backgroundColor: 'rgba(255, 255, 255, 0.12)' }} />
+                <Box sx={{ px: 1.5, display: 'flex', gap: 1, alignItems: 'center' }}>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      fontSize: '0.6rem',
+                      fontWeight: 700,
+                      color: '#94A3B8',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.08em',
+                      lineHeight: 1,
+                    }}
+                  >
+                    Superior / Inferior
+                  </Typography>
+                </Box>
+                <Box sx={{ flex: 1, height: '1px', backgroundColor: 'rgba(255, 255, 255, 0.12)' }} />
               </Box>
-              <Box sx={{ flex: 1, height: '1px', backgroundColor: 'rgba(255, 255, 255, 0.12)' }} />
-            </Box>
 
-            {/* Dentição Decídua Inferior: 85 a 81 | 71 a 75 */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <Box sx={{ display: 'flex', gap: 0.5 }}>{q8.map(renderToothCard)}</Box>
-              <Box sx={{ width: '2px', height: 46, backgroundColor: 'rgba(0, 201, 246, 0.4)', mx: 0.6 }} />
-              <Box sx={{ display: 'flex', gap: 0.5 }}>{q7.map(renderToothCard)}</Box>
+              {/* LINHA INFERIOR (LOWER): 48 a 41 | 31 a 38 */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.45 }}>
+                <Box sx={{ display: 'flex', gap: 0.45 }}>{q4.map(renderToothCard)}</Box>
+                <Box sx={{ width: '2px', height: 38, backgroundColor: 'rgba(0, 201, 246, 0.4)', mx: 0.5 }} />
+                <Box sx={{ display: 'flex', gap: 0.45 }}>{q3.map(renderToothCard)}</Box>
+              </Box>
             </Box>
-          </Box>
-        )}
-      </Box>
+          ) : (
+            <Box sx={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', minWidth: 'max-content', mx: 'auto' }}>
+              {/* Dentição Decídua Superior: 55 a 51 | 61 a 65 */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.45 }}>
+                <Box sx={{ display: 'flex', gap: 0.45 }}>{q5.map(renderToothCard)}</Box>
+                <Box sx={{ width: '2px', height: 38, backgroundColor: 'rgba(0, 201, 246, 0.4)', mx: 0.5 }} />
+                <Box sx={{ display: 'flex', gap: 0.45 }}>{q6.map(renderToothCard)}</Box>
+              </Box>
+
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  width: '100%',
+                  my: 0.45,
+                  '@media (max-height: 800px)': {
+                    my: 0.25,
+                  },
+                }}
+              >
+                <Box sx={{ flex: 1, height: '1px', backgroundColor: 'rgba(255, 255, 255, 0.12)' }} />
+                <Box sx={{ px: 1.5, display: 'flex', alignItems: 'center' }}>
+                  <Typography variant="caption" sx={{ fontSize: '0.6rem', fontWeight: 700, color: '#94A3B8', lineHeight: 1 }}>
+                    Decíduo Sup. / Inf.
+                  </Typography>
+                </Box>
+                <Box sx={{ flex: 1, height: '1px', backgroundColor: 'rgba(255, 255, 255, 0.12)' }} />
+              </Box>
+
+              {/* Dentição Decídua Inferior: 85 a 81 | 71 a 75 */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.45 }}>
+                <Box sx={{ display: 'flex', gap: 0.45 }}>{q8.map(renderToothCard)}</Box>
+                <Box sx={{ width: '2px', height: 38, backgroundColor: 'rgba(0, 201, 246, 0.4)', mx: 0.5 }} />
+                <Box sx={{ display: 'flex', gap: 0.45 }}>{q7.map(renderToothCard)}</Box>
+              </Box>
+            </Box>
+          )}
+        </Box>
+      </Collapse>
     </Paper>
   );
 };

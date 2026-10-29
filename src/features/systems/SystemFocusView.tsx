@@ -1,5 +1,7 @@
 import React, { useEffect } from 'react';
-import { Box, Paper, Typography, Chip, Stack } from '@mui/material';
+import { Box, Paper, Typography, Chip, Slider, IconButton, Tooltip } from '@mui/material';
+import OpenWithIcon from '@mui/icons-material/OpenWith';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import { AnatomyViewer3D } from '@/components/3d/AnatomyViewer3D';
 import { CameraControls } from '@/components/controls/CameraControls';
 import { LayerControls } from '@/components/controls/LayerControls';
@@ -11,16 +13,22 @@ const SYSTEM_STRUCTURES: Record<string, { id: string; label: string }[]> = {
   skeletal: [
     { id: 'mandibula', label: 'Mandíbula' },
     { id: 'maxila', label: 'Maxila' },
+    { id: 'osso_palatino', label: 'Palatino' },
+    { id: 'osso_zigomatico', label: 'Zigomático' },
     { id: 'osso_frontal', label: 'Frontal' },
     { id: 'osso_parietal', label: 'Parietal' },
     { id: 'osso_temporal', label: 'Temporal' },
     { id: 'osso_occipital', label: 'Occipital' },
     { id: 'osso_esfenoide', label: 'Esfenoide' },
     { id: 'osso_etmoide', label: 'Etmoide' },
-    { id: 'osso_zigomatico', label: 'Zigomático' },
     { id: 'osso_nasal', label: 'Nasal' },
+    { id: 'osso_lacrimal', label: 'Lacrimal' },
+    { id: 'osso_vomer', label: 'Vômer' },
+    { id: 'concha_nasal_inferior', label: 'Concha Nasal Inf.' },
+    { id: 'osso_hioide', label: 'Hioide' },
     { id: 'seio_maxilar', label: 'Seio Maxilar' },
-    { id: 'neurocranio', label: 'Calvária Geral' },
+    { id: 'seio_frontal', label: 'Seio Frontal' },
+    { id: 'seio_esfenoidal', label: 'Seio Esfenoidal' },
   ],
   muscular: [
     { id: 'masseter', label: 'Masseter' },
@@ -29,17 +37,25 @@ const SYSTEM_STRUCTURES: Record<string, { id: string; label: string }[]> = {
     { id: 'pterigoideo_medial', label: 'Pterigóideo Medial' },
     { id: 'musculo_orbicular_boca', label: 'Orbicular da Boca' },
     { id: 'musculo_bucinador', label: 'Bucinador' },
+    { id: 'musculo_mentual', label: 'Mentual' },
   ],
   nervous: [
-    { id: 'nervo_alveolar_inferior', label: 'Nervo Alveolar Inferior' },
-    { id: 'nervo_maxilar_v2', label: 'Nervo Maxilar (V2)' },
-    { id: 'nervo_lingual', label: 'Nervo Lingual' },
-    { id: 'nervo_mentual', label: 'Nervo Mentual' },
-    { id: 'nervo_trigemeo', label: 'Nervo Trigêmeo' },
+    { id: 'nervo_alveolar_inferior', label: 'Alveolar Inferior' },
+    { id: 'nervo_lingual', label: 'Lingual' },
+    { id: 'nervo_bucal', label: 'Bucal' },
+    { id: 'nervo_mentual', label: 'Mentual' },
+    { id: 'nervo_maxilar_v2', label: 'Maxilar (V2)' },
+    { id: 'nervo_palatino_maior', label: 'Palatino Maior' },
+    { id: 'nervo_nasopalatino', label: 'Nasopalatino' },
+    { id: 'nervo_trigemeo', label: 'Trigêmeo (NC V)' },
+    { id: 'nervo_facial', label: 'Facial (NC VII)' },
+    { id: 'nervo_hipoglosso', label: 'Hipoglosso (NC XII)' },
   ],
   vascular: [
     { id: 'arteria_maxilar', label: 'Artéria Maxilar' },
+    { id: 'arteria_alveolar_inferior', label: 'Art. Alveolar Inferior' },
     { id: 'arteria_facial', label: 'Artéria Facial' },
+    { id: 'plexo_pterigoideo', label: 'Plexo Pterigóideo' },
   ],
   oral_tissue: [
     { id: 'gengiva_inserida', label: 'Gengiva Inserida' },
@@ -66,8 +82,8 @@ export const SystemFocusView: React.FC<SystemFocusViewProps> = ({
     setInfoPanelOpen,
     infoPanelOpen,
     setFocusedSystem,
-    toggleLayer,
-    layers,
+    explosionFactor,
+    setExplosionFactor,
     resetCamera,
     setActivePathology,
   } = useAnatomyStore();
@@ -83,8 +99,9 @@ export const SystemFocusView: React.FC<SystemFocusViewProps> = ({
 
     return () => {
       setFocusedSystem(null);
+      setExplosionFactor(0);
     };
-  }, [initialStructureId, systemType, setFocusedSystem, setSelectedStructure, resetCamera, setActivePathology]);
+  }, [initialStructureId, systemType, setFocusedSystem, setSelectedStructure, resetCamera, setActivePathology, setExplosionFactor]);
 
   const structuresList = SYSTEM_STRUCTURES[systemType] || [];
 
@@ -96,23 +113,29 @@ export const SystemFocusView: React.FC<SystemFocusViewProps> = ({
           elevation={4}
           sx={{
             position: 'absolute',
-            top: 12,
-            left: '50%',
-            transform: 'translateX(-50%)',
+            top: { xs: 50, md: 12 },
+            left: { xs: 10, md: '50%' },
+            right: { xs: 10, md: 'auto' },
+            transform: { xs: 'none', md: 'translateX(-50%)' },
             zIndex: 1000,
             backgroundColor: 'rgba(15, 23, 42, 0.94)',
             backdropFilter: 'blur(16px)',
             border: `1px solid ${themeTokens.colors.borderSubtle}`,
-            borderRadius: '16px',
-            px: 1.5,
-            py: 0.6,
+            borderRadius: { xs: '12px', md: '16px' },
+            px: { xs: 1, sm: 1.4 },
+            py: 0.55,
             display: 'flex',
-            flexWrap: 'wrap',
+            flexWrap: { xs: 'nowrap', md: 'wrap' },
             alignItems: 'center',
-            justifyContent: 'center',
-            gap: 0.6,
+            justifyContent: { xs: 'flex-start', md: 'center' },
+            gap: 0.55,
+            overflowX: { xs: 'auto', md: 'hidden' },
+            overflowY: { xs: 'hidden', md: 'auto' },
+            maxHeight: { xs: 'none', md: 72, xl: 105 },
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
-            maxWidth: infoPanelOpen ? 'calc(100% - 410px)' : 660,
+            maxWidth: { xs: 'none', md: 'calc(100% - 350px)', lg: 'min(640px, calc(100% - 380px))' },
+            scrollbarWidth: { xs: 'none', md: 'thin' },
+            '&::-webkit-scrollbar': { display: { xs: 'none', md: 'block' }, height: 4, width: 4 },
           }}
         >
           <Typography
@@ -137,7 +160,6 @@ export const SystemFocusView: React.FC<SystemFocusViewProps> = ({
                 size="small"
                 onClick={() => {
                   setSelectedStructure(st.id);
-                  setInfoPanelOpen(true);
                 }}
                 sx={{
                   fontWeight: 700,
@@ -167,8 +189,79 @@ export const SystemFocusView: React.FC<SystemFocusViewProps> = ({
       {/* Visualizador 3D com a câmera livre e iluminação clínica */}
       <AnatomyViewer3D />
 
-      {/* Controles Flutuantes de Camadas (posicionados abaixo da barra de 2 linhas, recolhidos por padrão) */}
-      <LayerControls top={96} defaultExpanded={false} />
+      {/* Controles Flutuantes de Camadas (alinhados no topo junto à barra Focar, recolhidos por padrão) */}
+      <LayerControls top={12} defaultExpanded={false} />
+
+      {/* Controle Rápido Dedicado de Dissecação 3D (Vista Explodida) no Sistema Esquelético (em telas compactas/mobile fica apenas dentro de Camadas Anatômicas) */}
+      {systemType === 'skeletal' && (
+        <Paper
+          elevation={4}
+          sx={{
+            display: { xs: 'none', lg: 'block' },
+            position: 'absolute',
+            bottom: 48,
+            right: 16,
+            zIndex: 1000,
+            width: 235,
+            backgroundColor: 'rgba(15, 23, 42, 0.92)',
+            backdropFilter: 'blur(12px)',
+            border:
+              explosionFactor > 0
+                ? `1px solid ${themeTokens.colors.brandCyan}`
+                : `1px solid ${themeTokens.colors.borderSubtle}`,
+            borderRadius: '12px',
+            px: { xs: 1.1, sm: 1.5 },
+            py: { xs: 0.7, sm: 1.0 },
+            boxShadow: themeTokens.shadows.elevated,
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.7 }}>
+              <OpenWithIcon sx={{ fontSize: '0.95rem', color: themeTokens.colors.brandCyan }} />
+              <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#F8FAFC' }}>
+                Vista Explodida (Crânio)
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3 }}>
+              <Typography
+                sx={{
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  color: themeTokens.colors.brandCyan,
+                  fontVariantNumeric: 'tabular-nums',
+                }}
+              >
+                {Math.round(explosionFactor * 100)}%
+              </Typography>
+              {explosionFactor > 0 && (
+                <Tooltip title="Remontar crânio (0%)">
+                  <IconButton
+                    size="small"
+                    onClick={() => setExplosionFactor(0)}
+                    sx={{ p: 0.2, color: themeTokens.colors.brandCyan }}
+                  >
+                    <RestartAltIcon sx={{ fontSize: '0.9rem' }} />
+                  </IconButton>
+                </Tooltip>
+              )}
+            </Box>
+          </Box>
+          <Slider
+            size="small"
+            value={Math.round(explosionFactor * 100)}
+            min={0}
+            max={100}
+            step={1}
+            onChange={(_, val) => setExplosionFactor((val as number) / 100)}
+            sx={{
+              color: themeTokens.colors.brandCyan,
+              height: 4,
+              py: 0.8,
+              '& .MuiSlider-thumb': { width: 12, height: 12 },
+            }}
+          />
+        </Paper>
+      )}
 
       {/* Controles Flutuantes de Câmera */}
       <CameraControls />

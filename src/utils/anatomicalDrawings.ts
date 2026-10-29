@@ -94,7 +94,7 @@ export const getStructureIllustration = (options: AnatomicalCardOptions): string
   ctx.translate(width / 2, height / 2 - 18);
 
   const isMandible = id.includes('mandib') || id === 'mandibula';
-  const isMaxilla = id.includes('maxil') || id === 'maxila' || id.includes('seio');
+  const isMaxilla = id.includes('maxil') || id === 'maxila' || id === 'seio_maxilar';
   const isTooth = id.includes('dente') || id.includes('tooth') || category === 'dental' || /^\d{2}$/.test(id);
   const isNerve = id.includes('nerv') || category === 'nervous';
   const isVessel = id.includes('arteri') || id.includes('veia') || category === 'vascular';
@@ -267,9 +267,9 @@ function drawMaxillaIllustration(ctx: CanvasRenderingContext2D) {
   // Cavidade do Seio Maxilar
   ctx.beginPath();
   ctx.ellipse(5, 10, 32, 24, Math.PI / 8, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(14, 165, 233, 0.25)';
+  ctx.fillStyle = 'rgba(236, 72, 153, 0.28)';
   ctx.fill();
-  ctx.strokeStyle = '#38BDF8';
+  ctx.strokeStyle = '#EC4899';
   ctx.setLineDash([3, 3]);
   ctx.stroke();
   ctx.setLineDash([]);

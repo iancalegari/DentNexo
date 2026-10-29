@@ -12,6 +12,7 @@ import {
   WisdomToothState 
 } from '@/types/dental';
 import { storageService } from '@/services/storageService';
+import { anatomicalStructures } from '@/data/anatomy/structures';
 
 interface AnatomyState {
   // Seleção e Foco
@@ -27,9 +28,12 @@ interface AnatomyState {
   
   // Modos Especiais
   xrayMode: boolean;
+  explosionFactor: number;
   cameraPreset: ViewPreset;
   cameraResetKey: number;
   activePathologyId: string | null;
+  activeAnesthesiaId: string | null;
+  anesthesiaFocusKey: number;
   focusedSystem: AnatomicalCategory | null;
   
   // Módulo Dental Específico
@@ -63,8 +67,11 @@ interface AnatomyState {
   resetVisibility: () => void;
   resetCamera: () => void;
   setXRayMode: (enabled: boolean) => void;
+  setExplosionFactor: (factor: number) => void;
   setCameraPreset: (preset: ViewPreset) => void;
   setActivePathology: (id: string | null) => void;
+  setActiveAnesthesia: (id: string | null) => void;
+  triggerAnesthesiaFocus: () => void;
   
   // Ações Dentais
   setActiveToothFdi: (fdi: string) => void;
@@ -78,6 +85,7 @@ interface AnatomyState {
   
   // Ações UI
   toggleSidebar: () => void;
+  setSidebarExpanded: (expanded: boolean) => void;
   toggleInfoPanel: () => void;
   setInfoPanelOpen: (open: boolean) => void;
   setSearchModalOpen: (open: boolean) => void;
@@ -112,9 +120,12 @@ export const useAnatomyStore = create<AnatomyState>((set, get) => ({
   hiddenStructureIds: [],
   
   xrayMode: false,
+  explosionFactor: 0,
   cameraPreset: 'isometric',
   cameraResetKey: 0,
   activePathologyId: null,
+  activeAnesthesiaId: null,
+  anesthesiaFocusKey: 0,
   focusedSystem: null,
   
   activeToothFdi: '36',
@@ -127,7 +138,7 @@ export const useAnatomyStore = create<AnatomyState>((set, get) => ({
   selectedSurfaceFeature: null,
   hideSurfaceFeatures: false,
   
-  sidebarExpanded: true,
+  sidebarExpanded: typeof window !== 'undefined' ? window.innerWidth >= 1200 : true,
   infoPanelOpen: false,
   searchModalOpen: false,
   exportDialogOpen: false,
@@ -136,7 +147,11 @@ export const useAnatomyStore = create<AnatomyState>((set, get) => ({
     if (id) {
       storageService.addRecentStructure(id);
     }
-    set({ selectedStructureId: id, infoPanelOpen: true });
+    const autoOpenPanel = typeof window !== 'undefined' ? window.innerWidth >= 900 : true;
+    set((state) => ({
+      selectedStructureId: id,
+      infoPanelOpen: id === null ? state.infoPanelOpen : (autoOpenPanel ? true : state.infoPanelOpen),
+    }));
   },
   
   setHoveredStructure: (id) => set({ hoveredStructureId: id }),
@@ -145,12 +160,30 @@ export const useAnatomyStore = create<AnatomyState>((set, get) => ({
   
   setFocusedSystem: (system) => set({ focusedSystem: system }),
   
-  toggleLayer: (layer) => set((state) => ({
-    layers: {
-      ...state.layers,
-      [layer]: !state.layers[layer],
-    },
-  })),
+  toggleLayer: (layer) => set((state) => {
+    const nextVisible = !state.layers[layer];
+    const selectedCategory = state.selectedStructureId
+      ? anatomicalStructures[state.selectedStructureId]?.category
+      : null;
+    const hoveredCategory = state.hoveredStructureId
+      ? anatomicalStructures[state.hoveredStructureId]?.category
+      : null;
+    const shouldClearSelected =
+      !nextVisible && !state.isolatedStructureId && selectedCategory === layer;
+
+    return {
+      layers: {
+        ...state.layers,
+        [layer]: nextVisible,
+      },
+      ...(shouldClearSelected
+        ? { selectedStructureId: null, infoPanelOpen: false }
+        : {}),
+      ...(!nextVisible && hoveredCategory === layer
+        ? { hoveredStructureId: null }
+        : {}),
+    };
+  }),
   
   setLayerOpacity: (layer, opacity) => set((state) => ({
     opacities: {
@@ -159,11 +192,15 @@ export const useAnatomyStore = create<AnatomyState>((set, get) => ({
     },
   })),
   
-  isolateStructure: (id, force) => set((state) => ({
-    isolatedStructureId: id === null ? null : (force ? id : (state.isolatedStructureId === id ? null : id)),
-    selectedStructureId: id,
-    infoPanelOpen: id !== null,
-  })),
+  isolateStructure: (id, force) => set((state) => {
+    const autoOpenPanel = typeof window !== 'undefined' ? window.innerWidth >= 900 : true;
+    return {
+      isolatedStructureId: id === null ? null : (force ? id : (state.isolatedStructureId === id ? null : id)),
+      selectedStructureId: id,
+      infoPanelOpen: id !== null ? (autoOpenPanel ? true : state.infoPanelOpen) : false,
+      hiddenStructureIds: id ? state.hiddenStructureIds.filter((hiddenId) => hiddenId !== id) : state.hiddenStructureIds,
+    };
+  }),
   
   hideStructure: (id) => set((state) => ({
     hiddenStructureIds: [...state.hiddenStructureIds, id],
@@ -184,6 +221,7 @@ export const useAnatomyStore = create<AnatomyState>((set, get) => ({
       cameraResetKey: state.cameraResetKey + 1,
       cameraPreset: 'isometric',
       xrayMode: false,
+      explosionFactor: 0,
       activePathologyId: null,
       surfaceExplorationMode: false,
       activeToothFace: null,
@@ -218,6 +256,8 @@ export const useAnatomyStore = create<AnatomyState>((set, get) => ({
   
   setXRayMode: (enabled) => set({ xrayMode: enabled }),
   
+  setExplosionFactor: (factor) => set({ explosionFactor: Math.max(0, Math.min(1, factor)) }),
+  
   setCameraPreset: (preset) => set({ cameraPreset: preset }),
   
   setActivePathology: (id) => set({ 
@@ -227,6 +267,15 @@ export const useAnatomyStore = create<AnatomyState>((set, get) => ({
       pathologies: Boolean(id),
     }
   }),
+
+  setActiveAnesthesia: (id) => set((state) => ({
+    activeAnesthesiaId: id,
+    anesthesiaFocusKey: id ? state.anesthesiaFocusKey + 1 : state.anesthesiaFocusKey,
+  })),
+
+  triggerAnesthesiaFocus: () => set((state) => ({
+    anesthesiaFocusKey: state.anesthesiaFocusKey + 1,
+  })),
   
   setActiveToothFdi: (fdi) => set({ activeToothFdi: fdi }),
   
@@ -253,6 +302,8 @@ export const useAnatomyStore = create<AnatomyState>((set, get) => ({
   setHideSurfaceFeatures: (hide) => set({ hideSurfaceFeatures: hide }),
   
   toggleSidebar: () => set((state) => ({ sidebarExpanded: !state.sidebarExpanded })),
+
+  setSidebarExpanded: (expanded) => set({ sidebarExpanded: expanded }),
   
   toggleInfoPanel: () => set((state) => ({ infoPanelOpen: !state.infoPanelOpen })),
   

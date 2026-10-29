@@ -13,9 +13,9 @@ export const storageService = {
   getFavorites(): string[] {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.FAVORITES);
-      return data ? JSON.parse(data) : ['mandibula', 'dente_36', 'nervo_alveolar_inferior'];
+      return data ? JSON.parse(data) : [];
     } catch {
-      return ['mandibula', 'dente_36', 'nervo_alveolar_inferior'];
+      return [];
     }
   },
 
@@ -36,18 +36,7 @@ export const storageService = {
   getNotes(): UserNote[] {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.NOTES);
-      return data ? JSON.parse(data) : [
-        {
-          id: 'note_1',
-          structureId: 'dente_36',
-          structureName: 'Primeiro Molar Inferior Esquerdo (FDI 36)',
-          title: 'Anotação de Anatomia Endodôntica',
-          content: 'Atenção para a curvatura da raiz mesial e a presença frequente de dois canais (MV e ML) com istmo comunicante.',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          tags: ['Endodontia', 'Molares', 'Provas'],
-        }
-      ];
+      return data ? JSON.parse(data) : [];
     } catch {
       return [];
     }
@@ -110,7 +99,7 @@ export const storageService = {
   getRecentStructures(): string[] {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.RECENT_STRUCTURES);
-      return data ? JSON.parse(data) : ['dente_36', 'mandibula', 'nervo_alveolar_inferior'];
+      return data ? JSON.parse(data) : [];
     } catch {
       return [];
     }

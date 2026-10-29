@@ -61,17 +61,22 @@ export const ContextMenu3D: React.FC<ContextMenu3DProps> = ({ onNavigateToNote }
     }
   }, [selectedStructureId]);
 
-  // Interceptar clique direito global sobre o canvas 3D
+  // Interceptar clique direito global sobre o canvas 3D (ativo apenas em dispositivos com mouse / desktop)
   useEffect(() => {
     const handleContextMenu = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      // Verificar se o clique foi dentro de um canvas (3D viewer)
-      if (target.tagName === 'CANVAS' && selectedStructureId) {
+      if (target.tagName === 'CANVAS') {
         e.preventDefault();
-        setMenuPosition({ x: e.clientX, y: e.clientY });
-        setShowNoteForm(false);
-        setNoteTitle('');
-        setNoteContent('');
+        // Em dispositivos touch (celular/tablet), não abrir menu de clique direito ao segurar o dedo
+        if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) {
+          return;
+        }
+        if (selectedStructureId) {
+          setMenuPosition({ x: e.clientX, y: e.clientY });
+          setShowNoteForm(false);
+          setNoteTitle('');
+          setNoteContent('');
+        }
       }
     };
 
@@ -165,9 +170,11 @@ export const ContextMenu3D: React.FC<ContextMenu3DProps> = ({ onNavigateToNote }
 
   const isIsolated = isolatedStructureId === selectedStructureId;
 
-  // Ajustar posição para não sair da tela
-  const adjustedX = Math.min(menuPosition.x, window.innerWidth - (showNoteForm ? 380 : 260));
-  const adjustedY = Math.min(menuPosition.y, window.innerHeight - (showNoteForm ? 320 : 280));
+  // Ajustar posição para não sair da tela (com proteção para telas pequenas / mobile)
+  const menuW = Math.min(showNoteForm ? 360 : 250, window.innerWidth - 16);
+  const menuH = showNoteForm ? 320 : 280;
+  const adjustedX = Math.max(8, Math.min(menuPosition.x, window.innerWidth - menuW - 8));
+  const adjustedY = Math.max(8, Math.min(menuPosition.y, window.innerHeight - menuH - 8));
 
   return (
     <Box
@@ -176,7 +183,7 @@ export const ContextMenu3D: React.FC<ContextMenu3DProps> = ({ onNavigateToNote }
         top: 0,
         left: 0,
         width: '100vw',
-        height: '100vh',
+        height: '100dvh',
         zIndex: 9999,
         pointerEvents: showNoteForm ? 'auto' : 'none',
       }}
@@ -194,12 +201,15 @@ export const ContextMenu3D: React.FC<ContextMenu3DProps> = ({ onNavigateToNote }
             position: 'absolute',
             top: adjustedY,
             left: adjustedX,
-            minWidth: showNoteForm ? 360 : 240,
+            width: menuW,
+            maxWidth: 'calc(100vw - 16px)',
+            maxHeight: 'calc(100dvh - 16px)',
+            overflowY: 'auto',
             pointerEvents: 'auto',
             backgroundColor: themeTokens.colors.bgElevated,
             border: `1px solid ${themeTokens.colors.borderSubtle}`,
             borderRadius: `${themeTokens.borderRadius.md}px`,
-            overflow: 'hidden',
+            overflowX: 'hidden',
             boxShadow: '0 12px 40px rgba(0, 0, 0, 0.7), 0 0 1px rgba(0, 201, 246, 0.3)',
           }}
         >

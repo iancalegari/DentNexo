@@ -92,17 +92,18 @@ export const SurfaceAnatomyPanel: React.FC = () => {
         elevation={6}
         sx={{
           position: 'absolute',
-          top: 16,
-          right: 16,
+          top: { xs: 8, sm: 12 },
+          right: { xs: 8, sm: 14 },
+          left: { xs: 8, sm: 'auto' },
           zIndex: 1100,
-          width: { xs: 300, sm: 350 },
-          maxHeight: 'calc(100% - 32px)',
+          width: { xs: 'auto', sm: 315, lg: 345 },
+          maxHeight: { xs: '48%', sm: 'calc(100% - 24px)' },
           overflowY: 'auto',
           backgroundColor: 'rgba(17, 20, 24, 0.94)',
           backdropFilter: 'blur(14px)',
           border: '1px solid rgba(255, 255, 255, 0.12)',
           borderRadius: '14px',
-          p: 2,
+          p: { xs: 1.3, sm: 1.8 },
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.65)',
           userSelect: 'none',
           '&::-webkit-scrollbar': {

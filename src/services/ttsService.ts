@@ -1,10 +1,12 @@
-// Serviço de Text-to-Speech de Alta Fidelidade com Kokoro TTS
+// Serviço Híbrido de Text-to-Speech Neural (Kokoro TTS pt-BR)
 // Vozes Brasileiras Nativas Oficiais:
 // - pf_dora: Feminina (Natural Brasileira)
 // - pm_alex: Masculina (Natural Brasileiro)
 //
-// Otimização de latência: Divisão em sentenças com pré-carregamento em fila (Pipeline Streaming)
-// Permite que o primeiro segundo de fala inicie em ~200ms enquanto o restante é sintetizado em segundo plano.
+// Pipeline em 3 camadas (100% compatível com Netlify / CDN estático + Mobile iOS/Android + Dev Local):
+// 1. Áudio Neural Pré-Renderizado Estático (/audio/tts/<audioId>.mp3) -> Latência instantânea (<50ms), zero backend
+// 2. Servidor Local Kokoro ONNX (/api/tts em localhost) -> Para textos dinâmicos em desenvolvimento
+// 3. Fallback Nativo Web Speech API (pt-BR) -> Contingência universal offline
 
 let currentAudio: HTMLAudioElement | null = null;
 let isPlaying = false;
@@ -14,6 +16,8 @@ let abortController: AbortController | null = null;
 
 export interface TTSOptions {
   text: string;
+  /** ID estático pré-renderizado em /audio/tts/<audioId>.mp3 para reprodução instantânea em produção (Netlify) */
+  audioId?: string;
   voice?: 'pf_dora' | 'pm_alex';
   speed?: number;
   onStart?: () => void;
@@ -21,11 +25,17 @@ export interface TTSOptions {
   onError?: (error: string) => void;
 }
 
-let speechKeepAliveInterval: any = null;
+let speechKeepAliveInterval: ReturnType<typeof setInterval> | null = null;
 
-// Síntese Web Speech 100% nativa de alta compatibilidade e zero dependências de backend (Web-ready)
+function isLocalDevHost(): boolean {
+  if (typeof window === 'undefined') return false;
+  const host = window.location.hostname;
+  return host === 'localhost' || host === '127.0.0.1';
+}
+
+// Síntese Web Speech 100% nativa de alta compatibilidade e zero dependências de backend
 const speakWithWebSpeech = (options: TTSOptions): boolean => {
-  if (!('speechSynthesis' in window)) return false;
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return false;
 
   const synth = window.speechSynthesis;
   synth.cancel();
@@ -60,7 +70,14 @@ const speakWithWebSpeech = (options: TTSOptions): boolean => {
 
     const voices = synth.getVoices();
     const ptBrVoice =
-      voices.find((v) => v.lang === 'pt-BR' && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Luciana') || v.name.includes('Francisca'))) ||
+      voices.find(
+        (v) =>
+          v.lang === 'pt-BR' &&
+          (v.name.includes('Natural') ||
+            v.name.includes('Google') ||
+            v.name.includes('Luciana') ||
+            v.name.includes('Francisca'))
+      ) ||
       voices.find((v) => v.lang === 'pt-BR') ||
       voices.find((v) => v.lang.startsWith('pt'));
 
@@ -137,6 +154,11 @@ async function fetchAudioBlob(
   speed: number,
   signal: AbortSignal
 ): Promise<Blob> {
+  // Evita chamadas para 127.0.0.1 em produção HTTPS (Netlify) para não disparar avisos de rede local no navegador
+  if (!isLocalDevHost()) {
+    throw new Error('Ambiente estático de produção (sem servidor Python local)');
+  }
+
   const endpoints = ['/api/tts', 'http://127.0.0.1:5005/api/tts'];
   let lastError: any = null;
 
@@ -150,8 +172,11 @@ async function fetchAudioBlob(
       });
 
       if (res.ok) {
-        const blob = await res.blob();
-        if (blob.size > 100) return blob;
+        const contentType = res.headers.get('content-type') || '';
+        if (contentType.includes('audio')) {
+          const blob = await res.blob();
+          if (blob.size > 100) return blob;
+        }
       }
     } catch (e: any) {
       if (e.name === 'AbortError') throw e;
@@ -160,6 +185,104 @@ async function fetchAudioBlob(
   }
 
   throw new Error(lastError?.message || 'Servidor Kokoro TTS offline');
+}
+
+async function speakDynamicOrFallback(
+  options: TTSOptions,
+  sessionId: number,
+  signal: AbortSignal
+): Promise<void> {
+  const text = options.text.trim();
+  const voice = options.voice || currentVoice;
+  const speed = options.speed || 1.0;
+
+  if (!isLocalDevHost()) {
+    const fallbackWorked = speakWithWebSpeech(options);
+    if (!fallbackWorked) {
+      options.onError?.('Síntese de voz indisponível neste dispositivo');
+    }
+    return;
+  }
+
+  const chunks = splitTextIntoSentences(text);
+  if (chunks.length === 0) return;
+
+  try {
+    const chunkPromises: Map<number, Promise<Blob>> = new Map();
+
+    const getChunkPromise = (index: number) => {
+      if (!chunkPromises.has(index) && index < chunks.length) {
+        chunkPromises.set(index, fetchAudioBlob(chunks[index], voice, speed, signal));
+      }
+      return chunkPromises.get(index);
+    };
+
+    getChunkPromise(0);
+    if (chunks.length > 1) {
+      getChunkPromise(1);
+    }
+
+    await getChunkPromise(0)!;
+    if (sessionId !== currentSessionId) return;
+
+    isPlaying = true;
+    options.onStart?.();
+
+    let currentChunkIndex = 0;
+
+    const playNextChunk = async () => {
+      if (sessionId !== currentSessionId) return;
+
+      if (currentChunkIndex >= chunks.length) {
+        isPlaying = false;
+        options.onEnd?.();
+        return;
+      }
+
+      const nextIndex = currentChunkIndex + 1;
+      if (nextIndex < chunks.length) {
+        getChunkPromise(nextIndex);
+      }
+
+      try {
+        const blob = await getChunkPromise(currentChunkIndex)!;
+        if (sessionId !== currentSessionId) return;
+
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        currentAudio = audio;
+
+        audio.onended = () => {
+          URL.revokeObjectURL(url);
+          currentChunkIndex++;
+          playNextChunk();
+        };
+
+        audio.onerror = (e) => {
+          console.warn('Erro ao tocar segmento Kokoro:', e);
+          URL.revokeObjectURL(url);
+          currentChunkIndex++;
+          playNextChunk();
+        };
+
+        await audio.play();
+      } catch (err: any) {
+        if (err.name === 'AbortError') return;
+        console.warn('Erro no segmento de áudio:', err);
+        currentChunkIndex++;
+        playNextChunk();
+      }
+    };
+
+    playNextChunk();
+  } catch (err: any) {
+    if (err.name === 'AbortError' || sessionId !== currentSessionId) return;
+    console.warn('Servidor Kokoro indisponível, acionando fallback nativo:', err?.message);
+    const fallbackWorked = speakWithWebSpeech(options);
+    if (!fallbackWorked) {
+      options.onError?.(err?.message || 'Erro ao sintetizar voz');
+    }
+  }
 }
 
 export const ttsService = {
@@ -172,7 +295,7 @@ export const ttsService = {
   },
 
   /**
-   * Sintetiza e reproduz texto em áudio usando Kokoro TTS em fila de baixa latência
+   * Reproduz explicação em voz neural Kokoro TTS (MP3 estático CDN -> servidor local -> Web Speech)
    */
   async speak(options: TTSOptions): Promise<void> {
     this.stop();
@@ -180,102 +303,86 @@ export const ttsService = {
     const text = options.text.trim();
     if (!text) return;
 
-    const voice = options.voice || currentVoice;
-    const speed = options.speed || 1.0;
-
     const sessionId = ++currentSessionId;
     abortController = new AbortController();
     const signal = abortController.signal;
 
-    const chunks = splitTextIntoSentences(text);
-    if (chunks.length === 0) return;
+    // Camada 1: Áudio Kokoro Neural Pré-Renderizado Estático (Instantâneo no Netlify e Mobile iOS/Android)
+    if (options.audioId) {
+      const baseUrl = ((import.meta as any).env?.BASE_URL as string | undefined) || '/';
+      const normalizedBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+      const staticUrl = `${normalizedBase}audio/tts/${encodeURIComponent(options.audioId)}.mp3`;
 
-    try {
-      // Iniciar a busca imediata do 1º bloco (que sintetiza em ~150ms)
-      const chunkPromises: Map<number, Promise<Blob>> = new Map();
-
-      const getChunkPromise = (index: number) => {
-        if (!chunkPromises.has(index) && index < chunks.length) {
-          chunkPromises.set(index, fetchAudioBlob(chunks[index], voice, speed, signal));
-        }
-        return chunkPromises.get(index);
-      };
-
-      // Disparar busca do 1º e do 2º bloco imediatamente
-      getChunkPromise(0);
-      if (chunks.length > 1) {
-        getChunkPromise(1);
+      const audio = new Audio(staticUrl);
+      audio.preload = 'auto';
+      if (options.speed && options.speed !== 1.0) {
+        audio.playbackRate = options.speed;
       }
+      currentAudio = audio;
 
-      // Esperar apenas o primeiro bloco para começar a falar instantaneamente
-      const firstBlob = await getChunkPromise(0)!;
-      if (sessionId !== currentSessionId) return;
+      let started = false;
+      let handledFallback = false;
 
-      isPlaying = true;
-      options.onStart?.();
+      const triggerFallback = () => {
+        if (handledFallback || sessionId !== currentSessionId) return;
+        handledFallback = true;
+        currentAudio = null;
+        void speakDynamicOrFallback(options, sessionId, signal);
+      };
 
-      let currentChunkIndex = 0;
-
-      const playNextChunk = async () => {
+      audio.onplaying = () => {
         if (sessionId !== currentSessionId) return;
-
-        if (currentChunkIndex >= chunks.length) {
-          isPlaying = false;
-          options.onEnd?.();
-          return;
-        }
-
-        // Pré-carregar o próximo bloco enquanto o atual toca
-        const nextIndex = currentChunkIndex + 1;
-        if (nextIndex < chunks.length) {
-          getChunkPromise(nextIndex);
-        }
-
-        try {
-          const blob = await getChunkPromise(currentChunkIndex)!;
-          if (sessionId !== currentSessionId) return;
-
-          const url = URL.createObjectURL(blob);
-          const audio = new Audio(url);
-          currentAudio = audio;
-
-          audio.onended = () => {
-            URL.revokeObjectURL(url);
-            currentChunkIndex++;
-            playNextChunk();
-          };
-
-          audio.onerror = (e) => {
-            console.warn('Erro ao tocar segmento Kokoro:', e);
-            URL.revokeObjectURL(url);
-            currentChunkIndex++;
-            playNextChunk();
-          };
-
-          await audio.play();
-        } catch (err: any) {
-          if (err.name === 'AbortError') return;
-          console.warn('Erro no segmento de áudio:', err);
-          currentChunkIndex++;
-          playNextChunk();
+        if (!started) {
+          started = true;
+          isPlaying = true;
+          options.onStart?.();
         }
       };
 
-      playNextChunk();
-    } catch (err: any) {
-      if (err.name === 'AbortError') return;
-      console.warn('Servidor Kokoro indisponível, acionando fallback nativo:', err?.message);
-      const fallbackWorked = speakWithWebSpeech(options);
-      if (!fallbackWorked) {
-        options.onError?.(err?.message || 'Erro ao sintetizar voz');
+      audio.onended = () => {
+        if (sessionId !== currentSessionId) return;
+        isPlaying = false;
+        currentAudio = null;
+        options.onEnd?.();
+      };
+
+      audio.onerror = () => {
+        if (sessionId !== currentSessionId) return;
+        if (!started) {
+          triggerFallback();
+        } else {
+          isPlaying = false;
+          currentAudio = null;
+          options.onEnd?.();
+        }
+      };
+
+      try {
+        // Disparo síncrono na cadeia do clique do usuário (essencial para Safari iOS)
+        await audio.play();
+        if (sessionId === currentSessionId && !started) {
+          started = true;
+          isPlaying = true;
+          options.onStart?.();
+        }
+        return;
+      } catch (err: any) {
+        if (err?.name === 'AbortError' || sessionId !== currentSessionId) return;
+        triggerFallback();
+        return;
       }
     }
+
+    // Camadas 2 & 3: Servidor Kokoro Local (dev) ou Web Speech API
+    await speakDynamicOrFallback(options, sessionId, signal);
   },
 
   /**
    * Interrompe qualquer áudio em reprodução
    */
   stop(): void {
+    currentSessionId++;
+
     if (speechKeepAliveInterval) {
       clearInterval(speechKeepAliveInterval);
       speechKeepAliveInterval = null;
@@ -284,7 +391,7 @@ export const ttsService = {
     if (abortController) {
       try {
         abortController.abort();
-      } catch (e) {
+      } catch {
         // Ignora
       }
       abortController = null;
@@ -292,18 +399,21 @@ export const ttsService = {
 
     if (currentAudio) {
       try {
+        currentAudio.onended = null;
+        currentAudio.onerror = null;
+        currentAudio.onplaying = null;
         currentAudio.pause();
         currentAudio.currentTime = 0;
-      } catch (e) {
+      } catch {
         // Ignora
       }
       currentAudio = null;
     }
 
-    if ('speechSynthesis' in window) {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       try {
         window.speechSynthesis.cancel();
-      } catch (e) {
+      } catch {
         // Ignora
       }
     }

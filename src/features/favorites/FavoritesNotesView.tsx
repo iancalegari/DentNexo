@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -13,10 +13,8 @@ import {
   Stack,
   Tooltip,
   CircularProgress,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
+  Autocomplete,
+  InputAdornment,
   Snackbar,
   Alert,
 } from '@mui/material';
@@ -30,6 +28,7 @@ import AddIcon from '@mui/icons-material/Add';
 import HistoryIcon from '@mui/icons-material/History';
 import CenterFocusStrongIcon from '@mui/icons-material/CenterFocusStrong';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import SearchIcon from '@mui/icons-material/Search';
 
 import { storageService } from '@/services/storageService';
 import { anatomicalStructures } from '@/data/anatomy/structures';
@@ -52,6 +51,51 @@ export const FavoritesNotesView: React.FC = () => {
   const [newNoteContent, setNewNoteContent] = useState<string>('');
   const [newNoteStructureId, setNewNoteStructureId] = useState<string>(selectedStructureId || 'mandibula');
   const [isCreatingNote, setIsCreatingNote] = useState<boolean>(false);
+
+  const getCategoryLabel = (category: string) => {
+    switch (category) {
+      case 'dental':
+        return 'Dente';
+      case 'skeletal':
+        return 'Osso & Crânio';
+      case 'muscular':
+        return 'Músculo';
+      case 'nervous':
+        return 'Nervo';
+      case 'vascular':
+        return 'Vaso Sanguíneo';
+      case 'oral_tissue':
+        return 'Periodonto & Gengiva';
+      default:
+        return 'Estrutura';
+    }
+  };
+
+  const normalizeText = (text: string) =>
+    text
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
+
+  // Lista única e pesquisável de todas as estruturas anatômicas
+  const structureOptions = useMemo(() => {
+    const uniqueMap = new Map<string, (typeof anatomicalStructures)[string]>();
+    Object.values(anatomicalStructures).forEach((s) => {
+      if (!uniqueMap.has(s.id)) {
+        uniqueMap.set(s.id, s);
+      }
+    });
+    return Array.from(uniqueMap.values());
+  }, []);
+
+  const selectedNoteStructureOption = useMemo(() => {
+    return (
+      structureOptions.find((s) => s.id === newNoteStructureId) ||
+      anatomicalStructures[newNoteStructureId] ||
+      structureOptions[0] ||
+      null
+    );
+  }, [structureOptions, newNoteStructureId]);
 
   // Estados de exportação em PDF e feedback
   const [isExportingPdf, setIsExportingPdf] = useState<boolean>(false);
@@ -114,7 +158,7 @@ export const FavoritesNotesView: React.FC = () => {
     setSelectedStructure(cleanId);
     isolateStructure(cleanId, true);
     setInfoPanelOpen(true);
-    navigate('/atlas');
+    navigate('/atlas', { state: { preserveIsolation: true } });
   };
 
   /**
@@ -132,7 +176,7 @@ export const FavoritesNotesView: React.FC = () => {
     setSelectedStructure(cleanId);
     isolateStructure(cleanId, true);
     setInfoPanelOpen(true);
-    navigate('/atlas');
+    navigate('/atlas', { state: { preserveIsolation: true } });
   };
 
   /**
@@ -183,10 +227,10 @@ export const FavoritesNotesView: React.FC = () => {
   };
 
   return (
-    <Box sx={{ p: 3, maxWidth: 1200, margin: '0 auto', height: '100%', overflowY: 'auto' }}>
+    <Box sx={{ p: { xs: 1.5, sm: 2.2, md: 3 }, maxWidth: 1200, margin: '0 auto', height: '100%', overflowY: 'auto' }}>
       {/* Cabeçalho */}
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h4" sx={{ fontWeight: 800, color: themeTokens.colors.textPrimary, mb: 0.5 }}>
+      <Box sx={{ mb: { xs: 2, md: 3 } }}>
+        <Typography variant="h4" sx={{ fontWeight: 800, fontSize: { xs: '1.15rem', sm: '1.35rem' }, color: themeTokens.colors.textPrimary, mb: 0.5 }}>
           Favoritos & Anotações de Estudo
         </Typography>
         <Typography variant="body2" sx={{ color: themeTokens.colors.textSecondary }}>
@@ -195,19 +239,22 @@ export const FavoritesNotesView: React.FC = () => {
       </Box>
 
       {/* Tabs de Navegação */}
-      <Paper sx={{ mb: 3, backgroundColor: themeTokens.colors.bgSecondary, border: `1px solid ${themeTokens.colors.borderSubtle}` }}>
+      <Paper sx={{ mb: { xs: 2, md: 3 }, backgroundColor: themeTokens.colors.bgSecondary, border: `1px solid ${themeTokens.colors.borderSubtle}` }}>
         <Tabs
           value={activeTab}
           onChange={(_, val) => setActiveTab(val)}
           textColor="primary"
           indicatorColor="primary"
+          variant="scrollable"
+          scrollButtons="auto"
+          allowScrollButtonsMobile
           sx={{
-            px: 2,
+            px: { xs: 0.5, sm: 2 },
             '& .MuiTab-root': {
               fontWeight: 600,
               textTransform: 'none',
-              fontSize: '0.9rem',
-              py: 2,
+              fontSize: { xs: '0.8rem', sm: '0.9rem' },
+              py: { xs: 1.4, sm: 2 },
             },
           }}
         >
@@ -246,11 +293,13 @@ export const FavoritesNotesView: React.FC = () => {
                     <Paper
                       key={favId}
                       sx={{
-                        p: 2,
+                        p: { xs: 1.5, sm: 2 },
                         backgroundColor: themeTokens.colors.bgSecondary,
                         border: `1px solid ${themeTokens.colors.borderSubtle}`,
                         borderRadius: 1.5,
                         display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: 1.2,
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         transition: 'border-color 0.2s ease',
@@ -360,22 +409,101 @@ export const FavoritesNotesView: React.FC = () => {
                   Criar Nova Anotação de Estudo
                 </Typography>
 
-                {/* Seletor de Estrutura Anatômica Vinculada */}
-                <FormControl fullWidth size="small" sx={{ mb: 1.5 }}>
-                  <InputLabel sx={{ fontSize: '0.85rem' }}>Estrutura / Osso / Dente Vinculado</InputLabel>
-                  <Select
-                    value={newNoteStructureId}
-                    label="Estrutura / Osso / Dente Vinculado"
-                    onChange={(e) => setNewNoteStructureId(e.target.value)}
-                    sx={{ fontSize: '0.85rem' }}
-                  >
-                    {Object.values(anatomicalStructures).map((s) => (
-                      <MenuItem key={s.id} value={s.id}>
-                        {s.name} ({s.category === 'dental' ? 'Dente' : s.category === 'skeletal' ? 'Osso' : s.category === 'nervous' ? 'Nervo' : 'Estrutura'})
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                {/* Seletor Pesquisável de Estrutura Anatômica Vinculada (Desktop & Mobile) */}
+                <Autocomplete
+                  fullWidth
+                  size="small"
+                  openOnFocus
+                  blurOnSelect
+                  options={structureOptions}
+                  value={selectedNoteStructureOption}
+                  isOptionEqualToValue={(option, val) => option.id === val.id}
+                  getOptionLabel={(option) => `${option.name} (${getCategoryLabel(option.category)})`}
+                  onChange={(_, newValue) => {
+                    if (newValue) {
+                      setNewNoteStructureId(newValue.id);
+                    }
+                  }}
+                  filterOptions={(options, state) => {
+                    const q = normalizeText(state.inputValue.trim());
+                    if (!q) return options;
+                    return options.filter((opt) => {
+                      const catLabel = getCategoryLabel(opt.category);
+                      const searchable = normalizeText(
+                        `${opt.name} ${opt.scientificName || ''} ${opt.fdiNotation || ''} ${catLabel} ${(opt.synonyms || []).join(' ')}`
+                      );
+                      return searchable.includes(q);
+                    });
+                  }}
+                  noOptionsText="Nenhuma estrutura encontrada"
+                  ListboxProps={{
+                    sx: {
+                      maxHeight: { xs: 230, sm: 290 },
+                      backgroundColor: themeTokens.colors.bgElevated,
+                    },
+                  }}
+                  renderOption={(props, option) => {
+                    const { key, ...optionProps } = props as React.HTMLAttributes<HTMLLIElement> & { key: string };
+                    return (
+                      <Box
+                        component="li"
+                        key={option.id || key}
+                        {...optionProps}
+                        sx={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          gap: 1,
+                          py: 0.9,
+                          px: 1.5,
+                          borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
+                        }}
+                      >
+                        <Box sx={{ minWidth: 0 }}>
+                          <Typography sx={{ fontSize: '0.84rem', fontWeight: 700, color: themeTokens.colors.textPrimary }}>
+                            {option.name}
+                          </Typography>
+                          {option.scientificName && (
+                            <Typography sx={{ fontSize: '0.72rem', fontStyle: 'italic', color: themeTokens.colors.textMuted }}>
+                              {option.scientificName}
+                            </Typography>
+                          )}
+                        </Box>
+                        <Chip
+                          label={getCategoryLabel(option.category)}
+                          size="small"
+                          sx={{
+                            height: 20,
+                            fontSize: '0.68rem',
+                            fontWeight: 700,
+                            flexShrink: 0,
+                            backgroundColor: 'rgba(0, 201, 246, 0.12)',
+                            color: themeTokens.colors.brandCyan,
+                          }}
+                        />
+                      </Box>
+                    );
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Estrutura / Osso / Dente Vinculado (Pesquisar)"
+                      placeholder="Digite nome, número FDI (ex: 36), osso ou nervo..."
+                      InputProps={{
+                        ...params.InputProps,
+                        startAdornment: (
+                          <>
+                            <InputAdornment position="start" sx={{ pl: 0.5 }}>
+                              <SearchIcon fontSize="small" sx={{ color: themeTokens.colors.brandCyan }} />
+                            </InputAdornment>
+                            {params.InputProps.startAdornment}
+                          </>
+                        ),
+                      }}
+                    />
+                  )}
+                  sx={{ mb: 1.5 }}
+                />
 
                 <TextField
                   fullWidth
@@ -550,47 +678,59 @@ export const FavoritesNotesView: React.FC = () => {
         {/* ABA: HISTÓRICO RECENTE */}
         {activeTab === 'recents' && (
           <Box>
-            <Stack spacing={1.5}>
-              {recents.map((recId) => {
-                const s = anatomicalStructures[recId];
-                if (!s) return null;
-                return (
-                  <Paper
-                    key={recId}
-                    sx={{
-                      p: 1.8,
-                      backgroundColor: themeTokens.colors.bgSecondary,
-                      border: `1px solid ${themeTokens.colors.borderSubtle}`,
-                      borderRadius: 1.5,
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      transition: 'border-color 0.2s ease',
-                      '&:hover': {
-                        borderColor: themeTokens.colors.brandCyan,
-                      },
-                    }}
-                  >
-                    <Box>
-                      <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                        {s.name}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: themeTokens.colors.textMuted }}>
-                        {s.scientificName} • {s.category}
-                      </Typography>
-                    </Box>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      endIcon={<ArrowForwardIcon />}
-                      onClick={() => handleSelectAndNavigate(recId)}
+            {recents.length > 0 ? (
+              <Stack spacing={1.5}>
+                {recents.map((recId) => {
+                  const s = anatomicalStructures[recId];
+                  if (!s) return null;
+                  return (
+                    <Paper
+                      key={recId}
+                      sx={{
+                        p: 1.8,
+                        backgroundColor: themeTokens.colors.bgSecondary,
+                        border: `1px solid ${themeTokens.colors.borderSubtle}`,
+                        borderRadius: 1.5,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        transition: 'border-color 0.2s ease',
+                        '&:hover': {
+                          borderColor: themeTokens.colors.brandCyan,
+                        },
+                      }}
                     >
-                      Acessar
-                    </Button>
-                  </Paper>
-                );
-              })}
-            </Stack>
+                      <Box>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                          {s.name}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: themeTokens.colors.textMuted }}>
+                          {s.scientificName} • {s.category}
+                        </Typography>
+                      </Box>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        endIcon={<ArrowForwardIcon />}
+                        onClick={() => handleSelectAndNavigate(recId)}
+                      >
+                        Acessar
+                      </Button>
+                    </Paper>
+                  );
+                })}
+              </Stack>
+            ) : (
+              <Paper sx={{ p: 4, textAlign: 'center', backgroundColor: themeTokens.colors.bgSecondary }}>
+                <HistoryIcon sx={{ fontSize: 44, color: themeTokens.colors.textMuted, mb: 1 }} />
+                <Typography variant="body1" sx={{ color: themeTokens.colors.textMuted }}>
+                  Nenhuma estrutura visualizada recentemente.
+                </Typography>
+                <Typography variant="body2" sx={{ color: themeTokens.colors.textMuted, mt: 0.5 }}>
+                  Ao clicar em ossos, dentes, músculos ou nervos no Atlas 3D, seu histórico recente aparecerá aqui automaticamente.
+                </Typography>
+              </Paper>
+            )}
           </Box>
         )}
       </Box>

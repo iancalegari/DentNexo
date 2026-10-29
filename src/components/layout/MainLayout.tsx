@@ -19,6 +19,8 @@ export const MainLayout: React.FC = () => {
     setSelectedStructure,
     setInfoPanelOpen,
     isolateStructure,
+    setActiveAnesthesia,
+    setExplosionFactor,
     resetCamera,
   } = useAnatomyStore();
 
@@ -26,19 +28,39 @@ export const MainLayout: React.FC = () => {
 
   React.useEffect(() => {
     if (prevPathRef.current !== location.pathname) {
-      // Ao trocar de aba/página, limpar a seleção para não carregar dentes marcados para Patologias, Atlas, etc.
-      setSelectedStructure(null);
-      isolateStructure(null);
-      setInfoPanelOpen(false);
+      const preserveIsolation = Boolean(
+        (location.state as { preserveIsolation?: boolean } | null)?.preserveIsolation
+      );
+
+      // Ao trocar de aba/página manualmente, limpar a seleção; preservar quando vindo de Favoritos/Busca com estrutura isolada
+      if (!preserveIsolation) {
+        setSelectedStructure(null);
+        isolateStructure(null);
+        setInfoPanelOpen(false);
+      }
+      setExplosionFactor(0);
 
       if (location.pathname !== '/dental') {
         setSurfaceExplorationMode(false);
+      }
+      if (location.pathname !== '/anesthesia') {
+        setActiveAnesthesia(null);
       }
 
       resetCamera();
       prevPathRef.current = location.pathname;
     }
-  }, [location.pathname, setSelectedStructure, isolateStructure, setInfoPanelOpen, setSurfaceExplorationMode, resetCamera]);
+  }, [
+    location.pathname,
+    location.state,
+    setSelectedStructure,
+    isolateStructure,
+    setInfoPanelOpen,
+    setSurfaceExplorationMode,
+    setActiveAnesthesia,
+    setExplosionFactor,
+    resetCamera,
+  ]);
 
   const getSectionTitle = () => {
     switch (location.pathname) {
@@ -56,6 +78,8 @@ export const MainLayout: React.FC = () => {
         return 'Periodonto & Tecidos de Sustentação';
       case '/pathologies':
         return 'Atlas de Patologias Odontológicas';
+      case '/anesthesia':
+        return 'Simulador 3D de Bloqueios Anestésicos Odontológicos';
       case '/quiz':
         return 'Questionários & Desafios 3D';
       case '/favorites':
@@ -69,8 +93,9 @@ export const MainLayout: React.FC = () => {
   return (
     <Box
       sx={{
-        width: '100vw',
-        height: '100vh',
+        width: '100%',
+        height: '100dvh',
+        minHeight: 0,
         display: 'flex',
         flexDirection: 'column',
         backgroundColor: themeTokens.colors.bgMain,
@@ -82,7 +107,7 @@ export const MainLayout: React.FC = () => {
       <AppHeader currentSectionTitle={getSectionTitle()} />
 
       {/* Regiões Centrais B, C e D */}
-      <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden', position: 'relative' }}>
+      <Box sx={{ flex: 1, minHeight: 0, display: 'flex', overflow: 'hidden', position: 'relative' }}>
         {/* 2. Barra Lateral Esquerda Navegacional (Região B) */}
         <SidebarNav />
 
@@ -91,6 +116,8 @@ export const MainLayout: React.FC = () => {
           component="main"
           sx={{
             flex: 1,
+            minWidth: 0,
+            minHeight: 0,
             height: '100%',
             position: 'relative',
             overflow: 'hidden',
@@ -99,16 +126,20 @@ export const MainLayout: React.FC = () => {
           <Outlet />
         </Box>
 
-        {/* 4. Painel Lateral Direito Contextual (Região D) - Oculto em Questionários e Patologias */}
-        {!location.pathname.startsWith('/quiz') && !location.pathname.startsWith('/pathologies') && <InfoPanel />}
+        {/* 4. Painel Lateral Direito Contextual (Região D) - Oculto em Questionários, Patologias e Anestesiologia */}
+        {!location.pathname.startsWith('/quiz') &&
+          !location.pathname.startsWith('/pathologies') &&
+          !location.pathname.startsWith('/anesthesia') && <InfoPanel />}
       </Box>
 
       {/* Diálogos Globais */}
       <GlobalSearchDialog />
       <ExportDialog />
 
-      {/* Menu de Contexto 3D (clique direito) - Oculto em Questionários e Patologias */}
-      {!location.pathname.startsWith('/quiz') && !location.pathname.startsWith('/pathologies') && <ContextMenu3D />}
+      {/* Menu de Contexto 3D (clique direito) - Oculto em Questionários, Patologias e Anestesiologia */}
+      {!location.pathname.startsWith('/quiz') &&
+        !location.pathname.startsWith('/pathologies') &&
+        !location.pathname.startsWith('/anesthesia') && <ContextMenu3D />}
     </Box>
   );
 };

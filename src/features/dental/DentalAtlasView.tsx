@@ -41,6 +41,8 @@ export const DentalAtlasView: React.FC = () => {
     wisdomToothState,
     alignmentState,
     surfaceExplorationMode,
+    setActiveToothFdi,
+    setSelectedStructure,
     setToothViewMode,
     setWisdomToothState,
     setAlignmentState,
@@ -62,8 +64,16 @@ export const DentalAtlasView: React.FC = () => {
 
   const handleTabChange = (_: React.SyntheticEvent, val: 'solo_tooth' | 'surface' | 'arches') => {
     setActiveTab(val);
+    const isDeciduous = Boolean(deciduousTeethData[activeToothFdi]);
+    const nextFdi = val !== 'solo_tooth' && isDeciduous ? '36' : activeToothFdi;
+
+    if (val !== 'solo_tooth' && isDeciduous) {
+      setActiveToothFdi('36');
+      setSelectedStructure('dente_36');
+    }
+
     if (val === 'surface') {
-      setSurfaceExplorationMode(true, activeToothFdi);
+      setSurfaceExplorationMode(true, nextFdi);
       setInfoPanelOpen(false); // Fecha o painel de detalhes lateral pois a exploração de superfície tem painel próprio
     } else {
       setSurfaceExplorationMode(false);
@@ -85,42 +95,52 @@ export const DentalAtlasView: React.FC = () => {
       <Paper
         elevation={0}
         sx={{
-          p: 1.5,
+          px: { xs: 1, sm: 1.5 },
+          py: { xs: 0.65, lg: 1 },
+          '@media (max-height: 800px)': {
+            py: 0.55,
+          },
           backgroundColor: themeTokens.colors.bgSecondary,
           borderBottom: `1px solid ${themeTokens.colors.borderSubtle}`,
           display: 'flex',
           flexWrap: 'wrap',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: 1.5,
+          gap: { xs: 0.8, lg: 1.2 },
           zIndex: 10,
+          flexShrink: 0,
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, maxWidth: '100%', minWidth: 0 }}>
           <Tabs
             value={activeTab}
             onChange={handleTabChange}
+            variant="scrollable"
+            scrollButtons="auto"
+            allowScrollButtonsMobile
             sx={{
-              minHeight: 36,
+              minHeight: 32,
+              maxWidth: '100%',
               '& .MuiTab-root': {
-                minHeight: 36,
-                py: 0.5,
-                fontSize: '0.82rem',
+                minHeight: 32,
+                py: 0.3,
+                px: { xs: 1, sm: 1.4 },
+                fontSize: { xs: '0.74rem', sm: '0.78rem', xl: '0.82rem' },
                 fontWeight: 700,
               },
             }}
           >
-            <Tab value="solo_tooth" label={`Dente FDI ${activeToothFdi} (Corte & Histologia)`} />
+            <Tab value="solo_tooth" label={`Dente FDI ${activeToothFdi}`} />
             <Tab
               value="surface"
-              label="Dentro do Dente (Faces & Superfície)"
+              label="Dentro do Dente (Faces)"
               sx={{
                 '&.Mui-selected': {
                   color: '#818CF8 !important',
                 },
               }}
             />
-            <Tab value="arches" label="Arcadas Completas & Alinhamento" />
+            <Tab value="arches" label="Arcadas & Alinhamento" />
           </Tabs>
 
           <Chip
@@ -131,58 +151,81 @@ export const DentalAtlasView: React.FC = () => {
               color: themeTokens.colors.brandCyan,
               border: `1px solid ${themeTokens.colors.brandCyan}`,
               fontWeight: 700,
-              display: { xs: 'none', md: 'flex' },
+              flexShrink: 0,
+              display: { xs: 'none', xl: 'flex' },
             }}
           />
         </Box>
 
         {activeTab === 'solo_tooth' ? (
           /* Modos de visualização do dente: Externo, Corte Seccional, Raio X, Isolamento Pulpar */
-          <Stack direction="row" spacing={1} alignItems="center">
-            <Typography variant="caption" sx={{ color: themeTokens.colors.textMuted, fontWeight: 600 }}>
-              Modo Anatômico:
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8, overflowX: 'auto', maxWidth: '100%' }}>
+            <Typography variant="caption" sx={{ color: themeTokens.colors.textMuted, fontWeight: 600, display: { xs: 'none', xl: 'block' } }}>
+              Modo:
             </Typography>
-            <ButtonGroup size="small" variant="outlined">
+            <ButtonGroup
+              size="small"
+              variant="outlined"
+              sx={{
+                flexShrink: 0,
+                '& .MuiButton-root': {
+                  fontSize: { xs: '0.7rem', sm: '0.74rem' },
+                  px: { xs: 0.9, sm: 1.2 },
+                  py: 0.35,
+                  whiteSpace: 'nowrap',
+                },
+              }}
+            >
               <Button
                 variant={toothViewMode === 'external' ? 'contained' : 'outlined'}
                 onClick={() => setToothViewMode('external')}
-                startIcon={<ViewInArIcon />}
+                startIcon={<ViewInArIcon sx={{ fontSize: '15px !important' }} />}
               >
                 Externo
               </Button>
               <Button
                 variant={toothViewMode === 'cross_section' ? 'contained' : 'outlined'}
                 onClick={() => setToothViewMode('cross_section')}
-                startIcon={<ContentCutIcon />}
+                startIcon={<ContentCutIcon sx={{ fontSize: '15px !important' }} />}
               >
                 Corte Sagital
               </Button>
               <Button
                 variant={toothViewMode === 'xray' ? 'contained' : 'outlined'}
                 onClick={() => setToothViewMode('xray')}
-                startIcon={<ContrastIcon />}
+                startIcon={<ContrastIcon sx={{ fontSize: '15px !important' }} />}
               >
                 Translúcido
               </Button>
               <Button
                 variant={toothViewMode === 'pulp_isolation' ? 'contained' : 'outlined'}
                 onClick={() => setToothViewMode('pulp_isolation')}
-                startIcon={<FlareIcon />}
+                startIcon={<FlareIcon sx={{ fontSize: '15px !important' }} />}
               >
                 Câmara & Canais
               </Button>
             </ButtonGroup>
-          </Stack>
+          </Box>
         ) : activeTab === 'surface' ? null : (
           /* Variações didáticas de Terceiro Molar (Siso) e Apinhamento / Diastema */
-          <Stack direction="row" spacing={1.5} alignItems="center">
-            <FormControl size="small" sx={{ minWidth: 160 }}>
-              <InputLabel sx={{ fontSize: '0.75rem' }}>Posicionamento do Siso</InputLabel>
+          <Stack
+            direction="row"
+            spacing={1}
+            alignItems="center"
+            sx={{
+              width: { xs: '100%', md: 'auto' },
+              pt: { xs: 1.1, md: 0.5 },
+              pb: { xs: 0.2, md: 0 },
+              overflow: 'visible',
+            }}
+          >
+            <FormControl size="small" sx={{ flex: { xs: 1, md: 'none' }, minWidth: { xs: 0, sm: 162 } }}>
+              <InputLabel sx={{ fontSize: '0.73rem' }}>Posicionamento do Siso</InputLabel>
               <Select
                 value={wisdomToothState}
                 label="Posicionamento do Siso"
                 onChange={(e) => setWisdomToothState(e.target.value as WisdomToothState)}
-                sx={{ height: 34, fontSize: '0.78rem' }}
+                sx={{ height: 34, fontSize: { xs: '0.72rem', sm: '0.76rem' } }}
               >
                 <MenuItem value="erupted">Normal / Erupionado</MenuItem>
                 <MenuItem value="mesioangular">Impactação Mesioangular</MenuItem>
@@ -192,13 +235,13 @@ export const DentalAtlasView: React.FC = () => {
               </Select>
             </FormControl>
 
-            <FormControl size="small" sx={{ minWidth: 160 }}>
-              <InputLabel sx={{ fontSize: '0.75rem' }}>Alinhamento Dental</InputLabel>
+            <FormControl size="small" sx={{ flex: { xs: 1, md: 'none' }, minWidth: { xs: 0, sm: 162 } }}>
+              <InputLabel sx={{ fontSize: '0.73rem' }}>Alinhamento Dental</InputLabel>
               <Select
                 value={alignmentState}
                 label="Alinhamento Dental"
                 onChange={(e) => setAlignmentState(e.target.value as AlignmentState)}
-                sx={{ height: 34, fontSize: '0.78rem' }}
+                sx={{ height: 34, fontSize: { xs: '0.72rem', sm: '0.76rem' } }}
               >
                 <MenuItem value="aligned">Alinhamento Normal</MenuItem>
                 <MenuItem value="crowded_anterior">Apinhamento Anterior</MenuItem>
@@ -225,24 +268,33 @@ export const DentalAtlasView: React.FC = () => {
             elevation={3}
             sx={{
               position: 'absolute',
-              top: 16,
-              left: 16,
+              top: 12,
+              left: 12,
               zIndex: 100,
+              display: { xs: 'none', md: 'block' },
               backgroundColor: 'rgba(11, 15, 20, 0.88)',
               backdropFilter: 'blur(8px)',
               border: `1px solid ${themeTokens.colors.borderSubtle}`,
               borderRadius: 1.5,
-              p: 1.5,
-              maxWidth: 320,
+              p: 1.2,
+              maxWidth: 280,
             }}
           >
-            <Typography variant="subtitle2" sx={{ fontWeight: 800, color: themeTokens.colors.brandCyan, mb: 0.5 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 800, color: themeTokens.colors.brandCyan, mb: 0.3, fontSize: '0.76rem' }}>
               Arcadas Dentárias & Gengiva
             </Typography>
-            <Typography variant="caption" sx={{ color: themeTokens.colors.textSecondary, display: 'block', mb: 0.6 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: themeTokens.colors.textSecondary,
+                display: 'block',
+                mb: 0.5,
+                '@media (max-height: 780px)': { display: 'none' },
+              }}
+            >
               Visualização isolada da dentição completa e tecidos gengivais (sem ossos craniofaciais).
             </Typography>
-            <Typography variant="caption" sx={{ color: '#38BDF8', fontWeight: 700, display: 'block' }}>
+            <Typography variant="caption" sx={{ color: '#38BDF8', fontWeight: 700, display: 'block', fontSize: '0.72rem' }}>
               Posicionamento do Siso:{' '}
               <span style={{ color: '#F59E0B' }}>
                 {wisdomToothState === 'erupted'
@@ -265,27 +317,28 @@ export const DentalAtlasView: React.FC = () => {
             elevation={3}
             sx={{
               position: 'absolute',
-              top: 16,
-              left: 16,
+              top: 12,
+              left: 12,
               zIndex: 100,
+              display: { xs: 'none', sm: 'block' },
               backgroundColor: themeTokens.colors.bgOverlay,
               backdropFilter: 'blur(8px)',
               border: `1px solid ${themeTokens.colors.borderSubtle}`,
               borderRadius: 1.5,
-              p: 1.5,
-              maxWidth: 280,
+              p: 1.2,
+              maxWidth: 245,
             }}
           >
-            <Typography variant="subtitle2" sx={{ fontWeight: 800, color: themeTokens.colors.brandCyan, mb: 1 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 800, color: themeTokens.colors.brandCyan, mb: 0.6, fontSize: '0.75rem' }}>
               Camadas Histológicas
             </Typography>
-            <Stack spacing={0.8}>
+            <Stack spacing={0.55}>
               {internalToothLayers.map((layer) => (
-                <Box key={layer.id} sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                <Box key={layer.id} sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.8 }}>
                   <Box
                     sx={{
-                      width: 12,
-                      height: 12,
+                      width: 10,
+                      height: 10,
                       borderRadius: '3px',
                       backgroundColor: layer.colorHex,
                       border: '1px solid rgba(255,255,255,0.2)',
@@ -294,10 +347,18 @@ export const DentalAtlasView: React.FC = () => {
                     }}
                   />
                   <Box>
-                    <Typography variant="caption" sx={{ fontWeight: 700, color: themeTokens.colors.textPrimary, display: 'block' }}>
+                    <Typography variant="caption" sx={{ fontWeight: 700, color: themeTokens.colors.textPrimary, display: 'block', lineHeight: 1.2, fontSize: '0.72rem' }}>
                       {layer.name}
                     </Typography>
-                    <Typography variant="caption" sx={{ color: themeTokens.colors.textMuted, fontSize: '0.68rem', display: 'block' }}>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: themeTokens.colors.textMuted,
+                        fontSize: '0.65rem',
+                        display: 'block',
+                        '@media (max-height: 800px)': { display: 'none' },
+                      }}
+                    >
                       {layer.thicknessMm}
                     </Typography>
                   </Box>
@@ -309,8 +370,19 @@ export const DentalAtlasView: React.FC = () => {
       </Box>
 
       {/* Odontograma FDI Compacto na Base */}
-      <Box sx={{ p: 1.5, backgroundColor: themeTokens.colors.bgSecondary, borderTop: `1px solid ${themeTokens.colors.borderSubtle}` }}>
-        <OdontogramFDI />
+      <Box
+        sx={{
+          px: { xs: 0.8, sm: 1.2 },
+          py: { xs: 0.6, sm: 0.9 },
+          '@media (max-height: 800px)': {
+            py: 0.5,
+          },
+          backgroundColor: themeTokens.colors.bgSecondary,
+          borderTop: `1px solid ${themeTokens.colors.borderSubtle}`,
+          flexShrink: 0,
+        }}
+      >
+        <OdontogramFDI allowDeciduous={activeTab === 'solo_tooth'} />
       </Box>
     </Box>
   );

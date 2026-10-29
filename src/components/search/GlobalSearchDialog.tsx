@@ -23,6 +23,7 @@ import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { useAnatomyStore } from '@/stores/useAnatomyStore';
 import { anatomicalStructures } from '@/data/anatomy/structures';
 import { oralPathologies } from '@/data/pathologies/pathologiesData';
+import { ANESTHESIA_TECHNIQUES } from '@/data/clinical/anesthesiaData';
 import { permanentTeethData } from '@/data/dental/teethData';
 import { themeTokens } from '@/theme/tokens';
 
@@ -37,6 +38,7 @@ export const GlobalSearchDialog: React.FC = () => {
     setInfoPanelOpen,
     setActiveToothFdi,
     setActivePathology,
+    setActiveAnesthesia,
   } = useAnatomyStore();
   const [query, setQuery] = useState<string>('');
 
@@ -58,7 +60,7 @@ export const GlobalSearchDialog: React.FC = () => {
   // Resultados da busca
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return { structures: [], pathologies: [] };
+    if (!q) return { structures: [], pathologies: [], anesthesia: [] };
 
     // Extrair dígitos se o usuário digitar "dente 22" ou "22"
     const queryDigits = q.replace(/\D/g, '');
@@ -106,9 +108,20 @@ export const GlobalSearchDialog: React.FC = () => {
       );
     });
 
+    const foundAnesthesia = ANESTHESIA_TECHNIQUES.filter((a) => {
+      return (
+        a.name.toLowerCase().includes(q) ||
+        a.shortName.toLowerCase().includes(q) ||
+        a.subtitle.toLowerCase().includes(q) ||
+        q.includes('anestesi') ||
+        q.includes('bloqueio')
+      );
+    });
+
     return {
       structures: Array.from(foundStructuresMap.values()),
       pathologies: foundPathologies,
+      anesthesia: foundAnesthesia,
     };
   }, [query]);
 
@@ -126,7 +139,7 @@ export const GlobalSearchDialog: React.FC = () => {
     if (fdi) {
       setActiveToothFdi(fdi);
     }
-    navigate('/atlas');
+    navigate('/atlas', { state: { preserveIsolation: true } });
     setSearchModalOpen(false);
     setQuery('');
   };
@@ -134,6 +147,13 @@ export const GlobalSearchDialog: React.FC = () => {
   const handleSelectPathology = (pathologyId: string) => {
     setActivePathology(pathologyId);
     navigate('/pathologies');
+    setSearchModalOpen(false);
+    setQuery('');
+  };
+
+  const handleSelectAnesthesia = (anesthesiaId: string) => {
+    setActiveAnesthesia(anesthesiaId);
+    navigate('/anesthesia');
     setSearchModalOpen(false);
     setQuery('');
   };
@@ -150,7 +170,9 @@ export const GlobalSearchDialog: React.FC = () => {
           border: `1px solid ${themeTokens.colors.borderSubtle}`,
           borderRadius: 2,
           boxShadow: themeTokens.shadows.elevated,
-          top: -80,
+          top: { xs: 0, sm: -30, lg: -60 },
+          m: { xs: 1.5, sm: 2 },
+          width: { xs: 'calc(100% - 24px)', sm: '100%' },
         },
       }}
     >
@@ -303,7 +325,57 @@ export const GlobalSearchDialog: React.FC = () => {
               </>
             )}
 
-            {results.structures.length === 0 && results.pathologies.length === 0 && (
+            {/* Bloqueios Anestésicos Encontrados */}
+            {results.anesthesia && results.anesthesia.length > 0 && (
+              <>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    px: 2,
+                    pt: 1.5,
+                    pb: 0.5,
+                    fontWeight: 700,
+                    color: '#10B981',
+                    display: 'block',
+                    textTransform: 'uppercase',
+                    fontSize: '0.68rem',
+                  }}
+                >
+                  Bloqueios Anestésicos 3D ({results.anesthesia.length})
+                </Typography>
+                {results.anesthesia.map((a) => (
+                  <ListItem key={a.id} disablePadding>
+                    <ListItemButton
+                      onClick={() => handleSelectAnesthesia(a.id)}
+                      sx={{
+                        px: 2,
+                        py: 1,
+                        borderBottom: `1px solid rgba(255, 255, 255, 0.03)`,
+                        '&:hover': { backgroundColor: 'rgba(16, 185, 129, 0.08)' },
+                      }}
+                    >
+                      <ListItemText
+                        primary={
+                          <Typography variant="body2" sx={{ fontWeight: 700, color: themeTokens.colors.textPrimary }}>
+                            {a.name}
+                          </Typography>
+                        }
+                        secondary={
+                          <Typography variant="caption" sx={{ color: themeTokens.colors.textMuted }}>
+                            {a.subtitle}
+                          </Typography>
+                        }
+                      />
+                      <ArrowForwardIosIcon sx={{ fontSize: '0.75rem', color: themeTokens.colors.textMuted }} />
+                    </ListItemButton>
+                  </ListItem>
+                ))}
+              </>
+            )}
+
+            {results.structures.length === 0 &&
+              results.pathologies.length === 0 &&
+              results.anesthesia.length === 0 && (
               <Box sx={{ p: 4, textAlign: 'center' }}>
                 <Typography variant="body2" sx={{ color: themeTokens.colors.textMuted }}>
                   Nenhum resultado encontrado para "{query}".

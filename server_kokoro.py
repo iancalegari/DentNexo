@@ -3,7 +3,8 @@ import os
 import json
 import io
 import hashlib
-from http.server import HTTPServer, BaseHTTPRequestHandler
+import threading
+from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 from kokoro_onnx import Kokoro
 import soundfile as sf
@@ -11,6 +12,7 @@ import soundfile as sf
 PORT = 5005
 # Cache puramente em memória RAM (sem gravação de arquivos de áudio em disco)
 RAM_CACHE = {}
+SYNTH_LOCK = threading.Lock()
 
 print("Iniciando Kokoro TTS Engine...")
 MODEL_PATH = os.path.join(os.path.dirname(__file__), 'kokoro_weights', 'kokoro-v1.0.onnx')
@@ -88,8 +90,14 @@ class KokoroHandler(BaseHTTPRequestHandler):
             return
 
         try:
-            # Sintetizar áudio em português brasileiro diretamente em memória
-            samples, sample_rate = kokoro.create(text, voice=voice, speed=speed, lang='pt-br')
+            # Limpeza leve de símbolos gráficos para pronúncia fluida no Kokoro pt-BR
+            clean_text = (
+                text.replace('•', ', ')
+                .replace('—', ', ')
+                .replace('–', ', ')
+            )
+            with SYNTH_LOCK:
+                samples, sample_rate = kokoro.create(clean_text, voice=voice, speed=speed, lang='pt-br')
 
             buf = io.BytesIO()
             sf.write(buf, samples, sample_rate, format='WAV')
@@ -111,8 +119,8 @@ class KokoroHandler(BaseHTTPRequestHandler):
             self.wfile.write(f"Error: {e}".encode('utf-8'))
 
 if __name__ == '__main__':
-    server = HTTPServer(('127.0.0.1', PORT), KokoroHandler)
-    print(f"Servidor Kokoro TTS rodando em http://127.0.0.1:{PORT}/")
+    server = ThreadingHTTPServer(('127.0.0.1', PORT), KokoroHandler)
+    print(f"Servidor Kokoro TTS rodando em http://127.0.0.1:{PORT}/", flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:

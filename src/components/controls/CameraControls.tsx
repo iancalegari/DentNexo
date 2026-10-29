@@ -40,19 +40,22 @@ export const CameraControls: React.FC = () => {
       elevation={4}
       sx={{
         position: 'absolute',
-        bottom: 24,
+        bottom: { xs: 10, sm: 14, lg: 18 },
         left: '50%',
         transform: 'translateX(-50%)',
+        maxWidth: 'calc(100% - 16px)',
+        overflowX: 'auto',
         zIndex: 1000,
         backgroundColor: themeTokens.colors.bgOverlay,
         backdropFilter: 'blur(10px)',
         border: `1px solid ${themeTokens.colors.borderSubtle}`,
         borderRadius: `${themeTokens.borderRadius.round}px`,
-        p: 0.6,
+        p: { xs: 0.4, sm: 0.55 },
         display: 'flex',
         alignItems: 'center',
-        gap: 0.4,
+        gap: { xs: 0.25, sm: 0.4 },
         boxShadow: themeTokens.shadows.elevated,
+        '&::-webkit-scrollbar': { display: 'none' },
       }}
     >
       {presets.map((p) => {
@@ -63,8 +66,9 @@ export const CameraControls: React.FC = () => {
               size="small"
               onClick={() => setCameraPreset(p.id)}
               sx={{
-                width: 34,
-                height: 34,
+                width: { xs: 28, sm: 32, lg: 34 },
+                height: { xs: 28, sm: 32, lg: 34 },
+                flexShrink: 0,
                 color: isSelected ? themeTokens.colors.brandCyan : themeTokens.colors.textSecondary,
                 backgroundColor: isSelected ? 'rgba(0, 201, 246, 0.15)' : 'transparent',
                 border: isSelected ? `1px solid ${themeTokens.colors.brandCyan}` : '1px solid transparent',

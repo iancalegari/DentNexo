@@ -9,6 +9,8 @@ import {
   getGingivaBumpTexture,
 } from '@/utils/proceduralTextures';
 import { PeriodontalLigaments } from './PeriodontalLigaments';
+import { AnesthesiaOverlay3D } from './AnesthesiaOverlay3D';
+import { ANESTHESIA_MAP } from '@/data/clinical/anesthesiaData';
 
 // Paleta Anatômica Calibrada com tons orgânicos realistas de alta fidelidade
 const ANATOMY_PALETTE = {
@@ -21,8 +23,10 @@ const ANATOMY_PALETTE = {
   muscle: '#8C2220',       // Músculo estriado esquelético carmesim rico
   nerve: '#FBBF24',        // Feixes e ramos nervosos trigêmeos
   artery: '#EF4444',       // Artérias maxilares e ramos
-  vein: '#2563EB',         // Plexo venoso pterigóideo e veias faciais
-  sinus: '#38BDF8',        // Azul translúcido dos seios maxilares/face
+  vein: '#2563EB',          // Plexo venoso pterigóideo e veias faciais
+  sinus: '#EC4899',         // Rosa translúcido vibrante do seio maxilar
+  sinusFrontal: '#A855F7',  // Violeta translúcido do seio frontal
+  sinusSphenoid: '#818CF8', // Índigo suave translúcido do seio esfenoidal
 };
 
 interface MeshItem {
@@ -61,11 +65,13 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
     layers,
     opacities,
     xrayMode,
+    explosionFactor,
     wisdomToothState,
     alignmentState,
     surfaceExplorationMode,
     activeToothFdi,
     activePathologyId,
+    activeAnesthesiaId,
     focusedSystem,
     setSelectedStructure,
     setHoveredStructure,
@@ -89,7 +95,13 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
     if (name.includes('artery') || name.includes('vein') || name.includes('plexus')) {
       return 'vascular';
     }
-    if (name.includes('nerve') || name.includes('canal-envelope') || name.includes('ganglion')) {
+    if (
+      name.includes('nerve') ||
+      name.includes('branch') ||
+      name.includes('mandibular-canal') ||
+      name.includes('canal-envelope') ||
+      name.includes('ganglion')
+    ) {
       return 'nervous';
     }
     // Ossos: frontal, parietal, occipital, temporal, mandíbula, maxila, seios
@@ -116,43 +128,74 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
       return 'atm';
     }
 
-    // Seios da face (maxilar, frontal, esfenoidal)
-    if (name.includes('sinus')) {
+    // Seios paranasais da face (mapeamento individual por cavidade)
+    if (name.includes('frontal-sinus') || (name.includes('sinus') && name.includes('frontal'))) {
+      return 'seio_frontal';
+    }
+    if (name.includes('sphenoidal-sinus') || (name.includes('sinus') && name.includes('sphenoid'))) {
+      return 'seio_esfenoidal';
+    }
+    if (name.includes('maxillary-sinus') || name.includes('sinus')) {
       return 'seio_maxilar';
     }
 
-    // Nervos Cranianos Odontológicos
+    // Nervos Cranianos Odontológicos e Motores Faciais (precisão individual)
     if (name.includes('inferior-alveolar-nerve') || name.includes('mandibular-canal')) {
       return 'nervo_alveolar_inferior';
     }
     if (name.includes('lingual-nerve')) {
       return 'nervo_lingual';
     }
+    if (name.includes('buccal-nerve')) {
+      return 'nervo_bucal';
+    }
     if (name.includes('mental-nerve') || name.includes('incisive-nerve')) {
       return 'nervo_mentual';
+    }
+    if (name.includes('greater-palatine-nerve')) {
+      return 'nervo_palatino_maior';
+    }
+    if (name.includes('nasopalatine-nerve')) {
+      return 'nervo_nasopalatino';
+    }
+    if (
+      name.includes('facial-nerve') ||
+      name.includes('facial-temporal-branch') ||
+      name.includes('facial-zygomatic-branch') ||
+      name.includes('facial-buccal-branch') ||
+      name.includes('facial-marginal-mandibular-branch') ||
+      name.includes('facial-cervical-branch')
+    ) {
+      return 'nervo_facial';
+    }
+    if (name.includes('hypoglossal-nerve') || name.includes('hypoglossal')) {
+      return 'nervo_hipoglosso';
     }
     if (
       name.includes('maxillary-nerve') ||
       name.includes('infraorbital-nerve') ||
-      name.includes('superior-alveolar-nerve') ||
-      name.includes('palatine-nerve')
+      name.includes('superior-alveolar-nerve')
     ) {
       return 'nervo_maxilar_v2';
     }
     if (
       name.includes('trigeminal') ||
       name.includes('mandibular-nerve') ||
-      name.includes('facial-nerve') ||
       name.includes('glossopharyngeal') ||
       name.includes('vagus') ||
-      name.includes('hypoglossal') ||
       name.includes('ophthalmic') ||
       name.includes('nerve')
     ) {
       return 'nervo_trigemeo';
     }
 
-    // Vasos Sanguíneos (Artérias e Veias)
+    // Vasos Sanguíneos (Artérias, Veias e Plexo Pterigóideo)
+    if (name.includes('pterygoid-plexus')) {
+      return 'plexo_pterigoideo';
+    }
+    if (name.includes('inferior-alveolar-artery') || name.includes('inferior-alveolar-vein')) {
+      return 'arteria_alveolar_inferior';
+    }
     if (name.includes('facial-artery') || name.includes('facial-vein') || name.includes('jugular')) {
       return 'arteria_facial';
     }
@@ -163,7 +206,6 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
       name.includes('alveolar-artery') ||
       name.includes('palatine-artery') ||
       name.includes('buccal-artery') ||
-      name.includes('pterygoid-plexus') ||
       name.includes('artery') ||
       name.includes('vein')
     ) {
@@ -183,11 +225,31 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
     if (name.includes('medial-pterygoid') || name.includes('pterygoid')) {
       return 'pterigoideo_medial';
     }
-    if (name.includes('orbicularis') || name.includes('mentalis')) {
+    if (name.includes('mentalis')) {
+      return 'musculo_mentual';
+    }
+    if (name.includes('orbicularis')) {
       return 'musculo_orbicular_boca';
     }
     if (name.includes('buccinator')) {
       return 'musculo_bucinador';
+    }
+
+    // Ossos específicos da cavidade oral, nasal e cervical (antes de maxila/nasal genéricos)
+    if (name.includes('palatine-bone') || name.includes('palatine')) {
+      return 'osso_palatino';
+    }
+    if (name.includes('vomer')) {
+      return 'osso_vomer';
+    }
+    if (name.includes('lacrimal')) {
+      return 'osso_lacrimal';
+    }
+    if (name.includes('inferior-nasal-concha') || name.includes('concha')) {
+      return 'concha_nasal_inferior';
+    }
+    if (name.includes('hyoid')) {
+      return 'osso_hioide';
     }
 
     // Mandíbula e Côndilos
@@ -196,7 +258,7 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
     }
 
     // Maxila
-    if (name.includes('maxilla') || name.includes('maxill') || name.includes('palatine')) {
+    if (name.includes('maxilla') || name.includes('maxill')) {
       return 'maxila';
     }
 
@@ -228,6 +290,68 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
 
     // Neurocrânio e ossos da calvária/base
     return 'neurocranio';
+  };
+
+  // Vetor de deslocamento radial calibrado para a "Vista Explodida" (Dissecação Craniana 0% a 100%)
+  // Mantém o Esfenoide ("keystone") e os 3 Seios Paranasais no centro para revelação interna perfeita
+  const getExplosionOffset = (meshName: string, category: string): [number, number, number] => {
+    const n = meshName.toLowerCase();
+    const side = n.includes('-left') ? 1 : n.includes('-right') ? -1 : 0;
+
+    // Seios paranasais e esfenoide permanecem ancorados no núcleo da dissecação
+    if (n.includes('sinus') || n.includes('sphenoid')) {
+      return [0, 0, 0];
+    }
+
+    // Dentes e gengivas acompanham sua respectiva arcada (superior ou inferior)
+    if (n.startsWith('tooth-')) {
+      const fdiNum = Number(n.replace('tooth-', ''));
+      const isLower = fdiNum >= 31 && fdiNum <= 48;
+      if (isLower) {
+        return [0, -2.55, 0.95];
+      }
+      const toothSide = fdiNum >= 21 && fdiNum <= 28 ? 1 : -1;
+      return [toothSide * 1.15, -0.35, 1.45];
+    }
+    if (n === 'gingiva-lower') return [0, -2.55, 0.95];
+    if (n === 'gingiva-upper') return [0, -0.35, 1.45];
+
+    // Músculos afastam-se lateralmente para abrir visão limpa das suturas e cavidades
+    if (category === 'muscular') {
+      if (n.includes('orbicularis') || n.includes('mentalis')) return [0, -1.6, 3.2];
+      return [side * 3.8, 0.4, 0.3];
+    }
+
+    // Neurovascular permanece coeso no centro como mapa interno de referência
+    if (category === 'nervous' || category === 'vascular') {
+      return [0, 0, 0];
+    }
+
+    // Ossos individuais do neurocrânio e viscerocrânio afastando-se radialmente
+    if (n.includes('frontal-bone')) return [0, 2.85, 2.55];
+    if (n.includes('parietal-bone')) return [side * 3.1, 2.85, -1.35];
+    if (n.includes('occipital-bone')) return [0, 0.95, -3.85];
+    if (n.includes('temporal-bone') || n.includes('articular-fossa') || n.includes('articular-disc')) {
+      return [side * 3.65, 0.35, -1.05];
+    }
+    if (n.includes('zygomatic-bone')) return [side * 3.45, 0.55, 1.65];
+    if (n.includes('nasal-bone')) return [side * 0.68, 1.45, 2.95];
+    if (n.includes('lacrimal-bone')) return [side * 1.65, 0.85, 1.75];
+    if (n.includes('ethmoid-bone')) return [0, 0.9, 1.35];
+    if (n.includes('vomer')) return [0, -0.35, 1.55];
+    if (n.includes('inferior-nasal-concha')) return [side * 1.4, -0.1, 1.45];
+    if (n.includes('palatine-bone')) return [side * 1.25, -0.65, -1.25];
+    if (n.includes('maxilla') || n.includes('maxillary-alveolar')) {
+      return [side * 2.35, -0.25, 1.65];
+    }
+    if (n.includes('mandible') || n.includes('mandibular')) {
+      return [0, -2.55, 0.95];
+    }
+    if (n.includes('hyoid')) {
+      return [0, -3.85, -0.75];
+    }
+
+    return [0, 0, 0];
   };
 
   // 1. CLONAR E INDEXAR AS CENAS APENAS UMA VEZ (core + context + neuro)
@@ -286,7 +410,7 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
         emissiveHex = '#713F12';
         emissiveIntensity = 0.35;
       } else if (category === 'vascular') {
-        hex = name.includes('vein') ? ANATOMY_PALETTE.vein : ANATOMY_PALETTE.artery;
+        hex = name.includes('vein') || name.includes('plexus') ? ANATOMY_PALETTE.vein : ANATOMY_PALETTE.artery;
         roughness = 0.30;
       } else if (category === 'oral_tissue') {
         hex = ANATOMY_PALETTE.gingiva;
@@ -296,10 +420,20 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
           bumpScale = 0.014;
         }
       } else if (name.includes('sinus')) {
-        hex = ANATOMY_PALETTE.sinus;
+        if (name.includes('frontal-sinus') || name.includes('frontal')) {
+          hex = ANATOMY_PALETTE.sinusFrontal;
+          emissiveHex = '#4C1D95';
+        } else if (name.includes('sphenoidal-sinus') || name.includes('sphenoid')) {
+          hex = ANATOMY_PALETTE.sinusSphenoid;
+          emissiveHex = '#312E81';
+        } else {
+          hex = ANATOMY_PALETTE.sinus;
+          emissiveHex = '#831843';
+        }
         roughness = 0.22;
+        emissiveIntensity = 0.2;
         transparent = true;
-        opacity = 0.65;
+        opacity = 0.68;
       } else {
         if (hasUV) {
           bumpMap = boneBump;
@@ -324,6 +458,14 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
       child.material = material;
       child.castShadow = true;
       child.receiveShadow = true;
+
+      // Three.js r169+ testa raycast mesmo em objetos com visible=false.
+      // Ignorar imediatamente malhas ocultas garante que camadas/estruturas desligadas nunca interceptem cliques.
+      const origRaycast = child.raycast.bind(child);
+      child.raycast = (raycaster, intersects) => {
+        if (!child.visible) return;
+        origRaycast(raycaster, intersects);
+      };
 
       meshes.push({
         mesh: child,
@@ -356,10 +498,16 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
   const xrayColor = useMemo(() => new THREE.Color('#0284C7'), []);
   const xrayEmissive = useMemo(() => new THREE.Color('#082F49'), []);
   const blackColor = useMemo(() => new THREE.Color('#000000'), []);
+  const anesthesiaToothColor = useMemo(() => new THREE.Color('#34D399'), []);
+  const anesthesiaToothEmissive = useMemo(() => new THREE.Color('#059669'), []);
+  const anesthesiaNerveColor = useMemo(() => new THREE.Color('#FDE047'), []);
+  const anesthesiaNerveEmissive = useMemo(() => new THREE.Color('#D97706'), []);
+  const anesthesiaRefEmissive = useMemo(() => new THREE.Color('#0F766E'), []);
 
   // 2. ATUALIZAÇÃO DIRETA EM MEMÓRIA DAS PROPRIEDADES E TRANSFORMAÇÕES DIDÁTICAS
   useEffect(() => {
     const hasIsolation = isolatedStructureId !== null;
+    const activeAnesthesia = activeAnesthesiaId ? ANESTHESIA_MAP[activeAnesthesiaId] : null;
 
     for (let i = 0; i < meshList.length; i++) {
       const item = meshList[i];
@@ -377,6 +525,10 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
         initialPosition,
         initialRotation,
       } = item;
+
+      // Restaurar posição/rotação base antes de aplicar transformações dinâmicas (siso, alinhamento ou vista explodida)
+      mesh.position.copy(initialPosition);
+      mesh.rotation.copy(initialRotation);
 
       const isTooth = name.startsWith('tooth-');
       const isGingiva = name.startsWith('gingiva-');
@@ -396,7 +548,12 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
         id === 'osso_esfenoide' ||
         id === 'osso_etmoide' ||
         id === 'osso_zigomatico' ||
-        id === 'osso_nasal';
+        id === 'osso_nasal' ||
+        id === 'osso_palatino' ||
+        id === 'osso_vomer' ||
+        id === 'osso_lacrimal' ||
+        id === 'concha_nasal_inferior' ||
+        id === 'osso_hioide';
 
       const normalizeId = (id: string | null) => {
         if (!id) return '';
@@ -427,8 +584,8 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
         continue;
       }
 
-      const isVisible = layers[category as keyof typeof layers];
-      const isHidden = hiddenStructureIds.includes(structureId);
+      const isVisible = activeAnesthesia ? true : layers[category as keyof typeof layers];
+      const isHidden = !activeAnesthesia && hiddenStructureIds.includes(structureId);
 
       // Se a estrutura está isolada, ela DEVE ser sempre visível
       if (!isIsolated && (!isVisible || isHidden)) {
@@ -438,95 +595,102 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
 
       mesh.visible = true;
 
-      // ================= MANIPULAÇÃO DINÂMICA DO SISO (18, 28, 38, 48) =================
-      if (name === 'tooth-38' || name === 'tooth-48' || name === 'tooth-18' || name === 'tooth-28') {
-        mesh.position.copy(initialPosition);
-        mesh.rotation.copy(initialRotation);
+      // ================= MANIPULAÇÃO EXCLUSIVA DE ARCADAS & ALINHAMENTO (SISO + ALINHAMENTO DENTAL) =================
+      // Aplicada estritamente quando archesOnlyMode === true para NUNCA interferir no Atlas 3D ou nos demais módulos
+      if (archesOnlyMode) {
+        if (name === 'tooth-38' || name === 'tooth-48' || name === 'tooth-18' || name === 'tooth-28') {
+          if (wisdomToothState === 'absent') {
+            mesh.visible = false;
+            continue;
+          }
 
-        if (wisdomToothState === 'absent') {
-          mesh.visible = false;
-          continue;
+          if (name === 'tooth-38') {
+            // Terceiro molar inferior esquerdo
+            if (wisdomToothState === 'mesioangular') {
+              mesh.rotation.x += 0.55;
+              mesh.rotation.z += 0.22;
+              mesh.position.y -= 0.32;
+              mesh.position.z += 0.25;
+            } else if (wisdomToothState === 'horizontal') {
+              mesh.rotation.x += 1.38;
+              mesh.position.y -= 0.48;
+              mesh.position.z += 0.38;
+            } else if (wisdomToothState === 'impacted') {
+              mesh.position.y -= 0.78;
+              mesh.rotation.x += 0.2;
+            }
+          } else if (name === 'tooth-48') {
+            // Terceiro molar inferior direito
+            if (wisdomToothState === 'mesioangular') {
+              mesh.rotation.x += 0.55;
+              mesh.rotation.z -= 0.22;
+              mesh.position.y -= 0.32;
+              mesh.position.z += 0.25;
+            } else if (wisdomToothState === 'horizontal') {
+              mesh.rotation.x += 1.38;
+              mesh.position.y -= 0.48;
+              mesh.position.z += 0.38;
+            } else if (wisdomToothState === 'impacted') {
+              mesh.position.y -= 0.78;
+              mesh.rotation.x += 0.2;
+            }
+          } else if (name === 'tooth-18' || name === 'tooth-28') {
+            // Sisos superiores
+            if (wisdomToothState === 'impacted') {
+              mesh.position.y += 0.65;
+            } else if (wisdomToothState === 'mesioangular') {
+              mesh.rotation.x -= 0.38;
+              mesh.position.y += 0.25;
+            } else if (wisdomToothState === 'horizontal') {
+              mesh.rotation.x -= 1.1;
+              mesh.position.y += 0.4;
+            }
+          }
         }
 
-        if (name === 'tooth-38') {
-          // Terceiro molar inferior esquerdo
-          if (wisdomToothState === 'mesioangular') {
-            mesh.rotation.x += 0.55;
-            mesh.rotation.z += 0.22;
-            mesh.position.y -= 0.32;
-            mesh.position.z += 0.25;
-          } else if (wisdomToothState === 'horizontal') {
-            mesh.rotation.x += 1.38;
-            mesh.position.y -= 0.48;
-            mesh.position.z += 0.38;
-          } else if (wisdomToothState === 'impacted') {
-            mesh.position.y -= 0.78;
-            mesh.rotation.x += 0.2;
-          }
-        } else if (name === 'tooth-48') {
-          // Terceiro molar inferior direito
-          if (wisdomToothState === 'mesioangular') {
-            mesh.rotation.x += 0.55;
-            mesh.rotation.z -= 0.22;
-            mesh.position.y -= 0.32;
-            mesh.position.z += 0.25;
-          } else if (wisdomToothState === 'horizontal') {
-            mesh.rotation.x += 1.38;
-            mesh.position.y -= 0.48;
-            mesh.position.z += 0.38;
-          } else if (wisdomToothState === 'impacted') {
-            mesh.position.y -= 0.78;
-            mesh.rotation.x += 0.2;
-          }
-        } else if (name === 'tooth-18' || name === 'tooth-28') {
-          // Sisos superiores
-          if (wisdomToothState === 'impacted') {
-            mesh.position.y += 0.65;
-          } else if (wisdomToothState === 'mesioangular') {
-            mesh.rotation.x -= 0.38;
-            mesh.position.y += 0.25;
-          } else if (wisdomToothState === 'horizontal') {
-            mesh.rotation.x -= 1.1;
-            mesh.position.y += 0.4;
+        if (
+          name === 'tooth-31' ||
+          name === 'tooth-41' ||
+          name === 'tooth-12' ||
+          name === 'tooth-22' ||
+          name === 'tooth-11' ||
+          name === 'tooth-21'
+        ) {
+          if (alignmentState === 'crowded_anterior') {
+            if (name === 'tooth-31') {
+              mesh.position.z += 0.22;
+              mesh.rotation.y += 0.25;
+            } else if (name === 'tooth-41') {
+              mesh.position.z -= 0.16;
+              mesh.rotation.y -= 0.2;
+            } else if (name === 'tooth-12') {
+              mesh.position.z += 0.18;
+              mesh.rotation.y += 0.15;
+            } else if (name === 'tooth-22') {
+              mesh.position.z -= 0.15;
+              mesh.rotation.y -= 0.15;
+            }
+          } else if (alignmentState === 'diastema_central') {
+            if (name === 'tooth-11') {
+              mesh.position.x -= 0.13;
+            } else if (name === 'tooth-21') {
+              mesh.position.x += 0.13;
+            } else if (name === 'tooth-12') {
+              mesh.position.x -= 0.05;
+            } else if (name === 'tooth-22') {
+              mesh.position.x += 0.05;
+            }
           }
         }
       }
 
-      // ================= MANIPULAÇÃO DINÂMICA DE ALINHAMENTO DENTAL =================
-      if (
-        name === 'tooth-31' ||
-        name === 'tooth-41' ||
-        name === 'tooth-12' ||
-        name === 'tooth-22' ||
-        name === 'tooth-11' ||
-        name === 'tooth-21'
-      ) {
-        mesh.position.copy(initialPosition);
-        mesh.rotation.copy(initialRotation);
-
-        if (alignmentState === 'crowded_anterior') {
-          if (name === 'tooth-31') {
-            mesh.position.z += 0.22;
-            mesh.rotation.y += 0.25;
-          } else if (name === 'tooth-41') {
-            mesh.position.z -= 0.16;
-            mesh.rotation.y -= 0.2;
-          } else if (name === 'tooth-12') {
-            mesh.position.z += 0.18;
-            mesh.rotation.y += 0.15;
-          } else if (name === 'tooth-22') {
-            mesh.position.z -= 0.15;
-            mesh.rotation.y -= 0.15;
-          }
-        } else if (alignmentState === 'diastema_central') {
-          if (name === 'tooth-11') {
-            mesh.position.x -= 0.35;
-          } else if (name === 'tooth-21') {
-            mesh.position.x += 0.35;
-          }
-        }
+      // ================= MODO VISTA EXPLODIDA DO CRÂNIO (SLIDER 0% A 100%) =================
+      if (explosionFactor > 0 && !archesOnlyMode && !surfaceExplorationMode && !activeAnesthesia) {
+        const [ex, ey, ez] = getExplosionOffset(name, category);
+        mesh.position.x += ex * explosionFactor;
+        mesh.position.y += ey * explosionFactor;
+        mesh.position.z += ez * explosionFactor;
       }
-
 
       // ================= MODO RAIO X =================
       if (xrayMode) {
@@ -596,16 +760,74 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
       }
 
       // ================= CÁLCULO DINÂMICO DE OPACIDADE E REALCE CLÍNICO =================
-      const userLayerOpacity = opacities[category as keyof typeof opacities] ?? 1.0;
+      const userLayerOpacity = activeAnesthesia ? 1.0 : (opacities[category as keyof typeof opacities] ?? 1.0);
       let opacityMultiplier = 1.0;
       let targetColor = defaultColor;
       let targetEmissive = defaultEmissive;
       let targetEmissiveIntensity = defaultEmissiveIntensity;
 
-      // ISOLAMENTO DE ESTRUTURA (PRIORIDADE MÁXIMA):
-      // A estrutura isolada fica com 100% de opacidade e realce ciano.
-      // Todo o restante do modelo recebe opacidade baixa (0.15), garantindo o isolamento perfeito com referência sutil.
-      if (hasIsolation) {
+      // SIMULADOR 3D DE BLOQUEIOS ANESTÉSICOS:
+      // Realça o nervo alvo em dourado e ilumina em verde-esmeralda TODOS os dentes, mucosas e estruturas ósseas da área afetada!
+      if (activeAnesthesia) {
+        const lowerName = name.toLowerCase();
+        const isTargetNerve = activeAnesthesia.targetMeshNames.some((sub) => lowerName.includes(sub));
+        const toothFdi = isTooth ? name.replace('tooth-', '') : '';
+        const isAffectedTooth =
+          isTooth &&
+          (activeAnesthesia.anesthetizedTeeth.includes(toothFdi) ||
+            activeAnesthesia.softTissueTeeth.includes(toothFdi));
+
+        const isAffectedGingiva =
+          (activeAnesthesia.arch === 'mandibular' && lowerName === 'gingiva-lower') ||
+          (activeAnesthesia.arch === 'maxillary' && lowerName === 'gingiva-upper');
+
+        const isAffectedBoneStructure =
+          (activeAnesthesia.id === 'bloqueio_palatino_maior' && lowerName === 'palatine-bone-left') ||
+          (activeAnesthesia.id === 'bloqueio_nasopalatino' && lowerName === 'vomer');
+
+        if (isTargetNerve) {
+          targetColor = anesthesiaNerveColor;
+          targetEmissive = anesthesiaNerveEmissive;
+          targetEmissiveIntensity = 0.95;
+          opacityMultiplier = 1.0;
+        } else if (isAffectedTooth) {
+          targetColor = anesthesiaToothColor;
+          targetEmissive = anesthesiaToothEmissive;
+          targetEmissiveIntensity = 0.65;
+          opacityMultiplier = 1.0;
+        } else if (isAffectedBoneStructure) {
+          targetColor = anesthesiaToothColor;
+          targetEmissive = anesthesiaToothEmissive;
+          targetEmissiveIntensity = 0.55;
+          opacityMultiplier = 0.68;
+        } else if (isAffectedGingiva) {
+          targetColor = anesthesiaToothColor;
+          targetEmissive = anesthesiaToothEmissive;
+          targetEmissiveIntensity = 0.45;
+          opacityMultiplier = 0.48;
+        } else if (isTooth) {
+          opacityMultiplier = 0.32;
+          targetEmissive = blackColor;
+          targetEmissiveIntensity = 0;
+        } else if (category === 'nervous') {
+          opacityMultiplier = 0.35;
+        } else if (category === 'vascular') {
+          const isRiskVessel =
+            (activeAnesthesia.id === 'bloqueio_asp' && lowerName.includes('pterygoid-plexus-left')) ||
+            (activeAnesthesia.id === 'bloqueio_nai' &&
+              (lowerName.includes('inferior-alveolar-artery-left') ||
+                lowerName.includes('inferior-alveolar-vein-left')));
+          opacityMultiplier = isRiskVessel ? 0.85 : 0.3;
+        } else if (category === 'oral_tissue') {
+          opacityMultiplier = 0.18;
+        } else if (category === 'muscular') {
+          opacityMultiplier = 0.06;
+        } else {
+          // Esqueleto translúcido permitindo ver o canal mandibular, forames e trajeto da agulha
+          opacityMultiplier = lowerName.includes('sinus') ? 0.25 : 0.22;
+        }
+      } else if (hasIsolation) {
+        // ISOLAMENTO DE ESTRUTURA (PRIORIDADE MÁXIMA):
         if (isIsolated) {
           targetColor = cyanColor;
           targetEmissive = cyanEmissive;
@@ -620,9 +842,15 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
       } else if (focusedSystem) {
         const isTargetSystem = category === focusedSystem;
         const isLpoSelected = selectedStructureId === 'ligamento_periodontal';
+        const isSinusSelected =
+          selectedStructureId === 'seio_maxilar' ||
+          selectedStructureId === 'seio_frontal' ||
+          selectedStructureId === 'seio_esfenoidal';
 
         if (isTargetSystem) {
           if (focusedSystem === 'oral_tissue' && isLpoSelected && isGingiva) {
+            opacityMultiplier = 0.22;
+          } else if (focusedSystem === 'skeletal' && isSinusSelected && !isSelected && !name.includes('sinus')) {
             opacityMultiplier = 0.22;
           } else {
             opacityMultiplier = 1.0;
@@ -673,17 +901,30 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
           targetEmissiveIntensity = 0.25;
         }
 
+        if (explosionFactor > 0 && category === 'muscular') {
+          opacityMultiplier = Math.max(0.18, 1 - explosionFactor * 0.72);
+        }
+
         if (selectedStructureId === 'ligamento_periodontal') {
           if (isGingiva) opacityMultiplier = 0.22;
           else if (category === 'skeletal') opacityMultiplier = 0.12;
           else if (category === 'dental') opacityMultiplier = 0.40;
+        } else if (
+          (selectedStructureId === 'seio_maxilar' ||
+            selectedStructureId === 'seio_frontal' ||
+            selectedStructureId === 'seio_esfenoidal') &&
+          !isSelected &&
+          category === 'skeletal' &&
+          !name.includes('sinus')
+        ) {
+          opacityMultiplier = 0.25;
         }
       }
 
       // A opacidade final é o produto do controle do usuário pelo multiplicador de foco,
       // sendo que em isolamento forçado a peça alvo fica 100% e as demais 15% (ghost de referência).
       let effectiveOpacity = Math.max(0.0, Math.min(1.0, userLayerOpacity * opacityMultiplier));
-      if (hasIsolation) {
+      if (!activeAnesthesia && hasIsolation) {
         effectiveOpacity = isIsolated ? 1.0 : 0.15;
       }
       const isSolid = effectiveOpacity >= 0.98 && !name.includes('sinus');
@@ -694,18 +935,27 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
       material.emissive.copy(targetEmissive);
       material.emissiveIntensity = targetEmissiveIntensity;
       material.transparent = effectiveOpacity < 0.98 || name.includes('sinus');
-      material.opacity = name.includes('sinus') ? 0.65 : effectiveOpacity;
+      material.opacity = name.includes('sinus')
+        ? activeAnesthesia
+          ? 0.28
+          : isIsolated
+            ? 0.9
+            : isSelected
+              ? Math.min(0.85, effectiveOpacity)
+              : Math.min(0.68, effectiveOpacity)
+        : effectiveOpacity;
       material.depthWrite = isSolid;
       material.side = THREE.DoubleSide;
       mesh.castShadow = isSolid;
       mesh.receiveShadow = true;
-      mesh.visible = (isIsolated || isVisible) && !isHidden && effectiveOpacity > 0.01;
+      mesh.visible = (activeAnesthesia ? true : isIsolated || isVisible) && !isHidden && effectiveOpacity > 0.01;
     }
   }, [
     meshList,
     archesOnlyMode,
     wisdomToothState,
     alignmentState,
+    explosionFactor,
     selectedStructureId,
     hoveredStructureId,
     isolatedStructureId,
@@ -716,6 +966,7 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
     surfaceExplorationMode,
     activeToothFdi,
     activePathologyId,
+    activeAnesthesiaId,
     focusedSystem,
     cyanColor,
     cyanEmissive,
@@ -724,16 +975,23 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
     xrayColor,
     xrayEmissive,
     blackColor,
+    anesthesiaToothColor,
+    anesthesiaToothEmissive,
+    anesthesiaNerveColor,
+    anesthesiaNerveEmissive,
+    anesthesiaRefEmissive,
   ]);
 
   // Handlers de interação
   const handlePointerOver = (e: any) => {
-    e.stopPropagation();
-    if (surfaceExplorationMode) return;
+    if (!e.object?.visible) return;
+    const isAnesthesia = typeof window !== 'undefined' && window.location.pathname.includes('/anesthesia');
+    if (surfaceExplorationMode || isAnesthesia) return;
     const meshName = e.object?.name;
     if (meshName) {
       const id = getStructureId(meshName);
       if (hiddenStructureIds.includes(id)) return;
+      e.stopPropagation();
       setHoveredStructure(id);
       document.body.style.cursor = 'pointer';
     }
@@ -745,31 +1003,39 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
   };
 
   const handleClick = (e: any) => {
-    e.stopPropagation();
+    if (!e.object?.visible) return;
     const isQuiz = typeof window !== 'undefined' && window.location.pathname.includes('/quiz');
     const isPathology = typeof window !== 'undefined' && window.location.pathname.includes('/pathologies');
+    const isAnesthesia = typeof window !== 'undefined' && window.location.pathname.includes('/anesthesia');
 
-    // Em Dentro do Dente, Quiz e Patologias, cliques no 3D não abrem painel de detalhes
-    if (surfaceExplorationMode || isQuiz || isPathology) return;
+    // Em Dentro do Dente, Patologias e Anestesiologia, cliques no 3D são ignorados; no Quiz, seleciona sem abrir InfoPanel
+    if (surfaceExplorationMode || isPathology || isAnesthesia) return;
 
     const meshName = e.object?.name;
     if (meshName) {
       const id = getStructureId(meshName);
       // Se a estrutura está oculta, não seleciona (permite o raycast atingir o que está atrás)
       if (hiddenStructureIds.includes(id)) return;
-      setSelectedStructure(id);
+      e.stopPropagation();
+      if (isQuiz) {
+        useAnatomyStore.setState({ selectedStructureId: id, infoPanelOpen: false });
+      } else {
+        setSelectedStructure(id);
+      }
     }
   };
 
   const handleContextMenu = (e: any) => {
-    e.stopPropagation();
+    if (!e.object?.visible) return;
     const isQuiz = typeof window !== 'undefined' && window.location.pathname.includes('/quiz');
     const isPathology = typeof window !== 'undefined' && window.location.pathname.includes('/pathologies');
-    if (surfaceExplorationMode || isQuiz || isPathology) return;
+    const isAnesthesia = typeof window !== 'undefined' && window.location.pathname.includes('/anesthesia');
+    if (surfaceExplorationMode || isQuiz || isPathology || isAnesthesia) return;
     const meshName = e.object?.name;
     if (meshName) {
       const id = getStructureId(meshName);
       if (hiddenStructureIds.includes(id)) return;
+      e.stopPropagation();
       setSelectedStructure(id);
     }
   };
@@ -787,7 +1053,10 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
       <primitive object={coreClone} />
       {!archesOnlyMode && !surfaceExplorationMode && <primitive object={contextClone} />}
       {!archesOnlyMode && !surfaceExplorationMode && <primitive object={neuroClone} />}
-      {!surfaceExplorationMode && <PeriodontalLigaments archesOnlyMode={archesOnlyMode} />}
+      {!surfaceExplorationMode && !activeAnesthesiaId && explosionFactor < 0.01 && (
+        <PeriodontalLigaments archesOnlyMode={archesOnlyMode} />
+      )}
+      {!archesOnlyMode && !surfaceExplorationMode && activeAnesthesiaId && <AnesthesiaOverlay3D />}
     </group>
   );
 };

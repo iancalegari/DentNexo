@@ -33,7 +33,7 @@ export const themeTokens = {
       gum: '#F472B6',
       mucosa: '#FB7185',
       periodontalLigament: '#F97316',
-      sinus: '#64748B',
+      sinus: '#EC4899',
       pathology: '#E11D48',
     },
     

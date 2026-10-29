@@ -5,6 +5,7 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { AtlasView } from '@/features/atlas/AtlasView';
 import { DentalAtlasView } from '@/features/dental/DentalAtlasView';
 import { PathologiesView } from '@/features/pathologies/PathologiesView';
+import { AnesthesiaView } from '@/features/anesthesia/AnesthesiaView';
 import { ConnectionsView } from '@/features/connections/ConnectionsView';
 import { QuizView } from '@/features/study/QuizView';
 import { FavoritesNotesView } from '@/features/favorites/FavoritesNotesView';
@@ -88,6 +89,10 @@ export const router = createBrowserRouter([
       {
         path: 'pathologies',
         element: <PathologiesView />,
+      },
+      {
+        path: 'anesthesia',
+        element: <AnesthesiaView />,
       },
       {
         path: 'connections',

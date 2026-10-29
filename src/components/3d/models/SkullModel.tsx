@@ -151,7 +151,7 @@ export const SkullModel: React.FC = () => {
   const mandibleMatProps = getMaterialProps('mandibula', '#CBD5E1');
   const maxillaMatProps = getMaterialProps('maxila', '#E2E8F0');
   const craniumMatProps = getMaterialProps('neurocranio', '#94A3B8');
-  const sinusMatProps = getMaterialProps('seio_maxilar', '#64748B');
+  const sinusMatProps = getMaterialProps('seio_maxilar', '#EC4899');
 
   if (!isVisible && !xrayMode) return null;
 

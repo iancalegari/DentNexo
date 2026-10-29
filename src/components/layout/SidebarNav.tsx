@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Box,
+  Drawer,
   List,
   ListItem,
   ListItemButton,
@@ -10,22 +11,37 @@ import {
   Tooltip,
   Divider,
   Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  IconButton,
+  Stack,
+  Paper,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 
 // EXCLUSIVAMENTE ÍCONES DO MATERIAL UI (@mui/icons-material)
-import DashboardIcon from '@mui/icons-material/Dashboard';
 import ViewInArIcon from '@mui/icons-material/ViewInAr';
 import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
 import AccessibilityNewIcon from '@mui/icons-material/AccessibilityNew';
 import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
 import PsychologyIcon from '@mui/icons-material/Psychology';
-import FavoriteIcon from '@mui/icons-material/Favorite';
 import HealingIcon from '@mui/icons-material/Healing';
-import HubIcon from '@mui/icons-material/Hub';
+import VaccinesIcon from '@mui/icons-material/Vaccines';
 import QuizIcon from '@mui/icons-material/Quiz';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import ScienceIcon from '@mui/icons-material/Science';
 import BloodtypeIcon from '@mui/icons-material/Bloodtype';
+import GavelIcon from '@mui/icons-material/Gavel';
+import CloseIcon from '@mui/icons-material/Close';
+import SchoolIcon from '@mui/icons-material/School';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import VolunteerActivismIcon from '@mui/icons-material/VolunteerActivism';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import QrCode2Icon from '@mui/icons-material/QrCode2';
 
 import { useAnatomyStore } from '@/stores/useAnatomyStore';
 import { themeTokens } from '@/theme/tokens';
@@ -38,10 +54,17 @@ interface NavItem {
   category?: string;
 }
 
+const LIVEPIX_WIDGET_URL = 'https://widget.livepix.gg/embed/78732588-dd3f-4bbd-9f74-e3059c34db80';
+const LIVEPIX_PAGE_URL = 'https://livepix.gg/ianinsgames';
+
 export const SidebarNav: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { sidebarExpanded } = useAnatomyStore();
+  const theme = useTheme();
+  const isMobileDrawer = useMediaQuery(theme.breakpoints.down('md'));
+  const { sidebarExpanded, setSidebarExpanded } = useAnatomyStore();
+  const [termsOpen, setTermsOpen] = useState<boolean>(false);
+  const [supportOpen, setSupportOpen] = useState<boolean>(false);
 
   const navItems: NavItem[] = [
     {
@@ -101,6 +124,13 @@ export const SidebarNav: React.FC = () => {
       category: 'Estudo Clínico',
     },
     {
+      id: 'anesthesia',
+      path: '/anesthesia',
+      label: 'Bloqueios Anestésicos 3D',
+      icon: <VaccinesIcon fontSize="small" />,
+      category: 'Estudo Clínico',
+    },
+    {
       id: 'quiz',
       path: '/quiz',
       label: 'Questionários & Quiz 3D',
@@ -116,37 +146,78 @@ export const SidebarNav: React.FC = () => {
     },
   ];
 
-  return (
+  const showLabels = isMobileDrawer || sidebarExpanded;
+
+  const handleNavigate = (path: string) => {
+    navigate(path);
+    if (isMobileDrawer) {
+      setSidebarExpanded(false);
+    }
+  };
+
+  const navContent = (
     <Box
-      component="nav"
       sx={{
-        width: sidebarExpanded ? 240 : 64,
-        flexShrink: 0,
-        backgroundColor: themeTokens.colors.bgSecondary,
-        borderRight: `1px solid ${themeTokens.colors.borderSubtle}`,
-        height: 'calc(100vh - 60px)',
-        overflowY: 'auto',
-        overflowX: 'hidden',
-        transition: 'width 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+        height: '100%',
         display: 'flex',
         flexDirection: 'column',
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        backgroundColor: themeTokens.colors.bgSecondary,
       }}
     >
-      <List sx={{ py: 1, px: 0.8 }}>
+      {isMobileDrawer && (
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            px: 2,
+            py: 1.4,
+            borderBottom: `1px solid ${themeTokens.colors.borderSubtle}`,
+            flexShrink: 0,
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box component="img" src="/logo_pura.svg" alt="DentNexo" sx={{ width: 24, height: 24 }} />
+            <Typography sx={{ fontWeight: 800, fontSize: '1rem', letterSpacing: '0.02em' }}>
+              <span>DENT</span>
+              <span style={{ color: themeTokens.colors.brandCyan }}>NEXO</span>
+            </Typography>
+          </Box>
+          <IconButton size="small" onClick={() => setSidebarExpanded(false)}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </Box>
+      )}
+
+      <List
+        sx={{
+          py: 0.8,
+          px: 0.8,
+          '@media (max-height: 780px)': {
+            py: 0.4,
+          },
+        }}
+      >
         {navItems.map((item, index) => {
           const isActive = location.pathname === item.path || (item.path === '/atlas' && location.pathname === '/');
           const isFirstOfCategory = index === 0 || navItems[index - 1].category !== item.category;
 
           return (
             <React.Fragment key={item.id}>
-              {sidebarExpanded && isFirstOfCategory && item.category && (
+              {showLabels && isFirstOfCategory && item.category && (
                 <Typography
                   variant="caption"
                   sx={{
-                    px: 1.5,
-                    pt: index === 0 ? 0.5 : 1.8,
-                    pb: 0.5,
-                    fontSize: '0.66rem',
+                    px: 1.4,
+                    pt: index === 0 ? 0.4 : 1.4,
+                    pb: 0.4,
+                    '@media (max-height: 780px)': {
+                      pt: index === 0 ? 0.2 : 0.8,
+                      pb: 0.2,
+                    },
+                    fontSize: '0.64rem',
                     fontWeight: 700,
                     letterSpacing: '0.06em',
                     textTransform: 'uppercase',
@@ -158,16 +229,20 @@ export const SidebarNav: React.FC = () => {
                 </Typography>
               )}
 
-              <Tooltip title={!sidebarExpanded ? item.label : ''} placement="right" arrow>
-                <ListItem disablePadding sx={{ mb: 0.4 }}>
+              <Tooltip title={!showLabels ? item.label : ''} placement="right" arrow>
+                <ListItem disablePadding sx={{ mb: 0.3, '@media (max-height: 780px)': { mb: 0.15 } }}>
                   <ListItemButton
-                    onClick={() => navigate(item.path)}
+                    onClick={() => handleNavigate(item.path)}
                     selected={isActive}
                     sx={{
-                      minHeight: 40,
+                      minHeight: 38,
+                      '@media (max-height: 780px)': {
+                        minHeight: 33,
+                        py: 0.35,
+                      },
                       borderRadius: `${themeTokens.borderRadius.sm}px`,
-                      px: sidebarExpanded ? 1.5 : 1.5,
-                      justifyContent: sidebarExpanded ? 'initial' : 'center',
+                      px: 1.3,
+                      justifyContent: showLabels ? 'initial' : 'center',
                       backgroundColor: isActive ? 'rgba(0, 201, 246, 0.12)' : 'transparent',
                       borderLeft: isActive ? `3px solid ${themeTokens.colors.brandCyan}` : '3px solid transparent',
                       '&:hover': {
@@ -180,18 +255,18 @@ export const SidebarNav: React.FC = () => {
                     <ListItemIcon
                       sx={{
                         minWidth: 0,
-                        mr: sidebarExpanded ? 1.5 : 'auto',
+                        mr: showLabels ? 1.3 : 'auto',
                         justifyContent: 'center',
                         color: isActive ? themeTokens.colors.brandCyan : themeTokens.colors.textSecondary,
                       }}
                     >
                       {item.icon}
                     </ListItemIcon>
-                    {sidebarExpanded && (
+                    {showLabels && (
                       <ListItemText
                         primary={item.label}
                         primaryTypographyProps={{
-                          fontSize: '0.825rem',
+                          fontSize: '0.8rem',
                           fontWeight: isActive ? 700 : 500,
                           color: isActive ? themeTokens.colors.textPrimary : themeTokens.colors.textSecondary,
                           whiteSpace: 'nowrap',
@@ -207,6 +282,542 @@ export const SidebarNav: React.FC = () => {
           );
         })}
       </List>
+
+      {/* Rodapé da Barra Lateral: Termos de Uso & Apoio ao Desenvolvimento */}
+      <Box
+        sx={{
+          mt: 'auto',
+          p: 0.9,
+          pt: 0.4,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 0.6,
+          flexShrink: 0,
+        }}
+      >
+        <Divider sx={{ mb: 0.2, borderColor: themeTokens.colors.borderSubtle }} />
+        <Tooltip title={!showLabels ? 'Termos de Uso & Créditos' : ''} placement="right" arrow>
+          <ListItemButton
+            onClick={() => {
+              if (isMobileDrawer) setSidebarExpanded(false);
+              setTermsOpen(true);
+            }}
+            sx={{
+              minHeight: 34,
+              '@media (max-height: 780px)': { minHeight: 30, py: 0.4 },
+              borderRadius: `${themeTokens.borderRadius.sm}px`,
+              px: 1.3,
+              py: 0.6,
+              justifyContent: showLabels ? 'initial' : 'center',
+              backgroundColor: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              '&:hover': {
+                backgroundColor: 'rgba(0, 201, 246, 0.08)',
+                borderColor: 'rgba(0, 201, 246, 0.25)',
+              },
+            }}
+          >
+            <ListItemIcon
+              sx={{
+                minWidth: 0,
+                mr: showLabels ? 1.1 : 'auto',
+                justifyContent: 'center',
+                color: themeTokens.colors.textMuted,
+              }}
+            >
+              <GavelIcon sx={{ fontSize: 16 }} />
+            </ListItemIcon>
+            {showLabels && (
+              <Typography
+                sx={{
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  color: themeTokens.colors.textSecondary,
+                  lineHeight: 1.2,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                Termos de Uso
+              </Typography>
+            )}
+          </ListItemButton>
+        </Tooltip>
+
+        {/* Caixa Discreta Clicável: Apoie o Desenvolvimento (abaixo de Termos de Uso) */}
+        <Tooltip title={!showLabels ? 'Apoie o Desenvolvimento' : ''} placement="right" arrow>
+          <ListItemButton
+            onClick={() => {
+              if (isMobileDrawer) setSidebarExpanded(false);
+              setSupportOpen(true);
+            }}
+            sx={{
+              minHeight: 34,
+              '@media (max-height: 780px)': { minHeight: 30, py: 0.4 },
+              borderRadius: `${themeTokens.borderRadius.sm}px`,
+              px: 1.3,
+              py: 0.6,
+              justifyContent: showLabels ? 'initial' : 'center',
+              backgroundColor: 'rgba(255, 255, 255, 0.015)',
+              border: '1px solid rgba(255, 255, 255, 0.04)',
+              '&:hover': {
+                backgroundColor: 'rgba(16, 185, 129, 0.08)',
+                borderColor: 'rgba(16, 185, 129, 0.28)',
+              },
+            }}
+          >
+            <ListItemIcon
+              sx={{
+                minWidth: 0,
+                mr: showLabels ? 1.1 : 'auto',
+                justifyContent: 'center',
+                color: themeTokens.colors.textMuted,
+              }}
+            >
+              <VolunteerActivismIcon sx={{ fontSize: 16 }} />
+            </ListItemIcon>
+            {showLabels && (
+              <Typography
+                sx={{
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  color: themeTokens.colors.textSecondary,
+                  lineHeight: 1.2,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                Apoie o Desenvolvimento
+              </Typography>
+            )}
+          </ListItemButton>
+        </Tooltip>
+      </Box>
     </Box>
+  );
+
+  return (
+    <>
+      {isMobileDrawer ? (
+        <Drawer
+          anchor="left"
+          variant="temporary"
+          open={sidebarExpanded}
+          onClose={() => setSidebarExpanded(false)}
+          ModalProps={{ keepMounted: true }}
+          sx={{
+            zIndex: 1300,
+            '& .MuiDrawer-paper': {
+              width: 260,
+              maxWidth: '82vw',
+              height: '100dvh',
+              backgroundColor: themeTokens.colors.bgSecondary,
+              borderRight: `1px solid ${themeTokens.colors.borderSubtle}`,
+              backgroundImage: 'none',
+            },
+          }}
+        >
+          {navContent}
+        </Drawer>
+      ) : (
+        <Box
+          component="nav"
+          sx={{
+            width: sidebarExpanded ? { md: 208, xl: 238 } : 58,
+            flexShrink: 0,
+            backgroundColor: themeTokens.colors.bgSecondary,
+            borderRight: `1px solid ${themeTokens.colors.borderSubtle}`,
+            height: '100%',
+            overflow: 'hidden',
+            transition: 'width 0.22s cubic-bezier(0.4, 0, 0.2, 1)',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          {navContent}
+        </Box>
+      )}
+
+      {/* Modal de Termos de Uso, Autoria e Modelos 3D */}
+      <Dialog
+        open={termsOpen}
+        onClose={() => setTermsOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            backgroundColor: themeTokens.colors.bgSecondary,
+            border: `1px solid ${themeTokens.colors.borderSubtle}`,
+            borderRadius: 2.5,
+            backgroundImage: 'none',
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            px: 3,
+            py: 2,
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2 }}>
+            <GavelIcon sx={{ color: themeTokens.colors.brandCyan, fontSize: 22 }} />
+            <Typography variant="h6" sx={{ fontWeight: 800, color: themeTokens.colors.textPrimary }}>
+              Termos de Uso & Créditos
+            </Typography>
+          </Box>
+          <IconButton size="small" onClick={() => setTermsOpen(false)} sx={{ color: themeTokens.colors.textMuted }}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </DialogTitle>
+
+        <DialogContent
+          dividers
+          sx={{
+            px: 3,
+            pt: '24px !important',
+            pb: 2.8,
+            borderColor: themeTokens.colors.borderSubtle,
+          }}
+        >
+          <Stack spacing={2.2}>
+            <Paper
+              elevation={0}
+              sx={{
+                p: 2.2,
+                backgroundColor: themeTokens.colors.bgElevated,
+                border: `1px solid ${themeTokens.colors.borderSubtle}`,
+                borderRadius: 2,
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                <VolunteerActivismIcon sx={{ color: '#10B981', fontSize: 19 }} />
+                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: themeTokens.colors.textPrimary }}>
+                  Acesso 3D Gratuito & Sustentação do Projeto
+                </Typography>
+              </Box>
+              <Typography variant="body2" sx={{ color: themeTokens.colors.textSecondary, fontSize: '0.84rem', lineHeight: 1.6 }}>
+                O <strong>DentNexo</strong> é uma plataforma interativa de anatomia odontológica 3D disponibilizada de forma{' '}
+                <strong>gratuita</strong>. No futuro, poderão ser exibidos alguns anúncios discretos na interface exclusivamente
+                para ajudar a custear a hospedagem e manter o projeto de pé e acessível para todos.
+              </Typography>
+            </Paper>
+
+            <Paper
+              elevation={0}
+              sx={{
+                p: 2.2,
+                backgroundColor: themeTokens.colors.bgElevated,
+                border: `1px solid ${themeTokens.colors.borderSubtle}`,
+                borderRadius: 2,
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                <AutoAwesomeIcon sx={{ color: themeTokens.colors.brandCyan, fontSize: 19 }} />
+                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: themeTokens.colors.textPrimary }}>
+                  Desenvolvimento & Finalidade Educacional
+                </Typography>
+              </Box>
+              <Typography variant="body2" sx={{ color: themeTokens.colors.textSecondary, fontSize: '0.84rem', lineHeight: 1.6 }}>
+                Este projeto foi idealizado e desenvolvido por{' '}
+                <Box
+                  component="a"
+                  href="https://github.com/iancalegari"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  sx={{
+                    color: themeTokens.colors.brandCyan,
+                    fontWeight: 800,
+                    textDecoration: 'underline',
+                    textUnderlineOffset: '3px',
+                    '&:hover': { color: '#7DD3FC' },
+                  }}
+                >
+                  Ian Calegari
+                </Box>{' '}
+                com o auxílio de <strong>Inteligência Artificial</strong>, voltado estritamente para{' '}
+                <strong>propósitos de estudo, revisão e aprendizado acadêmico</strong>. O conteúdo tem caráter didático e não
+                substitui avaliação clínica, diagnóstico ou conduta odontológica profissional.
+              </Typography>
+            </Paper>
+
+            <Paper
+              elevation={0}
+              sx={{
+                p: 2.2,
+                backgroundColor: themeTokens.colors.bgElevated,
+                border: `1px solid ${themeTokens.colors.borderSubtle}`,
+                borderRadius: 2,
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                <SchoolIcon sx={{ color: '#A855F7', fontSize: 19 }} />
+                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: themeTokens.colors.textPrimary }}>
+                  Modelos Anatômicos 3D & Licenciamento
+                </Typography>
+              </Box>
+              <Typography variant="body2" sx={{ color: themeTokens.colors.textSecondary, fontSize: '0.84rem', lineHeight: 1.6 }}>
+                As malhas tridimensionais craniofaciais, dentárias, musculares e neurovasculares utilizadas no visualizador derivam dos acervos científicos abertos{' '}
+                <Box
+                  component="a"
+                  href="https://github.com/Yoosseph/dental-scope"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  sx={{
+                    color: themeTokens.colors.brandCyan,
+                    fontWeight: 800,
+                    textDecoration: 'underline',
+                    textUnderlineOffset: '3px',
+                    '&:hover': { color: '#7DD3FC' },
+                  }}
+                >
+                  Dental Scope
+                </Box>
+                ,{' '}
+                <Box
+                  component="a"
+                  href="https://lifesciencedb.jp/bp3d/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  sx={{
+                    color: themeTokens.colors.brandCyan,
+                    fontWeight: 800,
+                    textDecoration: 'underline',
+                    textUnderlineOffset: '3px',
+                    '&:hover': { color: '#7DD3FC' },
+                  }}
+                >
+                  BodyParts3D
+                </Box>{' '}
+                (The Database Center for Life Science) e{' '}
+                <Box
+                  component="a"
+                  href="https://github.com/Z-Anatomy/Models-of-human-anatomy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  sx={{
+                    color: themeTokens.colors.brandCyan,
+                    fontWeight: 800,
+                    textDecoration: 'underline',
+                    textUnderlineOffset: '3px',
+                    '&:hover': { color: '#7DD3FC' },
+                  }}
+                >
+                  Z-Anatomy
+                </Box>
+                , distribuídos sob licença aberta{' '}
+                <strong>Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)</strong>, com adaptações de materiais, paleta clínica e interatividade didática.
+              </Typography>
+            </Paper>
+
+            {/* Seção Apoie o Desenvolvimento dentro de Termos de Uso */}
+            <Paper
+              elevation={0}
+              sx={{
+                p: 2.2,
+                backgroundColor: 'rgba(16, 185, 129, 0.05)',
+                border: '1px solid rgba(16, 185, 129, 0.22)',
+                borderRadius: 2,
+              }}
+            >
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: { xs: 'flex-start', sm: 'center' },
+                  justifyContent: 'space-between',
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  gap: 1.5,
+                }}
+              >
+                <Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.6 }}>
+                    <QrCode2Icon sx={{ color: '#10B981', fontSize: 20 }} />
+                    <Typography
+                      variant="subtitle2"
+                      sx={{
+                        fontWeight: 800,
+                        letterSpacing: '0.03em',
+                        textTransform: 'uppercase',
+                        color: themeTokens.colors.textPrimary,
+                      }}
+                    >
+                      Apoie o Desenvolvimento
+                    </Typography>
+                  </Box>
+                  <Typography
+                    variant="body2"
+                    sx={{ color: themeTokens.colors.textSecondary, fontSize: '0.83rem', lineHeight: 1.55 }}
+                  >
+                    Doação totalmente espontânea e opcional para apoiar o desenvolvimento contínuo e novos recursos!
+                  </Typography>
+                </Box>
+
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<VolunteerActivismIcon fontSize="small" />}
+                  onClick={() => {
+                    setTermsOpen(false);
+                    setSupportOpen(true);
+                  }}
+                  sx={{
+                    flexShrink: 0,
+                    fontWeight: 700,
+                    textTransform: 'none',
+                    color: '#34D399',
+                    borderColor: 'rgba(16, 185, 129, 0.45)',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    px: 2,
+                    '&:hover': {
+                      borderColor: '#10B981',
+                      backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                    },
+                  }}
+                >
+                  Apoiar
+                </Button>
+              </Box>
+            </Paper>
+          </Stack>
+        </DialogContent>
+
+        <DialogActions sx={{ px: 3, py: 1.8 }}>
+          <Button
+            variant="contained"
+            size="small"
+            onClick={() => setTermsOpen(false)}
+            sx={{ fontWeight: 700, textTransform: 'none' }}
+          >
+            Entendi
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Modal de Apoio ao Desenvolvimento (QR Code LivePix) */}
+      <Dialog
+        open={supportOpen}
+        onClose={() => setSupportOpen(false)}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{
+          sx: {
+            backgroundColor: themeTokens.colors.bgSecondary,
+            border: `1px solid ${themeTokens.colors.borderSubtle}`,
+            borderRadius: 2.5,
+            backgroundImage: 'none',
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            px: 2.5,
+            py: 1.8,
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <VolunteerActivismIcon sx={{ color: '#10B981', fontSize: 21 }} />
+            <Typography variant="subtitle1" sx={{ fontWeight: 800, color: themeTokens.colors.textPrimary }}>
+              Apoie o Desenvolvimento
+            </Typography>
+          </Box>
+          <IconButton size="small" onClick={() => setSupportOpen(false)} sx={{ color: themeTokens.colors.textMuted }}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </DialogTitle>
+
+        <DialogContent
+          dividers
+          sx={{
+            px: 2.5,
+            pt: '20px !important',
+            pb: 2.2,
+            borderColor: themeTokens.colors.borderSubtle,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 1.8,
+          }}
+        >
+          <Typography
+            variant="body2"
+            sx={{
+              color: themeTokens.colors.textSecondary,
+              fontSize: '0.83rem',
+              lineHeight: 1.5,
+              textAlign: 'center',
+            }}
+          >
+            Doação totalmente espontânea e opcional para apoiar o desenvolvimento contínuo e novos recursos!
+          </Typography>
+
+          <Box
+            sx={{
+              width: '100%',
+              height: { xs: 340, sm: 390 },
+              '@media (max-height: 760px)': {
+                height: 315,
+              },
+              borderRadius: 2,
+              overflow: 'hidden',
+              border: `1px solid ${themeTokens.colors.borderSubtle}`,
+              backgroundColor: '#FFFFFF',
+            }}
+          >
+            <Box
+              component="iframe"
+              src={LIVEPIX_WIDGET_URL}
+              title="QR Code LivePix - Apoie o Desenvolvimento do DentNexo"
+              sx={{
+                width: '100%',
+                height: '100%',
+                border: 'none',
+                display: 'block',
+              }}
+            />
+          </Box>
+
+          <Box
+            component="a"
+            href={LIVEPIX_PAGE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            sx={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 0.7,
+              color: themeTokens.colors.brandCyan,
+              fontSize: '0.83rem',
+              fontWeight: 700,
+              textDecoration: 'underline',
+              textUnderlineOffset: '3px',
+              '&:hover': {
+                color: '#7DD3FC',
+              },
+            }}
+          >
+            Abrir no navegador
+            <OpenInNewIcon sx={{ fontSize: 15 }} />
+          </Box>
+        </DialogContent>
+
+        <DialogActions sx={{ px: 2.5, py: 1.5 }}>
+          <Button
+            variant="contained"
+            size="small"
+            onClick={() => setSupportOpen(false)}
+            sx={{ fontWeight: 700, textTransform: 'none' }}
+          >
+            Fechar
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 };

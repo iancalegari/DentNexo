@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Box,
   Paper,
@@ -9,6 +9,7 @@ import {
   Stack,
   Button,
   ButtonGroup,
+  CircularProgress,
 } from '@mui/material';
 
 // EXCLUSIVAMENTE ÍCONES DO MATERIAL UI
@@ -16,15 +17,17 @@ import HealingIcon from '@mui/icons-material/Healing';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ViewInArIcon from '@mui/icons-material/ViewInAr';
-import VisibilityIcon from '@mui/icons-material/Visibility';
 import ContentCutIcon from '@mui/icons-material/ContentCut';
 import ContrastIcon from '@mui/icons-material/Contrast';
 import FlareIcon from '@mui/icons-material/Flare';
+import VolumeUpIcon from '@mui/icons-material/VolumeUp';
+import StopIcon from '@mui/icons-material/Stop';
 
 import { useAnatomyStore } from '@/stores/useAnatomyStore';
 import { oralPathologies } from '@/data/pathologies/pathologiesData';
 import { AnatomyViewer3D } from '@/components/3d/AnatomyViewer3D';
 import { CameraControls } from '@/components/controls/CameraControls';
+import { ttsService } from '@/services/ttsService';
 import { themeTokens } from '@/theme/tokens';
 
 export const PathologiesView: React.FC = () => {
@@ -43,18 +46,77 @@ export const PathologiesView: React.FC = () => {
   } = useAnatomyStore();
 
   const selectedPathology = activePathologyId ? oralPathologies[activePathologyId] : oralPathologies['carie_dentaria'];
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [ttsLoading, setTtsLoading] = useState(false);
 
-  // Limpar patologia ativa e modo de exploração ao entrar/sair de Patologias
+  // Inicializar patologia padrão ao entrar e limpar ao sair de Patologias
   useEffect(() => {
     setInfoPanelOpen(false);
     setSurfaceExplorationMode(false);
     setSelectedStructure(null);
+    if (!useAnatomyStore.getState().activePathologyId) {
+      setActivePathology('carie_dentaria');
+    }
 
     return () => {
+      ttsService.stop();
       setActivePathology(null);
       setSelectedStructure(null);
     };
   }, [setActivePathology, setInfoPanelOpen, setSurfaceExplorationMode, setSelectedStructure]);
+
+  // Interromper áudio ao alternar patologia
+  useEffect(() => {
+    ttsService.stop();
+    setIsSpeaking(false);
+    setTtsLoading(false);
+  }, [selectedPathology?.id]);
+
+  const handleListenPathology = useCallback(() => {
+    if (!selectedPathology) return;
+    if (isSpeaking) {
+      ttsService.stop();
+      setIsSpeaking(false);
+      setTtsLoading(false);
+      return;
+    }
+
+    const stagesText = (selectedPathology.stages || [])
+      .map((s) => `Estágio ${s.stage}, ${s.title}: ${s.description}`)
+      .join(' ');
+
+    const textParts = [
+      `${selectedPathology.name}.`,
+      stagesText,
+      selectedPathology.etiology?.length ? `Etiologia principal: ${selectedPathology.etiology.join('; ')}.` : '',
+      selectedPathology.clinicalSigns?.length
+        ? `Sinais e sintomas clínicos: ${selectedPathology.clinicalSigns.join('; ')}.`
+        : '',
+      selectedPathology.treatmentOptions?.length
+        ? `Conduta clínica e tratamento: ${selectedPathology.treatmentOptions.join('; ')}.`
+        : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
+
+    setTtsLoading(true);
+    ttsService.speak({
+      audioId: `patologia_${selectedPathology.id}`,
+      text: textParts,
+      onStart: () => {
+        setIsSpeaking(true);
+        setTtsLoading(false);
+      },
+      onEnd: () => {
+        setIsSpeaking(false);
+        setTtsLoading(false);
+      },
+      onError: () => {
+        setIsSpeaking(false);
+        setTtsLoading(false);
+      },
+    });
+  }, [selectedPathology, isSpeaking]);
 
   // Extrair dentes afetados pela patologia selecionada
   const affectedTeeth = (selectedPathology?.affectedStructures || [])
@@ -68,42 +130,49 @@ export const PathologiesView: React.FC = () => {
 
   const isToothPathology = !isGingivalOrMucosal && affectedTeeth.length > 0;
 
-  // Modo de visualização 3D: por padrão 'general' (mostra crânio e arcadas contextualizados)
-  const [viewMode, setViewMode] = useState<'tooth' | 'general'>('general');
-
-  // Ao trocar de patologia, focar na estrutura SEM abrir o painel de detalhes nem isolar automaticamente
+  // Ao trocar de patologia, focar automaticamente no Dente 3D Isolado (para Cárie, Pulpite e Abscesso)
   useEffect(() => {
     if (isGingivalOrMucosal) {
-      setViewMode('general');
       if (layers.oral_tissue === false) toggleLayer('oral_tissue');
       if (layers.dental === false) toggleLayer('dental');
     } else if (isToothPathology) {
       const primaryTooth = affectedTeeth[0] || '36';
       setActiveToothFdi(primaryTooth);
-    } else {
-      setViewMode('general');
+      if (selectedPathology?.id === 'pulpite') {
+        setToothViewMode('pulp_isolation');
+      } else if (selectedPathology?.id === 'abscesso_periapical') {
+        setToothViewMode('cross_section');
+      } else {
+        setToothViewMode('external');
+      }
     }
     setInfoPanelOpen(false);
   }, [selectedPathology?.id]);
 
-  const handleSelectAffectedTooth = (fdi: string) => {
-    setActiveToothFdi(fdi);
-  };
-
   return (
-    <Box sx={{ width: '100%', height: '100%', display: 'flex', overflow: 'hidden' }}>
+    <Box
+      sx={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        flexDirection: { xs: 'column-reverse', md: 'row' },
+        overflow: 'hidden',
+      }}
+    >
       {/* Coluna Esquerda: Catálogo Científico de Patologias */}
       <Box
         sx={{
-          width: { xs: '100%', md: 460 },
-          height: '100%',
+          width: { xs: '100%', md: 350, lg: 400, xl: 460 },
+          flex: { xs: 1, md: 'none' },
+          minHeight: 0,
+          height: { xs: 'auto', md: '100%' },
           overflowY: 'auto',
           backgroundColor: themeTokens.colors.bgSecondary,
-          borderRight: `1px solid ${themeTokens.colors.borderSubtle}`,
-          p: 2.5,
+          borderRight: { xs: 'none', md: `1px solid ${themeTokens.colors.borderSubtle}` },
+          p: { xs: 1.6, sm: 2, lg: 2.5 },
           display: 'flex',
           flexDirection: 'column',
-          gap: 2.5,
+          gap: { xs: 1.8, md: 2.2 },
         }}
       >
         <Box>
@@ -160,6 +229,36 @@ export const PathologiesView: React.FC = () => {
             <Typography variant="body2" sx={{ fontStyle: 'italic', color: '#E11D48' }}>
               {selectedPathology.scientificName} • Categoria: {selectedPathology.category.toUpperCase()}
             </Typography>
+            <Button
+              variant={isSpeaking ? 'contained' : 'outlined'}
+              size="small"
+              fullWidth
+              onClick={handleListenPathology}
+              disabled={ttsLoading}
+              startIcon={
+                ttsLoading ? (
+                  <CircularProgress size={16} sx={{ color: themeTokens.colors.brandCyan }} />
+                ) : isSpeaking ? (
+                  <StopIcon fontSize="small" />
+                ) : (
+                  <VolumeUpIcon fontSize="small" />
+                )
+              }
+              sx={{
+                mt: 1.2,
+                fontSize: '0.78rem',
+                py: 0.55,
+                borderColor: isSpeaking ? '#10B981' : 'rgba(0, 201, 246, 0.4)',
+                color: isSpeaking ? '#FFFFFF' : themeTokens.colors.brandCyan,
+                backgroundColor: isSpeaking ? '#10B981' : 'transparent',
+                '&:hover': {
+                  backgroundColor: isSpeaking ? '#059669' : 'rgba(0, 201, 246, 0.08)',
+                  borderColor: isSpeaking ? '#10B981' : themeTokens.colors.brandCyan,
+                },
+              }}
+            >
+              {ttsLoading ? 'Carregando voz...' : isSpeaking ? 'Parar Áudio' : 'Ouvir Explicação Clínica'}
+            </Button>
           </Box>
 
           {/* Modelo Dental Demonstrativo */}
@@ -304,9 +403,19 @@ export const PathologiesView: React.FC = () => {
         </Box>
       </Box>
 
-      {/* Coluna Direita: Visualizador 3D com a Estrutura Afetada */}
-      <Box sx={{ flex: 1, height: '100%', position: 'relative', display: { xs: 'none', md: 'block' } }}>
-        <AnatomyViewer3D soloToothMode={viewMode === 'tooth' && isToothPathology} />
+      {/* Coluna Direita (Topo no Mobile): Visualizador 3D com a Estrutura Afetada */}
+      <Box
+        sx={{
+          flex: { xs: 'none', md: 1 },
+          width: { xs: '100%', md: 'auto' },
+          height: { xs: '42%', sm: '45%', md: '100%' },
+          minWidth: 0,
+          flexShrink: 0,
+          position: 'relative',
+          borderBottom: { xs: `1px solid ${themeTokens.colors.borderSubtle}`, md: 'none' },
+        }}
+      >
+        <AnatomyViewer3D soloToothMode={isToothPathology} />
         <CameraControls />
 
         {/* HUD de Controle de Visualização 3D na área da Patologia */}
@@ -314,66 +423,55 @@ export const PathologiesView: React.FC = () => {
           elevation={3}
           sx={{
             position: 'absolute',
-            top: 16,
-            left: 16,
+            top: { xs: 8, md: 14 },
+            left: { xs: 8, md: 14 },
             zIndex: 100,
             backgroundColor: 'rgba(11, 15, 20, 0.88)',
             backdropFilter: 'blur(10px)',
             border: `1px solid ${themeTokens.colors.borderSubtle}`,
             borderRadius: 2,
-            p: 1.5,
-            maxWidth: 360,
+            p: { xs: 0.8, md: 1.3 },
+            maxWidth: { xs: 'calc(100% - 16px)', md: 350 },
           }}
         >
-          <Typography variant="caption" sx={{ color: '#E11D48', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: '#E11D48',
+              fontWeight: 800,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              display: { xs: 'none', md: 'block' },
+            }}
+          >
             Visualização Anatômica da Patologia
           </Typography>
 
-          <Typography variant="subtitle2" sx={{ fontWeight: 800, color: themeTokens.colors.textPrimary, mt: 0.3, mb: 1.2 }}>
-            {viewMode === 'tooth' && isToothPathology
-              ? `Dente FDI ${activeToothFdi || '36'} (Estrutura Afetada)`
+          <Typography
+            variant="subtitle2"
+            sx={{
+              fontWeight: 800,
+              fontSize: { xs: '0.75rem', md: '0.84rem' },
+              color: themeTokens.colors.textPrimary,
+              mt: { xs: 0, md: 0.3 },
+              mb: isToothPathology ? 0.5 : 0.2,
+            }}
+          >
+            {isToothPathology
+              ? `Dente 3D Isolado — FDI ${activeToothFdi || '36'}`
               : 'Arcada & Crânio Completo'}
           </Typography>
 
-          {isToothPathology && (
-            <ButtonGroup size="small" sx={{ mb: 1 }}>
-              <Button
-                variant={viewMode === 'tooth' ? 'contained' : 'outlined'}
-                onClick={() => setViewMode('tooth')}
-                startIcon={<ViewInArIcon fontSize="small" />}
-                sx={{
-                  fontWeight: 700,
-                  fontSize: '0.74rem',
-                  backgroundColor: viewMode === 'tooth' ? themeTokens.colors.brandCyan : undefined,
-                  color: viewMode === 'tooth' ? '#0B0F14' : themeTokens.colors.textPrimary,
-                }}
-              >
-                Dente 3D Isolado
-              </Button>
-              <Button
-                variant={viewMode === 'general' ? 'contained' : 'outlined'}
-                onClick={() => setViewMode('general')}
-                startIcon={<VisibilityIcon fontSize="small" />}
-                sx={{
-                  fontWeight: 700,
-                  fontSize: '0.74rem',
-                }}
-              >
-                Visão Geral
-              </Button>
-            </ButtonGroup>
-          )}
-
           {/* Seletor de Modo Anatômico do Dente Afetado */}
-          {viewMode === 'tooth' && isToothPathology && (
-            <Box sx={{ mt: 1, pt: 1.2, borderTop: `1px solid ${themeTokens.colors.borderSubtle}` }}>
+          {isToothPathology && (
+            <Box sx={{ mt: 0.5, pt: { xs: 0.5, md: 0.8 }, borderTop: `1px solid ${themeTokens.colors.borderSubtle}` }}>
               <Typography
                 variant="caption"
                 sx={{
                   color: themeTokens.colors.brandCyan,
                   fontWeight: 700,
-                  display: 'block',
-                  mb: 0.8,
+                  display: { xs: 'none', md: 'block' },
+                  mb: 0.6,
                   fontSize: '0.72rem',
                 }}
               >
@@ -448,8 +546,17 @@ export const PathologiesView: React.FC = () => {
             </Box>
           )}
 
-          <Typography variant="caption" sx={{ color: themeTokens.colors.textMuted, display: 'block', mt: 1.2, fontSize: '0.72rem' }}>
-            {viewMode === 'tooth' && isToothPathology
+          <Typography
+            variant="caption"
+            sx={{
+              color: themeTokens.colors.textMuted,
+              display: { xs: 'none', lg: 'block' },
+              '@media (max-height: 760px)': { display: 'none' },
+              mt: 1,
+              fontSize: '0.7rem',
+            }}
+          >
+            {isToothPathology
               ? 'Exibindo anatomia 3D de alta fidelidade com camadas histológicas (esmalte, dentina e polpa).'
               : 'Exibindo conjunto ósseo e craniofacial.'}
           </Typography>

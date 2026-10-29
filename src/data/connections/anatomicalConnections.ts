@@ -292,6 +292,36 @@ export const anatomicalConnectionsMap: Record<string, AnatomicalConnectionItem[]
     },
   ],
 
+  seio_frontal: [
+    {
+      targetStructureId: 'osso_frontal',
+      relationType: 'supported_by',
+      relationLabel: 'Cavidade pneumática contida entre as tábuas do osso frontal',
+      clinicalSignificance: 'Importante referência em fraturas frontobasais e diagnóstico diferencial de dor facial superior.',
+    },
+    {
+      targetStructureId: 'osso_etmoide',
+      relationType: 'adjacent_to',
+      relationLabel: 'Drena para o meato nasal médio via infundíbulo etmoidal',
+      clinicalSignificance: 'Obstruções ostiomeatais podem associar sinusite frontal e maxilar simultâneas (pansinusite).',
+    },
+  ],
+
+  seio_esfenoidal: [
+    {
+      targetStructureId: 'osso_esfenoide',
+      relationType: 'supported_by',
+      relationLabel: 'Alojado no corpo central do osso esfenoide abaixo da sela túrcica',
+      clinicalSignificance: 'Parede lateral delgada vizinha à artéria carótida interna e ao seio cavernoso.',
+    },
+    {
+      targetStructureId: 'nervo_maxilar_v2',
+      relationType: 'adjacent_to',
+      relationLabel: 'Proximidade inferolateral com o forame redondo e trajeto de V2',
+      clinicalSignificance: 'Processos inflamatórios esfenoidais podem irradiar dor profunda retro-orbitária e maxilar.',
+    },
+  ],
+
   neurocranio: [
     {
       targetStructureId: 'mandibula',
@@ -395,6 +425,27 @@ export const anatomicalConnectionsMap: Record<string, AnatomicalConnectionItem[]
       relationType: 'adjacent_to',
       relationLabel: 'Nervo alveolar e lingual descem na face lateral do músculo',
       clinicalSignificance: 'Espaço pterigomandibular é o sítio exato da punção anestésica para bloqueio mandibular.',
+    },
+  ],
+
+  musculo_mentual: [
+    {
+      targetStructureId: 'mandibula',
+      relationType: 'originates_from',
+      relationLabel: 'Origem na fossa incisiva anterior da mandíbula',
+      clinicalSignificance: 'Reinserção cirúrgica obrigatória após acessos vestibulares na sínfise mandibular.',
+    },
+    {
+      targetStructureId: 'musculo_orbicular_boca',
+      relationType: 'adjacent_to',
+      relationLabel: 'Atua sinergicamente na elevação e selamento do lábio inferior',
+      clinicalSignificance: 'Hipercontração compensatória comum em respiradores bucais e Classe II esquelética.',
+    },
+    {
+      targetStructureId: 'nervo_mentual',
+      relationType: 'adjacent_to',
+      relationLabel: 'Relação topográfica lateral com a emergência do forame mentual',
+      clinicalSignificance: 'Referência de segurança em incisões no fundo de vestíbulo inferior.',
     },
   ],
 
@@ -605,6 +656,199 @@ export const anatomicalConnectionsMap: Record<string, AnatomicalConnectionItem[]
       relationType: 'vascularized_by',
       relationLabel: 'Plexo capilar vascular subepitelial de alta regeneração',
       clinicalSignificance: 'Garante coloração rosa-pálido sadia e resposta imune rápida a patógenos orais.',
+    },
+  ],
+
+  // ================= NOVAS ESTRUTURAS ÓSSEAS E NEUROVASCULARES DESTRAVADAS =================
+  osso_palatino: [
+    {
+      targetStructureId: 'maxila',
+      relationType: 'articulates_with',
+      relationLabel: 'Sutura palatina transversa completa o terço posterior do palato duro',
+      clinicalSignificance: 'Integridade essencial para separação oronasal; acometida em fissuras palatinas.',
+    },
+    {
+      targetStructureId: 'nervo_palatino_maior',
+      relationType: 'traverses',
+      relationLabel: 'Forame palatino maior transmite o feixe neurovascular palatino',
+      clinicalSignificance: 'Marco anatômico primordial para bloqueio anestésico palatino posterior.',
+    },
+    {
+      targetStructureId: 'osso_esfenoide',
+      relationType: 'articulates_with',
+      relationLabel: 'Processo piramidal articula-se com as lâminas pterigóideas',
+      clinicalSignificance: 'Zona de resistência na disjunção pterigomaxilar em cirurgias Le Fort I.',
+    },
+  ],
+
+  osso_vomer: [
+    {
+      targetStructureId: 'osso_etmoide',
+      relationType: 'articulates_with',
+      relationLabel: 'Une-se superiormente à lâmina perpendicular etmoidal no septo nasal',
+      clinicalSignificance: 'Desvios septais posteriores contribuem para respiração bucal e atresia maxilar.',
+    },
+    {
+      targetStructureId: 'nervo_nasopalatino',
+      relationType: 'adjacent_to',
+      relationLabel: 'Sulco oblíquo nas faces do vômer guia o nervo nasopalatino',
+      clinicalSignificance: 'Conduz a inervação sensitiva da cavidade nasal diretamente ao canal incisivo.',
+    },
+  ],
+
+  osso_lacrimal: [
+    {
+      targetStructureId: 'maxila',
+      relationType: 'articulates_with',
+      relationLabel: 'Forma a fossa do saco lacrimal junto ao processo frontal maxilar',
+      clinicalSignificance: 'Vulnerável em fraturas naso-órbito-etmoidais (NOE) e Le Fort II.',
+    },
+    {
+      targetStructureId: 'concha_nasal_inferior',
+      relationType: 'articulates_with',
+      relationLabel: 'Delimita superiormente o canal nasolacrimal rumo ao meato inferior',
+      clinicalSignificance: 'Drenagem lacrimal contínua para a porção inferior da cavidade nasal.',
+    },
+  ],
+
+  concha_nasal_inferior: [
+    {
+      targetStructureId: 'maxila',
+      relationType: 'articulates_with',
+      relationLabel: 'Articula-se na crista conchal da parede nasal lateral da maxila',
+      clinicalSignificance: 'Hipertrofia crônica associa-se à síndrome do respirador bucal em pacientes ortodônticos.',
+    },
+    {
+      targetStructureId: 'seio_maxilar',
+      relationType: 'adjacent_to',
+      relationLabel: 'Parede medial do seio maxilar situa-se lateralmente à concha inferior',
+      clinicalSignificance: 'Referência radiográfica e tomográfica constante em exames odontológicos.',
+    },
+  ],
+
+  osso_hioide: [
+    {
+      targetStructureId: 'mandibula',
+      relationType: 'supports',
+      relationLabel: 'Ancora a musculatura supra-hióidea que traciona a mandíbula para baixo',
+      clinicalSignificance: 'Estabilização hióidea é indispensável para abertura bucal ampla e deglutição.',
+    },
+    {
+      targetStructureId: 'nervo_hipoglosso',
+      relationType: 'adjacent_to',
+      relationLabel: 'Nervo hipoglosso contorna superiormente o corno maior do hioide',
+      clinicalSignificance: 'Reparo anatômico cirúrgico cervical no triângulo submandibular.',
+    },
+  ],
+
+  nervo_bucal: [
+    {
+      targetStructureId: 'mandibula',
+      relationType: 'adjacent_to',
+      relationLabel: 'Cruza a borda anterior do ramo mandibular (linha oblíqua)',
+      clinicalSignificance: 'Ponto exato de punção do bloqueio anestésico bucal distal aos molares.',
+    },
+    {
+      targetStructureId: 'gengiva_inserida',
+      relationType: 'innervates',
+      relationLabel: 'Inerva a gengiva vestibular e mucosa jugal dos molares inferiores',
+      clinicalSignificance: 'Indispensável para uso de grampos de isolamento e retalhos mucoperiosteais.',
+    },
+  ],
+
+  nervo_palatino_maior: [
+    {
+      targetStructureId: 'osso_palatino',
+      relationType: 'traverses',
+      relationLabel: 'Emerge pelo forame palatino maior na abóbada palatina posterior',
+      clinicalSignificance: 'Anestesia toda a hemimucosa palatina dura posterior até o 1º pré-molar.',
+    },
+    {
+      targetStructureId: 'nervo_maxilar_v2',
+      relationType: 'originates_from',
+      relationLabel: 'Ramo descendente via gânglio pterigopalatino (V2)',
+      clinicalSignificance: 'Transmite aferências dolorosas intensas da fibromucosa palatina queratinizada.',
+    },
+  ],
+
+  nervo_nasopalatino: [
+    {
+      targetStructureId: 'maxila',
+      relationType: 'traverses',
+      relationLabel: 'Atravessa o canal e forame incisivo sob a papila incisiva',
+      clinicalSignificance: 'Punção única anestesia bilateralmente o palato anterior de canino a canino (13 a 23).',
+    },
+    {
+      targetStructureId: 'osso_vomer',
+      relationType: 'adjacent_to',
+      relationLabel: 'Desce ao longo do septo nasal sobre o osso vômer',
+      clinicalSignificance: 'Sítio embriológico de formação do cisto do ducto nasopalatino.',
+    },
+  ],
+
+  nervo_facial: [
+    {
+      targetStructureId: 'musculo_orbicular_boca',
+      relationType: 'innervates',
+      relationLabel: 'Ramos bucal e marginal da mandíbula comandam a motricidade labial',
+      clinicalSignificance: 'Injeção intraparotídea acidental no bloqueio do NAI causa paralisia facial temporária.',
+    },
+    {
+      targetStructureId: 'musculo_bucinador',
+      relationType: 'innervates',
+      relationLabel: 'Ramos bucais do NC VII fornecem motricidade ao bucinador',
+      clinicalSignificance: 'Diferencia-se do nervo bucal de V3 (que é puramente sensitivo).',
+    },
+    {
+      targetStructureId: 'musculo_mentual',
+      relationType: 'innervates',
+      relationLabel: 'Ramo marginal da mandíbula inerva o músculo mentual',
+      clinicalSignificance: 'Risco cirúrgico em incisões submandibulares de Risdon.',
+    },
+  ],
+
+  nervo_hipoglosso: [
+    {
+      targetStructureId: 'osso_hioide',
+      relationType: 'adjacent_to',
+      relationLabel: 'Trajeto arqueado superiormente ao corno maior do osso hioide',
+      clinicalSignificance: 'Comanda toda a motricidade intrínseca e extrínseca da língua.',
+    },
+    {
+      targetStructureId: 'nervo_lingual',
+      relationType: 'adjacent_to',
+      relationLabel: 'Compartilha o espaço sublingual profundo com o nervo lingual',
+      clinicalSignificance: 'Dissociação funcional lingual: NC XII (motor) vs. Lingual/V3 (sensitivo geral).',
+    },
+  ],
+
+  arteria_alveolar_inferior: [
+    {
+      targetStructureId: 'arteria_maxilar',
+      relationType: 'originates_from',
+      relationLabel: 'Ramo descendente da porção mandibular da artéria maxilar',
+      clinicalSignificance: 'Exige aspiração prévia negativa obrigatória antes de injetar anestésico no espaço pterigomandibular.',
+    },
+    {
+      targetStructureId: 'mandibula',
+      relationType: 'traverses',
+      relationLabel: 'Percorre o canal mandibular irrigando dentes inferiores e osso alveolar',
+      clinicalSignificance: 'Lesão vascular em osteotomias ou implantes pode provocar sangramento intraósseo expressivo.',
+    },
+  ],
+
+  plexo_pterigoideo: [
+    {
+      targetStructureId: 'maxila',
+      relationType: 'adjacent_to',
+      relationLabel: 'Situado póstero-superiormente à tuberosidade da maxila',
+      clinicalSignificance: 'Punção profunda/alta excessiva no bloqueio ASP gera hematoma imediato na fossa infratemporal.',
+    },
+    {
+      targetStructureId: 'pterigoideo_lateral',
+      relationType: 'adjacent_to',
+      relationLabel: 'Envolve as superfícies do músculo pterigóideo lateral',
+      clinicalSignificance: 'Rede venosa sem válvulas com comunicação potencial para o seio cavernoso.',
     },
   ],
 };
