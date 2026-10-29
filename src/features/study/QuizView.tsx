@@ -82,7 +82,17 @@ export const QuizView: React.FC = () => {
   const isTeethLineupQuestion =
     Boolean(activeLevel && !quizFinished && currentQ?.sceneMode === 'teeth_lineup');
 
-  // Ajustar enquadramento da câmera quando a questão atual mudar
+  // Instrumento ativo no visualizador 3D (para questões de ferramentas e instrumentais 3D)
+  const activeInstrumentFor3D = (() => {
+    if (currentQ?.sceneMode !== 'instrument_3d') return null;
+    if (selectedOption && currentQ.options) {
+      const match = currentQ.options.find((opt) => opt.id === selectedOption);
+      if (match?.instrumentId) return match.instrumentId;
+    }
+    return currentQ.instrumentId || 'sonda_periodontal';
+  })();
+
+  // Ajustar enquadramento da câmera e camadas quando a questão atual mudar
   useEffect(() => {
     if (!activeLevel || quizFinished || !currentQ) return;
 
@@ -95,7 +105,63 @@ export const QuizView: React.FC = () => {
 
     if (currentQ.sceneMode === 'teeth_lineup') {
       setCameraPreset('frontal');
+    } else if (currentQ.sceneMode === 'instrument_3d') {
+      setCameraPreset('frontal');
     } else if (currentQ.type === 'structure_identification') {
+      if (currentQ.targetStructureId) {
+        const struct = anatomicalStructures[currentQ.targetStructureId];
+        if (struct) {
+          if (struct.category === 'skeletal') {
+            useAnatomyStore.setState({
+              layers: {
+                skeletal: true,
+                dental: true,
+                muscular: false,
+                nervous: false,
+                vascular: false,
+                oral_tissue: false,
+                pathologies: false,
+              },
+            });
+          } else if (struct.category === 'muscular') {
+            useAnatomyStore.setState({
+              layers: {
+                skeletal: true,
+                dental: false,
+                muscular: true,
+                nervous: false,
+                vascular: false,
+                oral_tissue: false,
+                pathologies: false,
+              },
+            });
+          } else if (struct.category === 'nervous') {
+            useAnatomyStore.setState({
+              layers: {
+                skeletal: true,
+                dental: true,
+                muscular: false,
+                nervous: true,
+                vascular: false,
+                oral_tissue: false,
+                pathologies: false,
+              },
+            });
+          } else if (struct.id === 'lingua' || struct.category === 'oral_tissue') {
+            useAnatomyStore.setState({
+              layers: {
+                skeletal: true,
+                dental: true,
+                muscular: false,
+                nervous: false,
+                vascular: false,
+                oral_tissue: true,
+                pathologies: false,
+              },
+            });
+          }
+        }
+      }
       setCameraPreset('frontal');
     } else {
       resetCamera();
@@ -272,9 +338,9 @@ export const QuizView: React.FC = () => {
                 </Typography>
               </Box>
               <Typography variant="body2" sx={{ color: themeTokens.colors.textSecondary, mt: 0.8, lineHeight: 1.5 }}>
-                Escolha um nível abaixo para iniciar. Cada nível possui um banco dedicado de{' '}
-                <strong>20 questões</strong> e sorteia <strong>5 questões aleatórias</strong> por rodada —
-                incluindo desafios interativos de seleção nos <strong>Dentes Enfileirados 3D</strong> e no crânio.
+                Escolha um nível abaixo para iniciar. Cada rodada sorteia <strong>5 desafios dinâmicos e balanceados</strong> —
+                incluindo <strong>Instrumentais 3D Interativos</strong>, <strong>Ossos, Músculos & Nervos no Crânio 3D</strong>,
+                <strong>Língua & Mucosa Oral</strong> e <strong>Dentes Enfileirados 3D</strong>, a partir de um banco com mais de <strong>90 questões</strong>.
               </Typography>
 
               <Stack direction="row" spacing={1} sx={{ mt: 1.5 }} flexWrap="wrap" useFlexGap>
@@ -291,7 +357,7 @@ export const QuizView: React.FC = () => {
                 />
                 <Chip
                   icon={<ViewInArIcon sx={{ fontSize: '15px !important' }} />}
-                  label="18 Desafios Práticos 3D (6 por nível)"
+                  label={`${quizQuestions.filter((q) => q.type === 'structure_identification' || q.sceneMode === 'instrument_3d').length} Desafios Práticos 3D (Ossos, Músculos & Instrumentos)`}
                   size="small"
                   sx={{
                     fontWeight: 700,
@@ -510,13 +576,25 @@ export const QuizView: React.FC = () => {
                       color: themeTokens.colors.brandCyan,
                     }}
                   />
-                  {currentQ.type === 'structure_identification' && (
+                  {currentQ.sceneMode === 'instrument_3d' ? (
+                    <Chip
+                      icon={<ViewInArIcon sx={{ fontSize: '14px !important' }} />}
+                      label="Desafio 3D • Instrumental Odontológico Interativo"
+                      size="small"
+                      sx={{
+                        fontSize: '0.68rem',
+                        fontWeight: 800,
+                        backgroundColor: 'rgba(236, 72, 153, 0.15)',
+                        color: '#F472B6',
+                      }}
+                    />
+                  ) : currentQ.type === 'structure_identification' ? (
                     <Chip
                       icon={<ViewInArIcon sx={{ fontSize: '14px !important' }} />}
                       label={
                         currentQ.sceneMode === 'teeth_lineup'
                           ? 'Desafio Interativo • Dentes Enfileirados 3D'
-                          : 'Desafio Interativo • Clique no 3D'
+                          : 'Desafio Interativo • Clique no Crânio 3D'
                       }
                       size="small"
                       sx={{
@@ -526,12 +604,32 @@ export const QuizView: React.FC = () => {
                         color: '#34D399',
                       }}
                     />
-                  )}
+                  ) : null}
                 </Box>
 
                 <Typography variant="h6" sx={{ fontWeight: 700, color: themeTokens.colors.textPrimary, lineHeight: 1.4 }}>
                   {currentQ.question}
                 </Typography>
+
+                {currentQ.sceneMode === 'instrument_3d' && (
+                  <Box
+                    sx={{
+                      p: 1.2,
+                      borderRadius: 1.5,
+                      backgroundColor: 'rgba(236, 72, 153, 0.08)',
+                      border: '1px solid rgba(236, 72, 153, 0.25)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                    }}
+                  >
+                    <TouchAppIcon sx={{ fontSize: 20, color: '#F472B6' }} />
+                    <Typography variant="caption" sx={{ color: '#FBCFE8', fontWeight: 600 }}>
+                      Gire e dê zoom no modelo 3D ao lado para inspecionar os detalhes do instrumental.
+                      {currentQ.options?.some((o) => o.instrumentId) && ' Ao selecionar uma opção, o modelo 3D é atualizado em tempo real!'}
+                    </Typography>
+                  </Box>
+                )}
 
                 {/* Pergunta de Múltipla Escolha */}
                 {currentQ.type === 'multiple_choice' && currentQ.options && (
@@ -603,7 +701,7 @@ export const QuizView: React.FC = () => {
                     <Typography variant="body2" sx={{ fontWeight: 700, color: themeTokens.colors.textPrimary }}>
                       {currentQ.sceneMode === 'teeth_lineup'
                         ? 'Clique diretamente no dente correspondente na vitrine 3D de 32 dentes enfileirados ao lado.'
-                        : 'Gire o modelo se necessário e clique diretamente na estrutura anatômica 3D ao lado.'}
+                        : 'Gire o crânio/face 3D se necessário e clique diretamente na estrutura anatômica (osso, músculo, nervo ou língua) ao lado.'}
                     </Typography>
 
                     {!isAnswered ? (
@@ -772,6 +870,8 @@ export const QuizView: React.FC = () => {
       >
         <AnatomyViewer3D
           teethLineupMode={isTeethLineupQuestion}
+          quizSceneMode={currentQ?.sceneMode || 'full_anatomy'}
+          quizInstrumentId={activeInstrumentFor3D}
           quizTargetId={currentQ?.targetStructureId || null}
           quizAnswered={isAnswered}
           hideSelectionBadge={Boolean(activeLevel && !isAnswered)}

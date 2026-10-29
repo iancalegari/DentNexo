@@ -54,12 +54,22 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
   const isLayerVisibleNerves = !isGeographicTongue && (layers.nervous || focusedSystem === 'nervous');
 
   const isTongueHidden = isGeographicTongue ? false : hiddenStructureIds.includes('lingua');
+  const isFloorHidden = isGeographicTongue ? false : hiddenStructureIds.includes('assoalho_boca');
+  const isTonsilsHidden = isGeographicTongue || hiddenStructureIds.includes('tonsilas_palatinas');
   const isUvulaHidden = isGeographicTongue || hiddenStructureIds.includes('uvula');
   const isNerveHidden = isGeographicTongue || hiddenStructureIds.includes('nervo_lingual');
 
   const isTongueSelected = selectedStructureId === 'lingua';
   const isTongueHovered = hoveredStructureId === 'lingua';
   const isTongueIsolated = isolatedStructureId === 'lingua';
+
+  const isFloorSelected = selectedStructureId === 'assoalho_boca';
+  const isFloorHovered = hoveredStructureId === 'assoalho_boca';
+  const isFloorIsolated = isolatedStructureId === 'assoalho_boca';
+
+  const isTonsilsSelected = selectedStructureId === 'tonsilas_palatinas';
+  const isTonsilsHovered = hoveredStructureId === 'tonsilas_palatinas';
+  const isTonsilsIsolated = isolatedStructureId === 'tonsilas_palatinas';
 
   const isUvulaSelected = selectedStructureId === 'uvula';
   const isUvulaHovered = hoveredStructureId === 'uvula';
@@ -411,6 +421,192 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
     return { softPalateGeometry: palateGeom, uvulaGeometry: uvGeom };
   }, []);
 
+  // 3. Geometria Anatômica do Assoalho da Boca Fechado (Comprimento Total da Língua)
+  const { floorOfMouthGeometry, frenulumGeometry } = useMemo(() => {
+    const numZ = 48; // Fatias ao longo do comprimento
+    const numX = 32; // Segmentos de um lado ao outro da mandíbula (fechado)
+    const positions: number[] = [];
+    const uvs: number[] = [];
+    const indices: number[] = [];
+
+    for (let i = 0; i <= numZ; i++) {
+      const t = i / numZ; // 0 = ápice anterior (z = 1.95), 1 = raiz posterior (z = -1.50)
+      const z = 1.95 - t * 3.45; // Comprimento idêntico ao da língua (1.94 a -1.50)
+
+      // Largura da arcada mandibular interna nesse Z
+      let maxHalfWidth: number;
+      if (t < 0.12) {
+        maxHalfWidth = Math.sin((t / 0.12) * Math.PI * 0.5) * 0.78;
+      } else if (t < 0.65) {
+        maxHalfWidth = 0.78 + ((t - 0.12) / 0.53) * 0.62; // alarga até 1.40 entre pré-molares e molares
+      } else {
+        maxHalfWidth = 1.40 + ((t - 0.65) / 0.35) * 0.24; // alarga até 1.64 na região posterior da mandíbula
+      }
+
+      // Altura Y da borda mandibular externa
+      let edgeY: number;
+      if (t < 0.20) {
+        edgeY = -0.86 - (t / 0.20) * 0.08;
+      } else if (t < 0.70) {
+        edgeY = -0.94 - ((t - 0.20) / 0.50) * 0.16;
+      } else {
+        const uPost = (t - 0.70) / 0.30;
+        edgeY = -1.10 - uPost * 0.38; // desce acompanhando a linha milo-hióidea e o osso hioide
+      }
+
+      // Altura Y da linha média do assoalho (centro do soalho sob a língua)
+      let midY: number;
+      if (t < 0.15) {
+        midY = -0.95 - t * 0.20;
+      } else if (t < 0.70) {
+        midY = -0.98 - ((t - 0.15) / 0.55) * 0.22;
+      } else {
+        const uPost = (t - 0.70) / 0.30;
+        midY = -1.20 - uPost * uPost * 0.45; // transição posterior ao hioide
+      }
+
+      // Largura da língua nesse ponto (para calcular a calha sublingual livre)
+      let tongueHalfW: number;
+      if (t < 0.15) {
+        tongueHalfW = Math.sin((t / 0.15) * Math.PI * 0.5) * 0.65;
+      } else if (t < 0.70) {
+        tongueHalfW = 0.65 + ((t - 0.15) / 0.55) * 0.58;
+      } else {
+        tongueHalfW = 1.23 - ((t - 0.70) / 0.30) * 0.25;
+      }
+
+      for (let j = 0; j <= numX; j++) {
+        // v varia de -1 (cortical esquerda) a +1 (cortical direita)
+        const v = (j / numX) * 2 - 1;
+        const distFromMid = Math.abs(v); // 0 no centro, 1 na borda mandibular
+
+        const px = v * maxHalfWidth;
+        let py: number;
+
+        if (distFromMid < 0.001) {
+          py = midY;
+        } else {
+          // Curvatura anatômica: perfil de bacia/cinta côncava suave (diafragma do milo-hióideo)
+          // Forma uma calha sublingual natural entre o corpo lingual e a mandíbula
+          const curveFactor = Math.pow(distFromMid, 1.6);
+          py = THREE.MathUtils.lerp(midY, edgeY, curveFactor);
+
+          // Calha sublingual onde a saliva se acumula lateralmente à língua
+          const isGutterRegion = px > tongueHalfW * 0.85 && distFromMid < 0.95;
+          if (isGutterRegion && t > 0.06 && t < 0.85) {
+            const gutterDip = Math.sin(Math.PI * Math.min(1, Math.max(0, (distFromMid - 0.4) / 0.5))) * -0.055;
+            py += gutterDip;
+          }
+        }
+
+        // Relevo anatômico das carúnculas sublinguais anteriores (saída dos ductos de Wharton)
+        if (t < 0.16 && distFromMid > 0.04 && distFromMid < 0.22) {
+          const caruncula =
+            Math.sin(((distFromMid - 0.04) / 0.18) * Math.PI) *
+            Math.sin((t / 0.16) * Math.PI) *
+            0.042;
+          py += caruncula;
+        }
+
+        // Pregas sublinguais (glândulas sublinguais sob a mucosa lateral)
+        if (t > 0.08 && t < 0.58 && distFromMid > 0.28 && distFromMid < 0.75) {
+          const glandRidge =
+            Math.sin(((t - 0.08) / 0.50) * Math.PI) *
+            Math.sin(((distFromMid - 0.28) / 0.47) * Math.PI) *
+            0.045;
+          py += glandRidge;
+        }
+
+        positions.push(px, py, z);
+        uvs.push(j / numX, t);
+      }
+    }
+
+    for (let i = 0; i < numZ; i++) {
+      for (let j = 0; j < numX; j++) {
+        const a = i * (numX + 1) + j;
+        const b = (i + 1) * (numX + 1) + j;
+        const c = (i + 1) * (numX + 1) + (j + 1);
+        const d = i * (numX + 1) + (j + 1);
+
+        // Ordem dos vértices para normais apontando para cima
+        indices.push(a, d, b);
+        indices.push(b, d, c);
+      }
+    }
+
+    const floorGeom = new THREE.BufferGeometry();
+    floorGeom.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    floorGeom.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+    floorGeom.setIndex(indices);
+    floorGeom.computeVertexNormals();
+
+    // Frênulo Lingual na linha média (prega mucosa sagital mediana conectando soalho à língua)
+    const frenGeom = new THREE.PlaneGeometry(0.32, 0.26, 6, 6);
+    frenGeom.rotateY(Math.PI * 0.5);
+    frenGeom.translate(0, -0.76, 1.48);
+
+    return { floorOfMouthGeometry: floorGeom, frenulumGeometry: frenGeom };
+  }, []);
+
+  // 4. Geometria Anatômica das Amígdalas (Tonsilas Palatinas) com Criptas e Pilares
+  const { tonsilsGeometries, tonsillarPillarsGeometry } = useMemo(() => {
+    const createTonsilGeom = (isLeft: boolean) => {
+      const geom = new THREE.SphereGeometry(0.30, 26, 20);
+      geom.scale(0.72, 1.35, 0.90);
+
+      const pos = geom.attributes.position;
+      const v = new THREE.Vector3();
+
+      for (let i = 0; i < pos.count; i++) {
+        v.fromBufferAttribute(pos, i);
+
+        // Modelagem de criptas tonsilares profundas e lobulações linfoides
+        const cryptPattern =
+          Math.sin(v.y * 14.0 + v.z * 10.0) * Math.cos(v.x * 12.0) +
+          Math.sin(v.y * 22.0) * 0.35;
+
+        if (cryptPattern < -0.32) {
+          const depth = (cryptPattern + 0.32) * 0.075;
+          v.addScaledVector(v.clone().normalize(), depth);
+        } else if (cryptPattern > 0.42) {
+          const bump = (cryptPattern - 0.42) * 0.038;
+          v.addScaledVector(v.clone().normalize(), bump);
+        }
+
+        pos.setXYZ(i, v.x, v.y, v.z);
+      }
+
+      geom.computeVertexNormals();
+      return geom;
+    };
+
+    // Pilares Amigdalianos (Arcos Palatoglosso e Palatofaríngeo)
+    const curveL = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(-0.95, 0.38, -1.45),
+      new THREE.Vector3(-1.40, -0.05, -1.56),
+      new THREE.Vector3(-1.36, -0.46, -1.68),
+      new THREE.Vector3(-1.16, -0.74, -1.58),
+    ]);
+    const curveR = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(0.95, 0.38, -1.45),
+      new THREE.Vector3(1.40, -0.05, -1.56),
+      new THREE.Vector3(1.36, -0.46, -1.68),
+      new THREE.Vector3(1.16, -0.74, -1.58),
+    ]);
+
+    const pillarL = new THREE.TubeGeometry(curveL, 20, 0.055, 10, false);
+    const pillarR = new THREE.TubeGeometry(curveR, 20, 0.055, 10, false);
+
+    return {
+      tonsilsGeometries: {
+        left: createTonsilGeom(true),
+        right: createTonsilGeom(false),
+      },
+      tonsillarPillarsGeometry: { left: pillarL, right: pillarR },
+    };
+  }, []);
+
   // 3. Ramos Bilaterais do Nervo Lingual Conectados Diretamente à Língua
   const lingualNerveGeometries = useMemo(() => {
     const leftMainCurve = new THREE.CatmullRomCurve3([
@@ -618,12 +814,113 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
     );
   };
 
+  const getFloorMaterial = () => {
+    if (xrayMode) {
+      return (
+        <meshStandardMaterial
+          color={isFloorSelected ? '#38BDF8' : '#D96B78'}
+          transparent
+          opacity={isFloorSelected ? 0.95 : 0.35}
+          roughness={0.2}
+          emissive={isFloorSelected ? '#00E5FF' : '#450A0A'}
+          emissiveIntensity={isFloorSelected ? 0.8 : 0.15}
+          side={THREE.DoubleSide}
+        />
+      );
+    }
+
+    let opacity = focusedSystem === 'oral_tissue' ? 1.0 : (opacities.oral_tissue ?? 1.0);
+    if (hasIsolation && !isFloorIsolated) {
+      opacity = 0.12;
+    }
+
+    let color = '#D96B78';
+    let emissive = '#450A0A';
+    let emissiveIntensity = 0.12;
+
+    if (isFloorSelected) {
+      color = themeTokens.colors.brandCyan;
+      emissive = '#00C9F6';
+      emissiveIntensity = 0.75;
+      opacity = 1.0;
+    } else if (isFloorHovered) {
+      color = '#F472B6';
+      emissive = '#DB2777';
+      emissiveIntensity = 0.45;
+    }
+
+    return (
+      <meshStandardMaterial
+        color={color}
+        roughness={0.28}
+        metalness={0.04}
+        emissive={emissive}
+        emissiveIntensity={emissiveIntensity}
+        transparent={opacity < 0.99 || (hasIsolation && !isFloorIsolated)}
+        opacity={opacity}
+        side={THREE.DoubleSide}
+      />
+    );
+  };
+
+  const getTonsilsMaterial = () => {
+    if (xrayMode) {
+      return (
+        <meshStandardMaterial
+          color={isTonsilsSelected ? '#38BDF8' : '#CE5B69'}
+          transparent
+          opacity={isTonsilsSelected ? 0.95 : 0.35}
+          roughness={0.3}
+          emissive={isTonsilsSelected ? '#00E5FF' : '#450A0A'}
+          emissiveIntensity={isTonsilsSelected ? 0.8 : 0.15}
+        />
+      );
+    }
+
+    let opacity = focusedSystem === 'oral_tissue' ? 1.0 : (opacities.oral_tissue ?? 1.0);
+    if (hasIsolation && !isTonsilsIsolated) {
+      opacity = 0.12;
+    }
+
+    let color = '#CE5B69';
+    let emissive = '#4C0519';
+    let emissiveIntensity = 0.18;
+
+    if (isTonsilsSelected) {
+      color = themeTokens.colors.brandCyan;
+      emissive = '#00C9F6';
+      emissiveIntensity = 0.75;
+      opacity = 1.0;
+    } else if (isTonsilsHovered) {
+      color = '#FB7185';
+      emissive = '#E11D48';
+      emissiveIntensity = 0.45;
+    }
+
+    return (
+      <meshStandardMaterial
+        color={color}
+        roughness={0.42}
+        metalness={0.02}
+        emissive={emissive}
+        emissiveIntensity={emissiveIntensity}
+        transparent={opacity < 0.99 || (hasIsolation && !isTonsilsIsolated)}
+        opacity={opacity}
+      />
+    );
+  };
+
   if (surfaceExplorationMode) return null;
 
   const tongueExplosionOffset: [number, number, number] = [0, -2.55 * explosionFactor, 0.95 * explosionFactor];
+  const floorExplosionOffset: [number, number, number] = [0, -2.55 * explosionFactor, 0.95 * explosionFactor];
+  const tonsilsLeftExplosionOffset: [number, number, number] = [-0.85 * explosionFactor, -0.65 * explosionFactor, -0.85 * explosionFactor];
+  const tonsilsRightExplosionOffset: [number, number, number] = [0.85 * explosionFactor, -0.65 * explosionFactor, -0.85 * explosionFactor];
   const uvulaExplosionOffset: [number, number, number] = [0, -0.35 * explosionFactor, 1.45 * explosionFactor];
 
-  const handlePointerOver = (e: any, structureId: 'lingua' | 'uvula' | 'nervo_lingual') => {
+  type InteractiveOralId = 'lingua' | 'uvula' | 'nervo_lingual' | 'assoalho_boca' | 'tonsilas_palatinas';
+
+  const handlePointerOver = (e: any, structureId: InteractiveOralId) => {
     e.stopPropagation();
     setHoveredStructure(structureId);
     document.body.style.cursor = 'pointer';
@@ -635,7 +932,7 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
     document.body.style.cursor = 'grab';
   };
 
-  const handleClick = (e: any, structureId: 'lingua' | 'uvula' | 'nervo_lingual') => {
+  const handleClick = (e: any, structureId: InteractiveOralId) => {
     e.stopPropagation();
     const isPathology = typeof window !== 'undefined' && window.location.pathname.includes('/pathologies');
     const isAnesthesia = typeof window !== 'undefined' && window.location.pathname.includes('/anesthesia');
@@ -715,6 +1012,77 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
               />
             </mesh>
           )}
+        </group>
+      )}
+
+      {/* 2. Assoalho da Boca (Soalho Bucal Sublingual com Frênulo Lingual e Carúnculas) */}
+      {!isFloorHidden && isLayerVisibleOral && (
+        <group
+          name="oral-floor-of-mouth"
+          position={floorExplosionOffset}
+          onPointerOver={(e) => handlePointerOver(e, 'assoalho_boca')}
+          onPointerOut={handlePointerOut}
+          onClick={(e) => handleClick(e, 'assoalho_boca')}
+        >
+          <mesh
+            geometry={floorOfMouthGeometry}
+            castShadow
+            receiveShadow
+          >
+            {getFloorMaterial()}
+          </mesh>
+          <mesh
+            geometry={frenulumGeometry}
+            castShadow
+          >
+            {getFloorMaterial()}
+          </mesh>
+        </group>
+      )}
+
+      {/* 3. Amígdalas (Tonsilas Palatinas) e Pilares Amigdalianos Bilaterais */}
+      {!isTonsilsHidden && isLayerVisibleOral && !archesOnlyMode && (
+        <group
+          name="oral-tonsils"
+          onPointerOver={(e) => handlePointerOver(e, 'tonsilas_palatinas')}
+          onPointerOut={handlePointerOut}
+          onClick={(e) => handleClick(e, 'tonsilas_palatinas')}
+        >
+          {/* Amígdala Esquerda com Criptas Tonsilares */}
+          <group
+            position={[
+              -1.38 + tonsilsLeftExplosionOffset[0],
+              -0.32 + tonsilsLeftExplosionOffset[1],
+              -1.65 + tonsilsLeftExplosionOffset[2],
+            ]}
+            rotation={[0.15, 0.40, -0.20]}
+          >
+            <mesh geometry={tonsilsGeometries.left} castShadow receiveShadow>
+              {getTonsilsMaterial()}
+            </mesh>
+          </group>
+
+          {/* Amígdala Direita com Criptas Tonsilares */}
+          <group
+            position={[
+              1.38 + tonsilsRightExplosionOffset[0],
+              -0.32 + tonsilsRightExplosionOffset[1],
+              -1.65 + tonsilsRightExplosionOffset[2],
+            ]}
+            rotation={[0.15, -0.40, 0.20]}
+          >
+            <mesh geometry={tonsilsGeometries.right} castShadow receiveShadow>
+              {getTonsilsMaterial()}
+            </mesh>
+          </group>
+
+          {/* Pilares Amigdalianos (Arcos Palatoglosso e Palatofaríngeo) */}
+          <mesh geometry={tonsillarPillarsGeometry.left} position={tonsilsLeftExplosionOffset}>
+            {getTonsilsMaterial()}
+          </mesh>
+          <mesh geometry={tonsillarPillarsGeometry.right} position={tonsilsRightExplosionOffset}>
+            {getTonsilsMaterial()}
+          </mesh>
         </group>
       )}
 

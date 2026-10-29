@@ -52,7 +52,15 @@ export const FavoritesNotesView: React.FC = () => {
   const [newNoteStructureId, setNewNoteStructureId] = useState<string>(selectedStructureId || 'mandibula');
   const [isCreatingNote, setIsCreatingNote] = useState<boolean>(false);
 
-  const getCategoryLabel = (category: string) => {
+  const getCategoryLabel = (category: string, id?: string) => {
+    if (id) {
+      if (id.includes('assoalho') || id.includes('sublingual')) return 'Assoalho Bucal & Glândulas';
+      if (id.includes('lingua') && !id.includes('nervo')) return 'Língua & Mucosa';
+      if (id.includes('tonsila') || id.includes('amigdala')) return 'Amígdalas & Orofaringe';
+      if (id.includes('uvula')) return 'Palato Mole & Úvula';
+      if (id.includes('hioide')) return 'Osso Hioide';
+      if (id.includes('gengiv')) return 'Gengiva Inserida & Marginal';
+    }
     switch (category) {
       case 'dental':
         return 'Dente';
@@ -65,7 +73,7 @@ export const FavoritesNotesView: React.FC = () => {
       case 'vascular':
         return 'Vaso Sanguíneo';
       case 'oral_tissue':
-        return 'Periodonto & Gengiva';
+        return 'Gengiva, Língua & Tecidos Orais';
       default:
         return 'Estrutura';
     }
@@ -104,7 +112,40 @@ export const FavoritesNotesView: React.FC = () => {
 
   useEffect(() => {
     setFavorites(storageService.getFavorites());
-    setNotes(storageService.getNotes());
+    const rawNotes = storageService.getNotes();
+
+    // Auto-atualização de anotações antigas que receberam novas ilustrações dedicadas
+    let hasUpdated = false;
+    const updatedNotes = rawNotes.map((n) => {
+      const struct = anatomicalStructures[n.structureId];
+      const isOralSpecial = [
+        'assoalho_boca',
+        'tonsilas_palatinas',
+        'lingua',
+        'uvula',
+        'osso_hioide',
+        'gengiva_inserida',
+      ].includes(n.structureId);
+
+      if (n.imageUrl?.startsWith('data:image/png') && isOralSpecial) {
+        hasUpdated = true;
+        const freshUrl = getStructureIllustration({
+          structureId: n.structureId,
+          structureName: struct?.name || n.structureName,
+          category: struct?.category || 'oral_tissue',
+          width: 600,
+          height: 450,
+        });
+        return { ...n, imageUrl: freshUrl };
+      }
+      return n;
+    });
+
+    if (hasUpdated) {
+      localStorage.setItem('dentnexo_notes', JSON.stringify(updatedNotes));
+    }
+
+    setNotes(updatedNotes);
     setRecents(storageService.getRecentStructures());
   }, []);
 
@@ -418,7 +459,7 @@ export const FavoritesNotesView: React.FC = () => {
                   options={structureOptions}
                   value={selectedNoteStructureOption}
                   isOptionEqualToValue={(option, val) => option.id === val.id}
-                  getOptionLabel={(option) => `${option.name} (${getCategoryLabel(option.category)})`}
+                  getOptionLabel={(option) => `${option.name} (${getCategoryLabel(option.category, option.id)})`}
                   onChange={(_, newValue) => {
                     if (newValue) {
                       setNewNoteStructureId(newValue.id);
@@ -428,7 +469,7 @@ export const FavoritesNotesView: React.FC = () => {
                     const q = normalizeText(state.inputValue.trim());
                     if (!q) return options;
                     return options.filter((opt) => {
-                      const catLabel = getCategoryLabel(opt.category);
+                      const catLabel = getCategoryLabel(opt.category, opt.id);
                       const searchable = normalizeText(
                         `${opt.name} ${opt.scientificName || ''} ${opt.fdiNotation || ''} ${catLabel} ${(opt.synonyms || []).join(' ')}`
                       );
@@ -470,7 +511,7 @@ export const FavoritesNotesView: React.FC = () => {
                           )}
                         </Box>
                         <Chip
-                          label={getCategoryLabel(option.category)}
+                          label={getCategoryLabel(option.category, option.id)}
                           size="small"
                           sx={{
                             height: 20,
@@ -542,15 +583,25 @@ export const FavoritesNotesView: React.FC = () => {
               {notes.length > 0 ? (
                 notes.map((note) => {
                   const struct = anatomicalStructures[note.structureId];
+                  const isOralSpecial = [
+                    'assoalho_boca',
+                    'tonsilas_palatinas',
+                    'lingua',
+                    'uvula',
+                    'osso_hioide',
+                    'gengiva_inserida',
+                  ].includes(note.structureId);
+
                   const previewImage =
-                    note.imageUrl ||
-                    getStructureIllustration({
-                      structureId: note.structureId,
-                      structureName: note.structureName || note.title,
-                      category: struct?.category || 'skeletal',
-                      width: 240,
-                      height: 180,
-                    });
+                    note.imageUrl && (!note.imageUrl.startsWith('data:image/png') || !isOralSpecial)
+                      ? note.imageUrl
+                      : getStructureIllustration({
+                          structureId: note.structureId,
+                          structureName: struct?.name || note.structureName || note.title,
+                          category: struct?.category || 'skeletal',
+                          width: 240,
+                          height: 180,
+                        });
 
                   return (
                     <Paper

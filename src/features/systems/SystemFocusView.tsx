@@ -59,6 +59,8 @@ const SYSTEM_STRUCTURES: Record<string, { id: string; label: string }[]> = {
   ],
   oral_tissue: [
     { id: 'lingua', label: 'Língua' },
+    { id: 'assoalho_boca', label: 'Assoalho da Boca' },
+    { id: 'tonsilas_palatinas', label: 'Amígdalas (Tonsilas Palatinas)' },
     { id: 'uvula', label: 'Úvula Palatina' },
     { id: 'gengiva_inserida', label: 'Gengiva Inserida' },
     { id: 'ligamento_periodontal', label: 'Ligamento Periodontal' },

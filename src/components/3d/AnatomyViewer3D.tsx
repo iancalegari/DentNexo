@@ -32,6 +32,7 @@ import { TeethLineup3D } from './models/TeethLineup3D';
 import { PathologyOverlays } from './models/PathologyOverlays';
 import { SurfaceLandmarkMarker } from './SurfaceLandmarkMarker';
 import { SurfaceAnatomyPanel } from '@/features/dental/SurfaceAnatomyPanel';
+import { DentalInstrument3D } from './models/DentalInstrument3D';
 import { themeTokens } from '@/theme/tokens';
 
 const isObjectVisibleInHierarchy = (obj: THREE.Object3D | null): boolean => {
@@ -68,13 +69,16 @@ const ModelLoadingOverlay: React.FC<{
   soloToothMode: boolean;
   archesOnlyMode: boolean;
   teethLineupMode: boolean;
+  quizSceneMode?: 'full_anatomy' | 'teeth_lineup' | 'instrument_3d';
   activeToothFdi: string;
-}> = ({ isSuspensePending, soloToothMode, archesOnlyMode, teethLineupMode, activeToothFdi }) => {
+}> = ({ isSuspensePending, soloToothMode, archesOnlyMode, teethLineupMode, quizSceneMode, activeToothFdi }) => {
   const { active, progress } = useProgress();
   const isVisible = active || isSuspensePending;
   const clampedProgress = Math.min(100, Math.max(0, Math.round(progress)));
 
-  const title = soloToothMode
+  const title = quizSceneMode === 'instrument_3d'
+    ? 'Carregando Instrumental Odontológico 3D...'
+    : soloToothMode
     ? `Carregando Dente FDI ${activeToothFdi} em 3D...`
     : archesOnlyMode || teethLineupMode
     ? 'Carregando Arcadas Dentárias 3D...'
@@ -206,6 +210,8 @@ interface AnatomyViewer3DProps {
   hideSelectionBadge?: boolean;
   hideCredits?: boolean;
   hideGizmo?: boolean;
+  quizSceneMode?: 'full_anatomy' | 'teeth_lineup' | 'instrument_3d';
+  quizInstrumentId?: string | null;
 }
 
 export const AnatomyViewer3D: React.FC<AnatomyViewer3DProps> = ({
@@ -217,6 +223,8 @@ export const AnatomyViewer3D: React.FC<AnatomyViewer3DProps> = ({
   hideSelectionBadge = false,
   hideCredits = false,
   hideGizmo = false,
+  quizSceneMode = 'full_anatomy',
+  quizInstrumentId = null,
 }) => {
   const {
     xrayMode,
@@ -369,7 +377,13 @@ export const AnatomyViewer3D: React.FC<AnatomyViewer3DProps> = ({
         )}
 
         {/* Modelos Tridimensionais Interativos Dental Scope */}
-        {soloToothMode ? (
+        {quizSceneMode === 'instrument_3d' && quizInstrumentId ? (
+          <Suspense fallback={<SuspenseFallbackTracker onPendingChange={setIsModelLoading} />}>
+            <group position={[0, 0, 0]}>
+              <DentalInstrument3D instrumentId={quizInstrumentId} />
+            </group>
+          </Suspense>
+        ) : soloToothMode ? (
           <Suspense fallback={<SuspenseFallbackTracker onPendingChange={setIsModelLoading} />}>
             <DentalScopeTooth />
             <PathologyOverlays isSoloTooth={true} />
@@ -400,6 +414,7 @@ export const AnatomyViewer3D: React.FC<AnatomyViewer3DProps> = ({
         soloToothMode={soloToothMode}
         archesOnlyMode={archesOnlyMode}
         teethLineupMode={teethLineupMode}
+        quizSceneMode={quizSceneMode}
         activeToothFdi={activeToothFdi || '36'}
       />
 

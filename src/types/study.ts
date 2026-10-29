@@ -27,18 +27,22 @@ export interface SavedView {
 
 export type QuizDifficulty = 'basico' | 'intermediario' | 'avancado';
 
+export type QuizSceneMode = 'full_anatomy' | 'teeth_lineup' | 'instrument_3d';
+
 export interface QuizQuestion {
   id: string;
   question: string;
   explanation: string;
-  category: 'anatomia_geral' | 'dentes' | 'nervos_vasos' | 'patologias' | 'periodonto';
+  category: 'anatomia_geral' | 'dentes' | 'nervos_vasos' | 'patologias' | 'periodonto' | 'instrumentos' | 'lingua';
   difficulty: QuizDifficulty;
   type: 'multiple_choice' | 'structure_identification';
-  /** Modo de cena 3D para a questão: 'teeth_lineup' exibe todos os 32 dentes enfileirados em 3D */
-  sceneMode?: 'full_anatomy' | 'teeth_lineup';
+  /** Modo de cena 3D para a questão: 'teeth_lineup' exibe os 32 dentes enfileirados; 'instrument_3d' exibe o modelo do instrumental cirúrgico; 'full_anatomy' exibe o crânio e tecidos */
+  sceneMode?: QuizSceneMode;
+  instrumentId?: string;
   options?: {
     id: string;
     text: string;
+    instrumentId?: string;
   }[];
   correctOptionId?: string;
   targetStructureId?: string; // Para identificar clicando no 3D

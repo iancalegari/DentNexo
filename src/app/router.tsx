@@ -10,6 +10,7 @@ import { ConnectionsView } from '@/features/connections/ConnectionsView';
 import { QuizView } from '@/features/study/QuizView';
 import { FavoritesNotesView } from '@/features/favorites/FavoritesNotesView';
 import { SystemFocusView } from '@/features/systems/SystemFocusView';
+import { InstrumentsView } from '@/features/instruments/InstrumentsView';
 
 import { RouteErrorElement } from '@/components/common/ErrorBoundary';
 
@@ -93,6 +94,14 @@ export const router = createBrowserRouter([
       {
         path: 'anesthesia',
         element: <AnesthesiaView />,
+      },
+      {
+        path: 'instruments',
+        element: <InstrumentsView />,
+      },
+      {
+        path: 'materials',
+        element: <Navigate to="/instruments" replace />,
       },
       {
         path: 'connections',

@@ -34,7 +34,6 @@ import { ToothViewMode, WisdomToothState, AlignmentState } from '@/types/dental'
 import { themeTokens } from '@/theme/tokens';
 
 export const DentalAtlasView: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'solo_tooth' | 'surface' | 'arches'>('solo_tooth');
   const {
     activeToothFdi,
     toothViewMode,
@@ -50,6 +49,10 @@ export const DentalAtlasView: React.FC = () => {
     setInfoPanelOpen,
     setActivePathology,
   } = useAnatomyStore();
+
+  const [activeTab, setActiveTab] = useState<'solo_tooth' | 'surface' | 'arches'>(() => {
+    return surfaceExplorationMode ? 'surface' : 'solo_tooth';
+  });
 
   // Ao entrar em Anatomia Dental & FDI, garantir que patologias não apareçam no dente ou arcada
   // e ao sair da aba odontológica, restaurar visão anatômica completa
@@ -80,12 +83,12 @@ export const DentalAtlasView: React.FC = () => {
     }
   };
 
-  // Se o usuário fechar o painel de superfície 3D, refletir na tab
+  // Sincronizar activeTab com o estado de exploração de superfície / dentro do dente
   React.useEffect(() => {
-    if (activeTab === 'surface') {
-      if (!surfaceExplorationMode) {
-        setActiveTab('solo_tooth');
-      }
+    if (surfaceExplorationMode && activeTab !== 'surface') {
+      setActiveTab('surface');
+    } else if (!surfaceExplorationMode && activeTab === 'surface') {
+      setActiveTab('solo_tooth');
     }
   }, [surfaceExplorationMode, activeTab]);
 

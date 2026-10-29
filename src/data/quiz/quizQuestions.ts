@@ -18,31 +18,31 @@ export const QUIZ_LEVEL_META: Record<
     id: 'basico',
     step: 1,
     title: 'Nível 1 • Básico',
-    subtitle: 'Fundamentos Anatômicos & Notação FDI',
+    subtitle: 'Fundamentos Anatômicos, Língua & Instrumentais Básicos',
     description:
-      'Reconhecimento dos grupos dentários, quadrantes da notação internacional FDI, tecidos mineralizados do dente e principais ossos da face.',
+      'Reconhecimento dos grupos dentários, quadrantes FDI, papilas e higienização lingual, tecidos dentários e instrumentais clínicos essenciais.',
     badgeColor: '#10B981',
-    topics: ['Notação FDI', 'Grupos Dentários', 'Esmalte, Dentina e Polpa', 'Ossos Principais'],
+    topics: ['Notação FDI', 'Papilas & Higiene Lingual', 'Instrumentais de Exame', 'Dentes & Ossos'],
   },
   intermediario: {
     id: 'intermediario',
     step: 2,
     title: 'Nível 2 • Intermediário',
-    subtitle: 'Sistemas Musculares, Nervos, Seios & Periodonto',
+    subtitle: 'Músculos, Nervos, Periodonto, Isolamento & Rotatórios',
     description:
-      'Morfologia radicular comparada, músculos da mastigação e expressão perioral, divisões do nervo trigêmeo, seios paranasais e ligamento periodontal.',
+      'Morfologia radicular, inervação gustativa e motora, periodonto, anquiloglossia, isolamento absoluto com Ainsworth e Palmer, e brocas rotatórias.',
     badgeColor: '#F59E0B',
-    topics: ['Músculos Orofaciais', 'Ramos do Trigêmeo', 'Seios da Face', 'Periodonto'],
+    topics: ['Isolamento & Palmer', 'Brocas & Alta Rotação', 'Inervação Lingual (NC VII)', 'Periodonto & Fissuras'],
   },
   avancado: {
     id: 'avancado',
     step: 3,
     title: 'Nível 3 • Avançado',
-    subtitle: 'Clínica Odontológica, Cirurgia, Endodontia & Patologias',
+    subtitle: 'Língua Geográfica, Dentística Estética, Cirurgia & Fotopolimerização',
     description:
-      'Correlações cirúrgicas e anestésicas, diagnóstico diferencial de pulpite e abscesso, emergências cervicofaciais, traumatologia e anatomia endodôntica.',
+      'Diagnóstico de glossite migratória benigna, paralisia do NC XII, espátulas em titânio, fotopolimerização LED, endodontia clínica e patologias orais.',
     badgeColor: '#EF4444',
-    topics: ['Anestesiologia & Cirurgia', 'Endodontia Clínica', 'Patologias Orais', 'Traumatologia'],
+    topics: ['Língua Geográfica (Munro)', 'Espátula Titânio & Compósitos', 'LED & Canforoquinona', 'Lesão NC XII & Cirurgia'],
   },
 };
 
@@ -127,6 +127,72 @@ export const quizQuestions: QuizQuestion[] = [
     explanation:
       'O Osso Frontal é um osso ímpar e pneumatizado na região anterossuperior do neurocrânio, protegendo os lobos frontais e abrigando os seios frontais.',
     referenceTitle: 'Sobotta Atlas de Anatomia Humana — Cabeça e Pescoço',
+  },
+  {
+    id: 'b_3d_maxila',
+    question:
+      'No crânio 3D ao lado, identifique e clique sobre a Maxila (osso par que sustenta a arcada dentária superior e forma o assoalho das órbitas):',
+    category: 'anatomia_geral',
+    difficulty: 'basico',
+    type: 'structure_identification',
+    sceneMode: 'full_anatomy',
+    targetStructureId: 'maxila',
+    explanation:
+      'A Maxila forma o arcabouço central da face, aloja os seios maxilares em seu corpo, sustenta as raízes dos dentes superiores e compõe a maior parte do palato duro.',
+    referenceTitle: 'Sobotta Atlas de Anatomia Humana — Cabeça e Pescoço',
+  },
+  {
+    id: 'b_3d_zigomatico',
+    question:
+      'No crânio 3D, identifique e clique sobre o Osso Zigomático (osso malar), que forma a proeminência lateral da bochecha e o arco zigomático:',
+    category: 'anatomia_geral',
+    difficulty: 'basico',
+    type: 'structure_identification',
+    sceneMode: 'full_anatomy',
+    targetStructureId: 'osso_zigomatico',
+    explanation:
+      'O Osso Zigomático forma a maçã do rosto, articula-se com os ossos frontal, maxilar, esfenóide e temporal, delimitando a margem inferolateral da órbita.',
+    referenceTitle: 'Netter — Atlas de Anatomia Humana',
+  },
+  {
+    id: 'b_3d_inst_pinca',
+    question:
+      'Analise o instrumento odontológico exibido em 3D ao lado. Com formato de V, hastes anguladas e microrranhuras internas na ponta ativa, qual é este instrumental?',
+    category: 'instrumentos',
+    difficulty: 'basico',
+    type: 'multiple_choice',
+    sceneMode: 'instrument_3d',
+    instrumentId: 'pinca_clinica',
+    options: [
+      { id: 'a', text: 'Pinça Clínica Odontológica — preensão e transporte de roletes de algodão, gaze e pequenos artefatos' },
+      { id: 'b', text: 'Pinça Porta-Grampos de Palmer — distensão do arco metálico do grampo de isolamento' },
+      { id: 'c', text: 'Pinça de Miller — apreensão de tiras de carbono para ajuste oclusal' },
+      { id: 'd', text: 'Pinça hemostática reta tipo Kelly' },
+    ],
+    correctOptionId: 'a',
+    explanation:
+      'A Pinça Clínica Odontológica possui corpo articulado elástico em V com extremidades ativas afiladas e serrilhadas internamente para manipulação estéril e sem escorregamento de insumos bucais.',
+    referenceTitle: 'Baratieri — Odontologia Restauradora',
+  },
+  {
+    id: 'b_3d_inst_select_sonda',
+    question:
+      'Para diagnosticar bolsas periodontais com precisão milimétrica e ponta atraumática de 0,5 mm sem lacerar o epitélio juncional, selecione na vitrine 3D o instrumento correto:',
+    category: 'instrumentos',
+    difficulty: 'basico',
+    type: 'multiple_choice',
+    sceneMode: 'instrument_3d',
+    instrumentId: 'sonda_periodontal',
+    options: [
+      { id: 'a', text: 'Sonda Periodontal Milimetrada (com marcações métricas pretas a laser de 1 a 15 mm)', instrumentId: 'sonda_periodontal' },
+      { id: 'b', text: 'Sonda Exploradora nº 5 em gancho curvo Shepherd\'s Hook', instrumentId: 'sonda_exploradora' },
+      { id: 'c', text: 'Pinça Clínica Odontológica com ponta estriada', instrumentId: 'pinca_clinica' },
+      { id: 'd', text: 'Espátula nº 24 para manipulação em placa de vidro', instrumentId: 'espatula_24_placa' },
+    ],
+    correctOptionId: 'a',
+    explanation:
+      'A Sonda Periodontal Milimetrada é o instrumento exclusivo para o exame do periodonto e periograma, com corpo cilíndrico calibrado a cada milímetro e ponta arredondada atraumática.',
+    referenceTitle: 'Newman, Takei, Klokkevold, Carranza — Periodontia Clínica',
   },
   {
     id: 'b_mc_1',
@@ -380,6 +446,144 @@ export const quizQuestions: QuizQuestion[] = [
       'Nas faces proximais, a face mesial é sempre aquela voltada para a linha média sagital do arco, enquanto a face distal é a que se afasta da linha média.',
     referenceTitle: 'Madeira — Anatomia do Dente',
   },
+  {
+    id: 'b_3d_lingua',
+    question:
+      'No modelo anatômico 3D da cavidade oral ao lado, identifique e clique diretamente no Órgão Lingual (Língua):',
+    category: 'lingua',
+    difficulty: 'basico',
+    type: 'structure_identification',
+    targetStructureId: 'lingua',
+    explanation:
+      'A língua é um órgão muscular situado no soalho da cavidade oral, essencial na fonação, gustação, mastigação e deglutição, revestida por mucosa com papilas no dorso e mucosa de revestimento delgada no ventre.',
+    referenceTitle: 'Moore — Anatomia Orientada para a Clínica & Sobotta',
+  },
+  {
+    id: 'b_mc_lingua_1',
+    question:
+      'Qual tipo de papila lingual é a mais abundante no dorso anterior da língua, apresenta formato cônico queratinizado responsável pelo atrito mecânico dos alimentos, mas NÃO possui botões gustativos?',
+    category: 'lingua',
+    difficulty: 'basico',
+    type: 'multiple_choice',
+    options: [
+      { id: 'a', text: 'Papilas Filiformes' },
+      { id: 'b', text: 'Papilas Fungiformes' },
+      { id: 'c', text: 'Papilas Circunvaladas' },
+      { id: 'd', text: 'Papilas Foliadas' },
+    ],
+    correctOptionId: 'a',
+    explanation:
+      'As papilas filiformes são finas, cônicas e queratinizadas, distribuídas densamente por todo o dorso anterior da língua. Diferente das demais, sua função é puramente mecânica e tátil, sem botões gustativos.',
+    referenceTitle: 'Junqueira & Carneiro — Histologia Básica',
+  },
+  {
+    id: 'b_mc_lingua_2',
+    question:
+      'Quais papilas gustativas volumosas (8 a 12 unidades) dispõem-se enfileiradas em formato de "V" lingual no terço posterior do dorso da língua e contêm em suas criptas os ductos das glândulas serosas de von Ebner?',
+    category: 'lingua',
+    difficulty: 'basico',
+    type: 'multiple_choice',
+    options: [
+      { id: 'a', text: 'Papilas Filiformes' },
+      { id: 'b', text: 'Papilas Circunvaladas (Caliciformes)' },
+      { id: 'c', text: 'Papilas Foliadas linguais' },
+      { id: 'd', text: 'Papilas Rombóides medianas' },
+    ],
+    correctOptionId: 'b',
+    explanation:
+      'As papilas circunvaladas (caliciformes) delimitam o sulco terminal em formato de V. A secreção fluida das glândulas de von Ebner lava suas fendas circulares, permitindo a contínua percepção dos estímulos gustativos.',
+    referenceTitle: 'Netter — Atlas de Anatomia Humana',
+  },
+  {
+    id: 'b_mc_lingua_3',
+    question:
+      'Qual é a conduta padrão ouro recomendada para a higienização do dorso lingual, visando à remoção eficaz da saburra lingual e prevenção de compostos sulfurados voláteis (halitose)?',
+    category: 'lingua',
+    difficulty: 'basico',
+    type: 'multiple_choice',
+    options: [
+      { id: 'a', text: 'Utilizar raspador/limpador lingual anatômico deslizado suavemente do terço posterior para a ponta sem traumatizar as papilas' },
+      { id: 'b', text: 'Friccionar vigorosamente com cerdas duras até sangrar as papilas linguais' },
+      { id: 'c', text: 'Bochechar exclusivamente água oxigenada 10 volumes três vezes ao dia sem qualquer raspagem física' },
+      { id: 'd', text: 'Nunca higienizar a língua para não remover a flora bacteriana protetora' },
+    ],
+    correctOptionId: 'a',
+    explanation:
+      'O uso suave de limpadores ou raspadores linguais específicos do fundo para a frente remove mecanicamente a camada de biofilme e células descamadas (saburra lingual) de forma atraumática para as papilas.',
+    referenceTitle: 'Consenso da Associação Brasileira de Halitose (ABHA)',
+  },
+  {
+    id: 'b_mc_inst_1',
+    question:
+      'Na bandeja de instrumentais para exame clínico odontológico básico, qual instrumento articulado em formato de V com extremidades afiladas e ranhuras internas é utilizado para pinçar algodão, gaze e pequenos artefatos?',
+    category: 'instrumentos',
+    difficulty: 'basico',
+    type: 'multiple_choice',
+    options: [
+      { id: 'a', text: 'Pinça Clínica Odontológica' },
+      { id: 'b', text: 'Pinça Porta-Grampo de Palmer' },
+      { id: 'c', text: 'Cureta periodontal de Gracey' },
+      { id: 'd', text: 'Alavanca cirúrgica reta' },
+    ],
+    correctOptionId: 'a',
+    explanation:
+      'A Pinça Clínica Odontológica possui hastes longas anguladas e microrranhuras nas pontas ativas, garantindo preensão firme e sem escorregamento de roletes de algodão, gaze e insumos odontológicos.',
+    referenceTitle: 'Baratieri — Odontologia Restauradora: Fundamentos e Possibilidades',
+  },
+  {
+    id: 'b_mc_inst_2',
+    question:
+      'Qual é a diferença funcional e morfológica elementar entre a Sonda Exploradora nº 5 e a Sonda Periodontal Milimetrada?',
+    category: 'instrumentos',
+    difficulty: 'basico',
+    type: 'multiple_choice',
+    options: [
+      { id: 'a', text: 'A Sonda Exploradora possui ponta afilada em gancho para checagem tátil de margens e cavidades; a Sonda Periodontal possui ponta cilíndrica romba calibrada em milímetros para medir o sulco/bolsa gengival' },
+      { id: 'b', text: 'A Sonda Periodontal é cortante como lâmina de bisturi e a Sonda Exploradora serve para injetar anestésicos' },
+      { id: 'c', text: 'Ambas possuem ponta esférica e a mesma indicação idêntica de mensuração de profundidade' },
+      { id: 'd', text: 'A Sonda Exploradora destina-se unicamente ao isolamento absoluto' },
+    ],
+    correctOptionId: 'a',
+    explanation:
+      'A Sonda Exploradora nº 5 avalia descontinuidades tácteis no esmalte e margens restauradoras. A Sonda Periodontal é calibrada milimetricamente com ponta arredondada atraumática (0,5 mm) para periograma e exame do periodonto.',
+    referenceTitle: 'Newman, Takei, Klokkevold, Carranza — Periodontia Clínica',
+  },
+  {
+    id: 'b_mc_inst_3',
+    question:
+      'Qual instrumento manual metálico possui lâmina longa, lisa e flexível, sendo o padrão clássico para manipulação e aglutinação ampla de Cimento de Fosfato de Zinco e Ionômero de Vidro sobre placa de vidro resfriada?',
+    category: 'instrumentos',
+    difficulty: 'basico',
+    type: 'multiple_choice',
+    options: [
+      { id: 'a', text: 'Espátula nº 24 flexível para cimentos' },
+      { id: 'b', text: 'Espátula de Resina com ponta em titânio' },
+      { id: 'c', text: 'Colher de Dentina de Black nº 17' },
+      { id: 'd', text: 'Perfurador de Lençol de Ainsworth' },
+    ],
+    correctOptionId: 'a',
+    explanation:
+      'A Espátula nº 24 metálica flexível permite espatular o cimento em amplas porções contra a placa de vidro fria, dissipando o calor exotérmico da reação do fosfato de zinco e garantindo espessura de película ideal.',
+    referenceTitle: 'Anusavice — Phillips Materiais Dentários',
+  },
+  {
+    id: 'b_mc_inst_4',
+    question:
+      'No conjunto de isolamento absoluto, qual instrumento dispõe de um tambor giratório com múltiplos orifícios calibrados (1 a 5) para perfurar o lençol de borracha no diâmetro exato de cada dente?',
+    category: 'instrumentos',
+    difficulty: 'basico',
+    type: 'multiple_choice',
+    options: [
+      { id: 'a', text: 'Perfurador de Lençol de Borracha de Ainsworth' },
+      { id: 'b', text: 'Pinça Porta-Grampos de Palmer' },
+      { id: 'c', text: 'Arco de Young em plástico ou metal' },
+      { id: 'd', text: 'Grampo asa nº 206' },
+    ],
+    correctOptionId: 'a',
+    explanation:
+      'O Perfurador de Ainsworth possui torre com punções de calibres graduados (desde dentes anteriores inferiores até molares volumosos e dentes com grampo), gerando perfurações circulares sem rebarbas.',
+    referenceTitle: 'Conceição — Dentística: Saúde e Estética',
+  },
 
   // ============================================================================
   // NÍVEL 2: INTERMEDIÁRIO (20 QUESTÕES: 6 INTERATIVAS 3D + 14 MÚLTIPLA ESCOLHA)
@@ -461,6 +665,85 @@ export const quizQuestions: QuizQuestion[] = [
     explanation:
       'O Músculo Mentual origina-se na fossa incisiva da mandíbula e insere-se na pele do mento, elevando e protruindo o lábio inferior e enrugando a pele do queixo.',
     referenceTitle: 'Sobotta Atlas de Anatomia Humana — Músculos da Mímica',
+  },
+  {
+    id: 'i_3d_temporal_m',
+    question:
+      'Na miologia craniofacial 3D, identifique e clique sobre o Músculo Temporal, potente elevador e retrator em leque alojado na fossa temporal:',
+    category: 'anatomia_geral',
+    difficulty: 'intermediario',
+    type: 'structure_identification',
+    sceneMode: 'full_anatomy',
+    targetStructureId: 'temporal_m',
+    explanation:
+      'O Músculo Temporal origina-se em toda a extensão da fossa temporal, converge suas fibras sob o arco zigomático e insere-se no processo coronoide da mandíbula.',
+    referenceTitle: 'Madeira — Anatomia da Face & Sobotta',
+  },
+  {
+    id: 'i_3d_bucinador',
+    question:
+      'No modelo muscular 3D, clique sobre o Músculo Bucinador, componente muscular da bochecha perfurado pelo ducto parotídeo de Stenon:',
+    category: 'anatomia_geral',
+    difficulty: 'intermediario',
+    type: 'structure_identification',
+    sceneMode: 'full_anatomy',
+    targetStructureId: 'musculo_bucinador',
+    explanation:
+      'O Músculo Bucinador mantém o tônus da bochecha, empurrando o bolo alimentar para entre as arcadas dentárias durante a mastigação e evitando mordiscaduras acidentais.',
+    referenceTitle: 'Sobotta — Atlas de Anatomia Humana',
+  },
+  {
+    id: 'i_3d_nervo_alveolar',
+    question:
+      'Na neuroanatomia mandibular 3D, identifique e clique no Nervo Alveolar Inferior (ramo de V3 que percorre o canal mandibular):',
+    category: 'nervos_vasos',
+    difficulty: 'intermediario',
+    type: 'structure_identification',
+    sceneMode: 'full_anatomy',
+    targetStructureId: 'nervo_alveolar_inferior',
+    explanation:
+      'O Nervo Alveolar Inferior adentra a mandíbula pelo forame mandibular na língula, emitindo ramos dentários para raízes e polpas de todos os dentes inferiores.',
+    referenceTitle: 'Malamed — Manual de Anestesia Local',
+  },
+  {
+    id: 'i_3d_inst_brocas',
+    question:
+      'Examine o conjunto de 8 brocas diamantadas esféricas de alta rotação (FG séries 1011 a 1018) exibido no modelo 3D. Qual a função clínica primária com anel azul (100–120 µm)?',
+    category: 'instrumentos',
+    difficulty: 'intermediario',
+    type: 'multiple_choice',
+    sceneMode: 'instrument_3d',
+    instrumentId: 'brocas_odontologicas',
+    options: [
+      { id: 'a', text: 'Abertura coronária inicial, delimitação de contorno cavitário em esmalte e penetração desobstrutiva rápida' },
+      { id: 'b', text: 'Polimento final de compósitos com alto brilho superficial' },
+      { id: 'c', text: 'Raspagem e alisamento radicular em bolsas periodontais' },
+      { id: 'd', text: 'Adesão de braquetes ortodônticos' },
+    ],
+    correctOptionId: 'a',
+    explanation:
+      'As brocas esféricas diamantadas FG com anel azul possuem granulação média padrão-ouro para desgaste rápido de esmalte e abertura cavitária sob irrigação contínua.',
+    referenceTitle: 'Mondelli — Fundamentos de Dentística Operatória',
+  },
+  {
+    id: 'i_3d_inst_select_palmer',
+    question:
+      'No isolamento absoluto, qual instrumento com mola e trava deve ser selecionado para abrir e posicionar os grampos de aço no dente pilar?',
+    category: 'instrumentos',
+    difficulty: 'intermediario',
+    type: 'multiple_choice',
+    sceneMode: 'instrument_3d',
+    instrumentId: 'pinca_palmer',
+    options: [
+      { id: 'a', text: 'Pinça Porta-Grampos de Palmer (com pontas de encaixe nos orifícios do grampo)', instrumentId: 'pinca_palmer' },
+      { id: 'b', text: 'Perfurador de Lençol de Ainsworth com tambor rotativo', instrumentId: 'perfurador_ainsworth' },
+      { id: 'c', text: 'Colher de Dentina de Black afiada', instrumentId: 'colher_dentina' },
+      { id: 'd', text: 'Espátula de Resina com pontas em titânio', instrumentId: 'espatula_resina' },
+    ],
+    correctOptionId: 'a',
+    explanation:
+      'A Pinça Porta-Grampos de Palmer foi desenvolvida especificamente para distender o arco do grampo metálico e assentá-lo firmemente na linha cervical do dente preparado.',
+    referenceTitle: 'Baratieri — Odontologia Restauradora',
   },
   {
     id: 'i_mc_1',
@@ -714,6 +997,132 @@ export const quizQuestions: QuizQuestion[] = [
       'O primeiro molar superior frequentemente exibe o Tubérculo de Carabelli (quinta cúspide acessória não funcional) na superfície palatina da cúspide mesiopalatina, além da ponte de esmalte oblíqua.',
     referenceTitle: 'Madeira — Anatomia do Dente',
   },
+  {
+    id: 'i_mc_lingua_1',
+    question:
+      'Qual par craniano conduz as fibras nervosas responsáveis pela sensibilidade GUSTATIVA (paladar) dos dois terços anteriores (2/3) da língua, anastomosando-se ao nervo lingual?',
+    category: 'lingua',
+    difficulty: 'intermediario',
+    type: 'multiple_choice',
+    options: [
+      { id: 'a', text: 'Nervo Corda do Tímpano (ramo do Nervo Facial - NC VII)' },
+      { id: 'b', text: 'Nervo Glossofaríngeo (NC IX)' },
+      { id: 'c', text: 'Nervo Hipoglosso (NC XII)' },
+      { id: 'd', text: 'Nervo Alveolar Inferior (ramo de V3)' },
+    ],
+    correctOptionId: 'a',
+    explanation:
+      'A percepção gustativa dos 2/3 anteriores da língua é inervada pela Corda do Tímpano (ramo do NC VII - Facial), que se une ao nervo lingual (NC V3) no espaço infratemporal. O NC V3 conduz apenas o tato, dor e temperatura da região.',
+    referenceTitle: 'Liebgott — Anatomia das Estruturas Orofaciais',
+  },
+  {
+    id: 'i_mc_lingua_2',
+    question:
+      'A Língua Fissurada é uma condição caracterizada por múltiplos sulcos profundos no dorso lingual. Qual orientação clínica essencial deve ser transmitida ao paciente?',
+    category: 'lingua',
+    difficulty: 'intermediario',
+    type: 'multiple_choice',
+    options: [
+      { id: 'a', text: 'Higienização cuidadosa das fendas com escova ou limpador macio para prevenir acúmulo de biofilme, restos alimentares e proliferação de Candida albicans' },
+      { id: 'b', text: 'Cauterização com ácido tricloroacético dos sulcos para preenchimento cicatricial' },
+      { id: 'c', text: 'Biópsia excisional profunda de rotina por ser lesão com 80% de transformação maligna' },
+      { id: 'd', text: 'Abandono total da higienização mecânica lingual' },
+    ],
+    correctOptionId: 'a',
+    explanation:
+      'A língua fissurada é uma alteração benigna muito comum. Seus sulcos anatômicos profundos tendem a reter restos alimentares e microrganismos, podendo deflagrar glossite secundária se não for adequadamente higienizada.',
+    referenceTitle: 'Neville, Damm, Allen, Chi — Patologia Oral e Maxilofacial',
+  },
+  {
+    id: 'i_mc_lingua_3',
+    question:
+      'Em Odontopediatria e no teste de triagem neonatal ("Teste da Linguinha"), qual condição decorrente de inserção anômala curta ou espessa do freio lingual pode causar formato de coração na ponta da língua e restrição de movimentos?',
+    category: 'lingua',
+    difficulty: 'intermediario',
+    type: 'multiple_choice',
+    options: [
+      { id: 'a', text: 'Anquiloglossia' },
+      { id: 'b', text: 'Macroglossia verdadeira congênita' },
+      { id: 'c', text: 'Glossite romboide mediana' },
+      { id: 'd', text: 'Língua pilosa negra' },
+    ],
+    correctOptionId: 'a',
+    explanation:
+      'A anquiloglossia restringe a protrusão e elevação lingual. Quando interfere na amamentação, deglutição ou desenvolvimento da fala, é indicada a intervenção cirúrgica simples (frenotomia lingual).',
+    referenceTitle: 'McDonald & Avery — Odontopediatria para Crianças e Adolescentes',
+  },
+  {
+    id: 'i_mc_inst_1',
+    question:
+      'No procedimento de isolamento absoluto, qual instrumento articulado com mola e anel de trava é projetado especificamente para prender, abrir e posicionar os grampos metálicos sobre o colo do dente?',
+    category: 'instrumentos',
+    difficulty: 'intermediario',
+    type: 'multiple_choice',
+    options: [
+      { id: 'a', text: 'Pinça Porta-Grampos de Palmer' },
+      { id: 'b', text: 'Pinça de Miller para carbono articular' },
+      { id: 'c', text: 'Perfurador de lençol de Ainsworth' },
+      { id: 'd', text: 'Pinça hemostática tipo mosquito' },
+    ],
+    correctOptionId: 'a',
+    explanation:
+      'A Pinça de Palmer possui pontas afiladas com ressaltos que se encaixam nos orifícios laterais do grampo, distendendo o arco elástico de aço para que suas garras abracem a linha cervical do dente com retenção mecânica.',
+    referenceTitle: 'Baratieri — Odontologia Restauradora',
+  },
+  {
+    id: 'i_mc_inst_2',
+    question:
+      'Na prática da Dentística Operatória, qual a função primária das brocas diamantadas esféricas de alta rotação (série FG 1011 a 1018) com anel de codificação azul (granulação média de 100 a 120 µm)?',
+    category: 'instrumentos',
+    difficulty: 'intermediario',
+    type: 'multiple_choice',
+    options: [
+      { id: 'a', text: 'Abertura coronária inicial, delimitação de contorno cavitário em esmalte e penetração desobstrutiva rápida' },
+      { id: 'b', text: 'Polimento final e brilho espelhado em resina composta' },
+      { id: 'c', text: 'Alisamento de paredes cavitárias sem refrigeração a água' },
+      { id: 'd', text: 'Remoção de cálculo subgengival em bolsas periodontais' },
+    ],
+    correctOptionId: 'a',
+    explanation:
+      'As brocas diamantadas esféricas FG (1011 a 1018) com anel azul (100–120 µm) são padrão-ouro para abertura coronária rápida e eficaz em esmalte dental rígido sob refrigeração copiosa a ar/água para evitar injúria pulpar.',
+    referenceTitle: 'Mondelli — Fundamentos de Dentística Operatória',
+  },
+  {
+    id: 'i_mc_inst_3',
+    question:
+      'Por que a remoção seletiva de tecido cariado na proximidade da polpa deve ser finalizada manualmente com a Colher de Dentina afiada (Cureta de Black), em detrimento de pontas rotatórias em alta velocidade?',
+    category: 'instrumentos',
+    difficulty: 'intermediario',
+    type: 'multiple_choice',
+    options: [
+      { id: 'a', text: 'Permite discriminação tátil apurada para raspar a dentina infectada necrótica sem pressionar ou perfurar a parede pulpar delgada' },
+      { id: 'b', text: 'Porque a colher de dentina emite íons de prata bactericidas' },
+      { id: 'c', text: 'Para condensar o material restaurador diretamente na cavidade' },
+      { id: 'd', text: 'Porque as brocas rotatórias não cortam dentina desmineralizada' },
+    ],
+    correctOptionId: 'a',
+    explanation:
+      'A colher de dentina proporciona controle táctil milimétrico, clivando apenas o tecido desorganizado/amolecido (dentina infectada) e preservando a dentina afetada passível de remineralização sem expor a câmara pulpar.',
+    referenceTitle: 'Schwendicke et al. — Consensus Recommendations on Carious Tissue Removal',
+  },
+  {
+    id: 'i_mc_inst_4',
+    question:
+      'Qual a principal distinção dinâmica entre a Turbina de Alta Rotação odontológica e o Contra-Ângulo acoplado a Micromotor?',
+    category: 'instrumentos',
+    difficulty: 'intermediario',
+    type: 'multiple_choice',
+    options: [
+      { id: 'a', text: 'Alta rotação atinge até 400.000 rpm com baixo torque sob irrigação contínua para corte de esmalte; o contra-ângulo opera até 40.000 rpm com alto torque para brocas de aço, profilaxia e polimento' },
+      { id: 'b', text: 'Alta rotação não utiliza refrigeração e baixa rotação opera a 1.000.000 rpm' },
+      { id: 'c', text: 'Não existe distinção de rotação ou torque, diferenciando-se apenas pelo tipo de broca' },
+      { id: 'd', text: 'Contra-ângulo é de uso exclusivo cirúrgico para implantes e a alta rotação apenas para moldagem' },
+    ],
+    correctOptionId: 'a',
+    explanation:
+      'A alta rotação emprega turbina a ar ultraveloz (350.000 a 400.000 rpm) ideal para desgaste de esmalte sem vibração prejudicial, exigindo spray de água. O contra-ângulo em baixa rotação tem alto torque mecânico para escavação, acabamento e polimento.',
+    referenceTitle: 'Craig — Materiais Odontológicos Restauradores',
+  },
 
   // ============================================================================
   // NÍVEL 3: AVANÇADO (20 QUESTÕES: 6 INTERATIVAS 3D + 14 MÚLTIPLA ESCOLHA)
@@ -795,6 +1204,98 @@ export const quizQuestions: QuizQuestion[] = [
     explanation:
       'O pilar zigomático transmite as forças oclusais da região do primeiro molar superior para o frontal e o arco zigomático, sendo frequentemente abordado em traumatologia bucomaxilofacial.',
     referenceTitle: 'Fonseca — Oral and Maxillofacial Trauma',
+  },
+  {
+    id: 'a_3d_esfenoide',
+    question:
+      'No neurocrânio 3D, identifique e clique sobre o Osso Esfenoide ("osso em forma de morcego"), elemento chave da base craniana que abriga a sela túrcica e forames nobres do trigêmeo:',
+    category: 'anatomia_geral',
+    difficulty: 'avancado',
+    type: 'structure_identification',
+    sceneMode: 'full_anatomy',
+    targetStructureId: 'osso_esfenoide',
+    explanation:
+      'O Osso Esfenoide articula-se com os ossos frontal, parietais, temporais, occipital, vômer e zigomáticos, ancorando a base do crânio e transmitindo os ramos maxilar e mandibular do trigêmeo pelos forames redondo e oval.',
+    referenceTitle: 'Terminologia Anatomica & Moore Clinically Oriented Anatomy',
+  },
+  {
+    id: 'a_3d_parietal',
+    question:
+      'No calvário craniano 3D, identifique e clique sobre o Osso Parietal, que compõe a maior parte da calota craniana e delimita as suturas sagital e coronal:',
+    category: 'anatomia_geral',
+    difficulty: 'avancado',
+    type: 'structure_identification',
+    sceneMode: 'full_anatomy',
+    targetStructureId: 'osso_parietal',
+    explanation:
+      'Os ossos parietais são ossos pares planos que formam o teto e as paredes laterais da cavidade craniana, unidos na linha média pela sutura sagital.',
+    referenceTitle: 'Sobotta — Atlas de Anatomia Humana',
+  },
+  {
+    id: 'a_3d_orbicular',
+    question:
+      'Na miologia perioral 3D, identifique e clique no Músculo Orbicular da Boca, esfíncter muscular responsável pelo selamento labial e fonação:',
+    category: 'anatomia_geral',
+    difficulty: 'avancado',
+    type: 'structure_identification',
+    sceneMode: 'full_anatomy',
+    targetStructureId: 'musculo_orbicular_boca',
+    explanation:
+      'O Músculo Orbicular da Boca circunda a cavidade oral. Inervado pelo nervo facial (NC VII), promove o selamento labial indispensável para a deglutição sob pressão negativa.',
+    referenceTitle: 'Netter — Atlas de Anatomia Humana',
+  },
+  {
+    id: 'a_3d_nervo_mentual',
+    question:
+      'Na neuroanatomia mandibular 3D, identifique e clique no Nervo Mentual, ramo terminal que emerge pelo forame mentual entre os pré-molares inferiores:',
+    category: 'nervos_vasos',
+    difficulty: 'avancado',
+    type: 'structure_identification',
+    sceneMode: 'full_anatomy',
+    targetStructureId: 'nervo_mentual',
+    explanation:
+      'O Nervo Mentual emerge no forame mentual para suprir a sensibilidade do lábio inferior, mento e mucosa gengival vestibular anterior inferior.',
+    referenceTitle: 'Malamed — Manual de Anestesia Local',
+  },
+  {
+    id: 'a_3d_inst_resina',
+    question:
+      'Examine no visualizador 3D a Espátula de Resina com pontas ativas ultrafinas contra-anguladas. Por que o recobrimento superficial em Nitreto de Titânio Dourado é fundamental na escultura estética?',
+    category: 'instrumentos',
+    difficulty: 'avancado',
+    type: 'multiple_choice',
+    sceneMode: 'instrument_3d',
+    instrumentId: 'espatula_resina',
+    options: [
+      { id: 'a', text: 'Confere propriedades antiaderentes excepcionais que impedem o repuxamento e a colagem da matriz resinosa na lâmina durante a modelagem anatômica' },
+      { id: 'b', text: 'Emite radiação ultravioleta que polimeriza a resina diretamente sob a lâmina metálica' },
+      { id: 'c', text: 'Serve para aquecer o cimento de ionômero de vidro' },
+      { id: 'd', text: 'Aumenta a absorção de saliva para lubrificar o dente' },
+    ],
+    correctOptionId: 'a',
+    explanation:
+      'O revestimento de Nitreto de Titânio (TiN) possui baixíssimo atrito e propriedades antiaderentes que eliminam a pegajosidade da resina composta durante a escultura estratificada.',
+    referenceTitle: 'Hilton, Ferracane, Broome — Summitt\'s Fundamentals of Operative Dentistry',
+  },
+  {
+    id: 'a_3d_inst_select_colher',
+    question:
+      'Ao abordar cavidades profundas próximas à polpa, qual instrumento deve ser selecionado para curetagem manual seletiva tátil da dentina necrótica infectada, evitando abertura pulpar acidental?',
+    category: 'instrumentos',
+    difficulty: 'avancado',
+    type: 'multiple_choice',
+    sceneMode: 'instrument_3d',
+    instrumentId: 'colher_dentina',
+    options: [
+      { id: 'a', text: 'Colher de Dentina de Black (cureta manual com borda afiada)', instrumentId: 'colher_dentina' },
+      { id: 'b', text: 'Brocas Diamantadas Esféricas FG em alta velocidade', instrumentId: 'brocas_odontologicas' },
+      { id: 'c', text: 'Pinça Porta-Grampos de Palmer', instrumentId: 'pinca_palmer' },
+      { id: 'd', text: 'Fotopolimerizador LED odontológico', instrumentId: 'fotopolimerizador' },
+    ],
+    correctOptionId: 'a',
+    explanation:
+      'A Colher de Dentina permite ao cirurgião-dentista discriminar tatilmente a dentina amolecida infectada da dentina afetada esclerosada, preservando a vitalidade pulpar.',
+    referenceTitle: 'Schwendicke et al. — Consensus Recommendations on Carious Tissue Removal',
   },
   {
     id: 'a_mc_1',
@@ -1048,6 +1549,96 @@ export const quizQuestions: QuizQuestion[] = [
       'A ausência de resposta ao frio indica necrose do tecido pulpar, enquanto a dor intensa à percussão vertical e a rarefação apical refletem inflamação/exsudato purulento nos tecidos periapicais.',
     referenceTitle: 'Cohen — Caminhos da Polpa',
   },
+  {
+    id: 'a_mc_lingua_1',
+    question:
+      'Paciente adulto jovem apresenta áreas eritematosas circundadas por bordas esbranquiçadas sinuosas no dorso lingual com padrão migratório ("mapa geográfico") e leve ardência a alimentos cítricos. Qual é o diagnóstico e o manejo clínico correto?',
+    category: 'lingua',
+    difficulty: 'avancado',
+    type: 'multiple_choice',
+    options: [
+      { id: 'a', text: 'Língua Geográfica (Glossite Migratória Benigna / Eritema Migratório); condição benigna autolimitada que requer apenas tranquilização do paciente e orientação de evitar alimentos picantes/ácidos' },
+      { id: 'b', text: 'Carcinoma Espinocelular em estágio avançado; requer glossectomia parcial com esvaziamento cervical' },
+      { id: 'c', text: 'Leucoplasia pilosa associada ao vírus Epstein-Barr; requer terapia antiviral de alta potência' },
+      { id: 'd', text: 'Líquen plano bolhoso erosivo irreversível; requer radioterapia adjuvante' },
+    ],
+    correctOptionId: 'a',
+    explanation:
+      'A Língua Geográfica é uma anomalia benigna e comum. O aspecto migratório de áreas de descamação com halo serpiginoso esbranquiçado não requer biópsia se a apresentação clínica for clássica, dispensando tratamentos invasivos.',
+    referenceTitle: 'Neville, Damm, Allen, Chi — Patologia Oral e Maxilofacial',
+  },
+  {
+    id: 'a_mc_lingua_2',
+    question:
+      'Histopatologicamente, o que ocorre nas áreas centrais avermelhadas (eritematosas) observadas na Língua Geográfica?',
+    category: 'lingua',
+    difficulty: 'avancado',
+    type: 'multiple_choice',
+    options: [
+      { id: 'a', text: 'Perda/atrofia transitória das papilas filiformes com adelgaçamento epitelial e infiltrado inflamatório de neutrófilos formando microabscessos de Munro' },
+      { id: 'b', text: 'Necrose liquefativa profunda dos fascículos do músculo genioglosso' },
+      { id: 'c', text: 'Hiperqueratose maciça de papilas foliadas com displasia epitelial moderada' },
+      { id: 'd', text: 'Trombose aguda dos ramos terminais da artéria lingual ranina' },
+    ],
+    correctOptionId: 'a',
+    explanation:
+      'A lesão central da língua geográfica exibe perda da queratina das papilas filiformes, expondo a vascularização subepitelial acompanhada de neutrófilos intraepiteliais (microabscessos de Munro), mimetizando o padrão histológico da psoríase.',
+    referenceTitle: 'Regezi, Sciubba, Jordan — Patologia Oral: Correlações Clinicopatológicas',
+  },
+  {
+    id: 'a_mc_lingua_3',
+    question:
+      'Durante o exame clínico dos nervos cranianos, ao solicitar a protrusão ativa da língua, observa-se que a ponta da língua desvia-se persistentemente para o lado ESQUERDO. Qual par craniano e estrutura muscular estão acometidos?',
+    category: 'lingua',
+    difficulty: 'avancado',
+    type: 'multiple_choice',
+    options: [
+      { id: 'a', text: 'Nervo Hipoglosso (NC XII) esquerdo ipsilateral, devido à fraqueza ou paralisia do músculo genioglosso esquerdo' },
+      { id: 'b', text: 'Nervo Glossofaríngeo (NC IX) direito contralateral' },
+      { id: 'c', text: 'Nervo Trigêmeo (ramo mandibular V3) com paralisia motora do masseter' },
+      { id: 'd', text: 'Nervo Facial (NC VII) por incompetência do músculo orbicular da boca' },
+    ],
+    correctOptionId: 'a',
+    explanation:
+      'O músculo genioglosso é o principal protrator da língua. Na lesão do NC XII periférico (ipsilateral), a metade paralisada não exerce tração anterior, de modo que o genioglosso normal contralateral empurra a ponta da língua para o lado afetado.',
+    referenceTitle: 'Kandel — Princípios da Neurociência & Sobotta',
+  },
+  {
+    id: 'a_mc_inst_1',
+    question:
+      'Por que os instrumentais odontológicos modernos para inserção e escultura de resinas compostas são revestidos por filme ultrafino de Nitreto de Titânio (coloração dourada)?',
+    category: 'instrumentos',
+    difficulty: 'avancado',
+    type: 'multiple_choice',
+    options: [
+      { id: 'a', text: 'Confere alta dureza superficial e excelente antiaderência que impede que a matriz resinosa e suas cargas inorgânicas grudem na lâmina durante a modelagem anatômica' },
+      { id: 'b', text: 'Aumenta a condutividade elétrica do instrumento para fotopolimerizar o compósito quimicamente' },
+      { id: 'c', text: 'Permite que a espátula seja descartada após uso único sem lavagem' },
+      { id: 'd', text: 'Serve unicamente para tingir a resina com pigmentos estéticos' },
+    ],
+    correctOptionId: 'a',
+    explanation:
+      'O revestimento de Nitreto de Titânio (TiN) possui baixo coeficiente de atrito superficial, minimizando a pegajosidade dos monômeros da resina e permitindo esculpir sulcos e cúspides anatômicas sem repuxar o material restaurador.',
+    referenceTitle: 'Hilton, Ferracane, Broome — Summitt\'s Fundamentals of Operative Dentistry',
+  },
+  {
+    id: 'a_mc_inst_2',
+    question:
+      'Nos aparelhos fotopolimerizadores odontológicos de LED azul de alta potência, qual faixa de comprimento de onda é indispensável para ativar com eficiência máxima o fotoiniciador canforoquinona em resinas compostas?',
+    category: 'instrumentos',
+    difficulty: 'avancado',
+    type: 'multiple_choice',
+    options: [
+      { id: 'a', text: '450 a 480 nm (espectro de luz azul visível com pico em 468 nm)' },
+      { id: 'b', text: '200 a 280 nm (faixa UVC germicida invisível)' },
+      { id: 'c', text: '750 a 900 nm (faixa infravermelha com geração de calor profundo)' },
+      { id: 'd', text: '590 a 620 nm (faixa da luz âmbar alaranjada)' },
+    ],
+    correctOptionId: 'a',
+    explanation:
+      'A canforoquinona absorve fótons de luz prioritariamente entre 450 e 480 nm com pico máximo em 468 nm. O LED na faixa azul adequada assegura alta taxa de conversão de monômeros em polímeros, evitando falhas adesivas e toxicidade pulpar.',
+    referenceTitle: 'Rueggeberg et al. — Light-curing in dentistry and photoinitiator chemistry',
+  },
 ];
 
 function shuffleArray<T>(items: T[]): T[] {
@@ -1060,9 +1651,12 @@ function shuffleArray<T>(items: T[]): T[] {
 }
 
 /**
- * Sorteia 5 questões aleatórias dentre as 20 do nível escolhido,
- * garantindo matematicamente pelo menos 1 desafio interativo no 3D
- * (com prioridade para Dentes Enfileirados 3D + Anatomia 3D).
+ * Sorteia 5 questões aleatórias dentre as do nível escolhido com balanceamento de categorias:
+ * - 1 desafio 3D de Ossos, Músculos, Partes do Corpo (Língua) ou Nervos no Crânio
+ * - 1 desafio 3D interativo de Instrumentais e Ferramentas Odontológicas
+ * - 0 ou 1 desafio 3D de Dentes Enfileirados (alternado com outros elementos)
+ * - Questões teóricas e clínicas de múltipla escolha
+ * Garantindo uma experiência variada sem nunca repetir múltiplos dentes em sequência.
  */
 export function drawQuizQuestionsByLevel(
   difficulty: QuizDifficulty,
@@ -1070,33 +1664,51 @@ export function drawQuizQuestionsByLevel(
 ): QuizQuestion[] {
   const levelPool = quizQuestions.filter((q) => q.difficulty === difficulty);
 
+  // 1. Desafios 3D de Ossos, Músculos, Língua, Nervos e Estruturas Craniofaciais
+  const anatomy3dPool = shuffleArray(
+    levelPool.filter((q) => q.type === 'structure_identification' && q.sceneMode === 'full_anatomy')
+  );
+
+  // 2. Desafios 3D de Instrumentais e Ferramentas Odontológicas
+  const instrument3dPool = shuffleArray(
+    levelPool.filter((q) => q.sceneMode === 'instrument_3d')
+  );
+
+  // 3. Desafios 3D de Dentes Enfileirados
   const lineupPool = shuffleArray(
     levelPool.filter((q) => q.type === 'structure_identification' && q.sceneMode === 'teeth_lineup')
   );
-  const anatomy3dPool = shuffleArray(
-    levelPool.filter((q) => q.type === 'structure_identification' && q.sceneMode !== 'teeth_lineup')
+
+  // 4. Questões de Múltipla Escolha Teóricas e Clínicas
+  const mcPool = shuffleArray(
+    levelPool.filter((q) => q.type === 'multiple_choice' && q.sceneMode !== 'instrument_3d')
   );
-  const mcPool = shuffleArray(levelPool.filter((q) => q.type === 'multiple_choice'));
 
   const selected: QuizQuestion[] = [];
 
-  // 1. Garante sempre pelo menos 1 questão de Dentes Enfileirados 3D na rodada de 5 questões
-  if (lineupPool.length > 0) {
+  // Regra 1: Garante SEMPRE 1 desafio 3D de Ossos / Músculos / Partes do Corpo / Nervos
+  if (anatomy3dPool.length > 0) {
+    selected.push(anatomy3dPool[0]);
+  }
+
+  // Regra 2: Garante SEMPRE 1 desafio 3D de Ferramentas & Instrumentais Odontológicos
+  if (instrument3dPool.length > 0) {
+    selected.push(instrument3dPool[0]);
+  }
+
+  // Regra 3: Com 50% de probabilidade, inclui 1 desafio de dente enfileirado OU um segundo desafio anatômico (osso/músculo)
+  if (Math.random() < 0.50 && lineupPool.length > 0) {
+    selected.push(lineupPool[0]);
+  } else if (anatomy3dPool.length > 1) {
+    selected.push(anatomy3dPool[1]);
+  } else if (lineupPool.length > 0) {
     selected.push(lineupPool[0]);
   }
 
-  // 2. Com 55% de probabilidade, inclui uma 2ª questão interativa 3D (do crânio/músculos ou outro dente)
-  // mantendo proporção natural próxima aos 30% do banco (6/20 = 1,5 por rodada de 5)
-  const remainingInteractive = [...anatomy3dPool, ...lineupPool.slice(1)];
-  if (remainingInteractive.length > 0 && Math.random() < 0.55) {
-    const extra3d = shuffleArray(remainingInteractive)[0];
-    selected.push(extra3d);
-  }
-
-  // 3. Completa as vagas restantes (3 ou 4 questões) com múltipla escolha aleatória do nível
+  // Regra 4: Completa as vagas restantes com questões clínicas de múltipla escolha
   const neededMc = Math.max(0, count - selected.length);
   selected.push(...mcPool.slice(0, neededMc));
 
-  // 4. Embaralha a ordem final das 5 questões para que o desafio 3D apareça em posição imprevisível
+  // Regra 5: Embaralha a ordem final das 5 questões para que os desafios 3D apareçam em posições dinâmicas
   return shuffleArray(selected).slice(0, count);
 }

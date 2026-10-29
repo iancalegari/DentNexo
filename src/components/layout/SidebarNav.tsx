@@ -35,6 +35,7 @@ import QuizIcon from '@mui/icons-material/Quiz';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import ScienceIcon from '@mui/icons-material/Science';
 import BloodtypeIcon from '@mui/icons-material/Bloodtype';
+import HandymanIcon from '@mui/icons-material/Handyman';
 import GavelIcon from '@mui/icons-material/Gavel';
 import CloseIcon from '@mui/icons-material/Close';
 import SchoolIcon from '@mui/icons-material/School';
@@ -128,6 +129,13 @@ export const SidebarNav: React.FC = () => {
       path: '/anesthesia',
       label: 'Bloqueios Anestésicos 3D',
       icon: <VaccinesIcon fontSize="small" />,
+      category: 'Estudo Clínico',
+    },
+    {
+      id: 'instruments',
+      path: '/instruments',
+      label: 'Instrumentais & Materiais',
+      icon: <HandymanIcon fontSize="small" />,
       category: 'Estudo Clínico',
     },
     {

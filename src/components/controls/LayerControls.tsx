@@ -86,11 +86,41 @@ export const LayerControls: React.FC<LayerControlsProps> = ({
         borderRadius: `${themeTokens.borderRadius.md}px`,
         px: 1.2,
         py: expanded ? 1.1 : 0.7,
-        width: expanded ? 252 : 'fit-content',
+        width: expanded ? 260 : 'fit-content',
         maxWidth: 'calc(100vw - 20px)',
         maxHeight: 'calc(100% - 70px)',
+        overflowX: 'hidden',
         overflowY: expanded ? 'auto' : 'hidden',
+        boxSizing: 'border-box',
         boxShadow: themeTokens.shadows.elevated,
+        scrollbarWidth: 'thin',
+        '&::-webkit-scrollbar': {
+          width: '5px',
+          height: '0px',
+        },
+        '&::-webkit-scrollbar:horizontal': {
+          display: 'none',
+          height: '0px',
+        },
+        '&::-webkit-scrollbar-track': {
+          background: 'transparent',
+        },
+        '&::-webkit-scrollbar-thumb': {
+          background: 'rgba(255, 255, 255, 0.18)',
+          borderRadius: '4px',
+        },
+        '&::-webkit-scrollbar-thumb:hover': {
+          background: 'rgba(255, 255, 255, 0.35)',
+        },
+        '& .MuiCollapse-root': {
+          overflowX: 'hidden',
+        },
+        '& .MuiCollapse-wrapper': {
+          overflowX: 'hidden',
+        },
+        '& .MuiCollapse-wrapperInner': {
+          overflowX: 'hidden',
+        },
       }}
     >
       <Box

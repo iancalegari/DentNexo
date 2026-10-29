@@ -85,11 +85,20 @@ export const exportNotesToPdf = async (options: ExportPdfOptions): Promise<void>
     const note = notes[i];
     let img = note.imageUrl;
 
-    if (!img) {
+    const isOralSpecial = [
+      'assoalho_boca',
+      'tonsilas_palatinas',
+      'lingua',
+      'uvula',
+      'osso_hioide',
+      'gengiva_inserida',
+    ].includes(note.structureId);
+
+    if (!img || (img.startsWith('data:image/png') && isOralSpecial)) {
       const struct = anatomicalStructures[note.structureId];
       img = getStructureIllustration({
         structureId: note.structureId,
-        structureName: note.structureName || note.title,
+        structureName: struct?.name || note.structureName || note.title,
         category: struct?.category || 'skeletal',
         width: 600,
         height: 450,

@@ -93,15 +93,34 @@ export const getStructureIllustration = (options: AnatomicalCardOptions): string
   ctx.save();
   ctx.translate(width / 2, height / 2 - 18);
 
+  const isFloorOfMouth = id.includes('assoalho') || id.includes('soalho') || id.includes('sublingual') || id === 'assoalho_boca';
+  const isTongue = (id.includes('lingua') || id.includes('tongue')) && !isFloorOfMouth && !id.includes('nervo_lingual');
+  const isTonsils = id.includes('tonsila') || id.includes('amigdala') || id.includes('tonsil');
+  const isUvula = id.includes('uvula') || id.includes('palato_mole');
+  const isHyoid = id.includes('hioide') || id === 'osso_hioide';
+  const isGingiva = id.includes('gengiv');
+
   const isMandible = id.includes('mandib') || id === 'mandibula';
   const isMaxilla = id.includes('maxil') || id === 'maxila' || id === 'seio_maxilar';
   const isTooth = id.includes('dente') || id.includes('tooth') || category === 'dental' || /^\d{2}$/.test(id);
   const isNerve = id.includes('nerv') || category === 'nervous';
   const isVessel = id.includes('arteri') || id.includes('veia') || category === 'vascular';
   const isMuscle = id.includes('masseter') || id.includes('temporal') || category === 'muscular';
-  const isPeriodontal = id.includes('periodont') || id.includes('gengiv') || category === 'oral_tissue';
+  const isPeriodontal = id.includes('periodont') || (category === 'oral_tissue' && !isFloorOfMouth && !isTongue && !isTonsils && !isUvula && !isGingiva);
 
-  if (isMandible) {
+  if (isFloorOfMouth) {
+    drawFloorOfMouthIllustration(ctx);
+  } else if (isTongue) {
+    drawTongueIllustration(ctx);
+  } else if (isTonsils) {
+    drawTonsilsIllustration(ctx);
+  } else if (isUvula) {
+    drawUvulaIllustration(ctx);
+  } else if (isGingiva) {
+    drawGingivaIllustration(ctx);
+  } else if (isHyoid) {
+    drawHyoidIllustration(ctx);
+  } else if (isMandible) {
     drawMandibleIllustration(ctx);
   } else if (isMaxilla) {
     drawMaxillaIllustration(ctx);
@@ -146,8 +165,14 @@ export const getStructureIllustration = (options: AnatomicalCardOptions): string
 };
 
 const getCategoryLabel = (category: string, id: string): string => {
+  if (id.includes('assoalho') || id.includes('soalho') || id.includes('sublingual')) return 'ESTOMATOLOGIA • ASSOALHO DA BOCA & GLÂNDULAS';
+  if (id.includes('tonsila') || id.includes('amigdala')) return 'OROFARINGE • ANEL LINFÁTICO DE WALDEYER (AMÍGDALAS)';
+  if (id.includes('lingua') && !id.includes('nervo')) return 'ESTOMATOLOGIA • LÍNGUA & PAPILAS GUSTATIVAS';
+  if (id.includes('uvula') || id.includes('palato_mole')) return 'PALATO & OROFARINGE • PALATO MOLE & ÚVULA';
+  if (id.includes('gengiv')) return 'PERIODONTIA • GENGIVA INSERIDA & MARGINAL';
   if (id.includes('mandibula')) return 'SISTEMA ESQUELÉTICO • VISCEROCRÂNIO (MANDÍBULA)';
   if (id.includes('maxila')) return 'SISTEMA ESQUELÉTICO • ESQUELETO FACIAL SUPERIOR';
+  if (id.includes('hioide')) return 'OSTEOLOGIA CERVICAL • OSSO HIOIDE';
   if (category === 'dental' || id.includes('dente') || id.includes('tooth')) return 'ANATOMIA DENTAL • ODONTOLOGIA CLÍNICA';
   if (category === 'nervous' || id.includes('nerv')) return 'NEUROANATOMIA • INERVAÇÃO CRANIOFACIAL';
   if (category === 'vascular' || id.includes('arteri')) return 'ANGIOLOGIA • VASCULARIZAÇÃO MAXILOFACIAL';
@@ -605,6 +630,742 @@ function drawSkullIllustration(ctx: CanvasRenderingContext2D) {
   ctx.strokeStyle = '#64748B';
   ctx.lineWidth = 3;
   ctx.stroke();
+
+  ctx.restore();
+}
+
+/** Assoalho da Boca & Cavidade Sublingual (Vista Anatômica Oclusal/Sublingual) */
+function drawFloorOfMouthIllustration(ctx: CanvasRenderingContext2D) {
+  const radial = ctx.createRadialGradient(0, 0, 15, 0, 0, 140);
+  radial.addColorStop(0, 'rgba(244, 63, 94, 0.22)');
+  radial.addColorStop(0.6, 'rgba(56, 189, 248, 0.10)');
+  radial.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = radial;
+  ctx.beginPath();
+  ctx.arc(0, 0, 140, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.save();
+  ctx.scale(1.15, 1.15);
+
+  // 1. Arco Mandibular Anterior (Vista oclusal interna / sínfise e processo alveolar)
+  ctx.beginPath();
+  ctx.moveTo(-90, 45);
+  ctx.bezierCurveTo(-75, -20, -50, -55, 0, -60);
+  ctx.bezierCurveTo(50, -55, 75, -20, 90, 45);
+  ctx.bezierCurveTo(72, 40, 45, -35, 0, -42);
+  ctx.bezierCurveTo(-45, -35, -72, 40, -90, 45);
+  ctx.closePath();
+
+  const boneGrad = ctx.createLinearGradient(0, -60, 0, 45);
+  boneGrad.addColorStop(0, '#E2E8F0');
+  boneGrad.addColorStop(0.5, '#CBD5E1');
+  boneGrad.addColorStop(1, '#94A3B8');
+  ctx.fillStyle = boneGrad;
+  ctx.fill();
+  ctx.strokeStyle = '#38BDF8';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Dentes Incisivos e Caninos Inferiores na crista anterior
+  ctx.fillStyle = '#FFFFFF';
+  ctx.strokeStyle = '#64748B';
+  ctx.lineWidth = 1;
+  const teethPositions = [
+    { x: -38, y: -44, w: 10, h: 10, rot: -0.35 },
+    { x: -25, y: -52, w: 9, h: 8, rot: -0.2 },
+    { x: -11, y: -56, w: 8, h: 7, rot: -0.08 },
+    { x: 3, y: -56, w: 8, h: 7, rot: 0.08 },
+    { x: 16, y: -52, w: 9, h: 8, rot: 0.2 },
+    { x: 28, y: -44, w: 10, h: 10, rot: 0.35 },
+  ];
+  teethPositions.forEach(t => {
+    ctx.save();
+    ctx.translate(t.x + t.w / 2, t.y + t.h / 2);
+    ctx.rotate(t.rot);
+    ctx.beginPath();
+    ctx.roundRect(-t.w / 2, -t.h / 2, t.w, t.h, [2, 2, 2, 2]);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  });
+
+  // 2. Fundo/Bacia do Assoalho da Boca (Músculos Milo-hióideo & Genio-hióideo revestidos de mucosa)
+  ctx.beginPath();
+  ctx.moveTo(-68, 38);
+  ctx.bezierCurveTo(-45, -30, -28, -38, 0, -38);
+  ctx.bezierCurveTo(28, -38, 45, -30, 68, 38);
+  ctx.bezierCurveTo(45, 52, -45, 52, -68, 38);
+  ctx.closePath();
+
+  const floorGrad = ctx.createRadialGradient(0, 0, 5, 0, 0, 60);
+  floorGrad.addColorStop(0, '#FB7185');
+  floorGrad.addColorStop(0.5, '#E11D48');
+  floorGrad.addColorStop(1, '#9F1239');
+  ctx.fillStyle = floorGrad;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(251, 113, 133, 0.8)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // 3. Ventre da Língua (Língua erguida revelando a face inferior sublingual)
+  ctx.beginPath();
+  ctx.moveTo(-42, 45);
+  ctx.bezierCurveTo(-38, 5, -28, -15, 0, -22);
+  ctx.bezierCurveTo(28, -15, 38, 5, 42, 45);
+  ctx.bezierCurveTo(25, 48, -25, 48, -42, 45);
+  ctx.closePath();
+
+  const tongueVenterGrad = ctx.createLinearGradient(0, -22, 0, 45);
+  tongueVenterGrad.addColorStop(0, '#FDA4AF');
+  tongueVenterGrad.addColorStop(0.6, '#F43F5E');
+  tongueVenterGrad.addColorStop(1, '#BE123C');
+  ctx.fillStyle = tongueVenterGrad;
+  ctx.fill();
+  ctx.strokeStyle = '#FECDD3';
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+
+  // 4. Veias Sublinguais Profundas (Veias Râninas - azuladas no ventre lingual)
+  ctx.lineWidth = 2.5;
+  ctx.strokeStyle = '#6366F1';
+  ctx.beginPath();
+  ctx.moveTo(-16, -12);
+  ctx.bezierCurveTo(-20, 5, -22, 22, -26, 38);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(16, -12);
+  ctx.bezierCurveTo(20, 5, 22, 22, 26, 38);
+  ctx.stroke();
+
+  // 5. Frênulo Lingual Mediano (Frenulum linguae)
+  ctx.beginPath();
+  ctx.moveTo(0, -20);
+  ctx.lineTo(0, 18);
+  ctx.strokeStyle = '#FFF1F2';
+  ctx.lineWidth = 3.5;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(0, -18);
+  ctx.lineTo(0, 16);
+  ctx.strokeStyle = '#FDA4AF';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // 6. Carúnculas Sublinguais (Carunculae sublinguales com óstio do ducto de Wharton)
+  // Carúncula esquerda
+  ctx.beginPath();
+  ctx.arc(-7, 20, 4.5, 0, Math.PI * 2);
+  ctx.fillStyle = '#FB7185';
+  ctx.fill();
+  ctx.strokeStyle = '#FFE4E6';
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(-7, 20, 1.2, 0, Math.PI * 2);
+  ctx.fillStyle = '#4C0519';
+  ctx.fill();
+
+  // Carúncula direita
+  ctx.beginPath();
+  ctx.arc(7, 20, 4.5, 0, Math.PI * 2);
+  ctx.fillStyle = '#FB7185';
+  ctx.fill();
+  ctx.strokeStyle = '#FFE4E6';
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(7, 20, 1.2, 0, Math.PI * 2);
+  ctx.fillStyle = '#4C0519';
+  ctx.fill();
+
+  // 7. Pregas Sublinguais (Plicae sublinguales sobre glândulas sublinguais)
+  ctx.lineWidth = 2.5;
+  ctx.strokeStyle = 'rgba(253, 164, 175, 0.7)';
+  ctx.beginPath();
+  ctx.moveTo(-11, 23);
+  ctx.bezierCurveTo(-28, 26, -42, 28, -52, 34);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(11, 23);
+  ctx.bezierCurveTo(28, 26, 42, 28, 52, 34);
+  ctx.stroke();
+
+  // Óstios menores (ductos de Rivinus)
+  ctx.fillStyle = '#FFE4E6';
+  [-22, -34, -45, 22, 34, 45].forEach((px) => {
+    const py = 25 + Math.abs(px) * 0.16;
+    ctx.beginPath();
+    ctx.arc(px, py, 1.2, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // Callouts
+  ctx.strokeStyle = 'rgba(0, 201, 246, 0.6)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([2, 2]);
+  ctx.beginPath();
+  ctx.moveTo(10, 21);
+  ctx.lineTo(35, 10);
+  ctx.lineTo(60, 10);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(0, -5);
+  ctx.lineTo(-25, -18);
+  ctx.lineTo(-55, -18);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = '#00C9F6';
+  ctx.beginPath();
+  ctx.arc(60, 10, 2, 0, Math.PI * 2);
+  ctx.arc(-55, -18, 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#38BDF8';
+  ctx.font = 'bold 8px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('Ductos de Wharton', 28, 6);
+  ctx.textAlign = 'right';
+  ctx.fillText('Frênulo Lingual', -28, -22);
+
+  ctx.restore();
+}
+
+/** Língua & Papilas Gustativas (Vista Dorsal) */
+function drawTongueIllustration(ctx: CanvasRenderingContext2D) {
+  const radial = ctx.createRadialGradient(0, 0, 15, 0, 0, 135);
+  radial.addColorStop(0, 'rgba(244, 63, 94, 0.22)');
+  radial.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = radial;
+  ctx.beginPath();
+  ctx.arc(0, 0, 135, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.save();
+  ctx.scale(1.15, 1.15);
+
+  // Contorno da Língua em ogiva (ápice na frente, corpo e raiz posterior)
+  ctx.beginPath();
+  ctx.moveTo(0, 58);
+  ctx.bezierCurveTo(-38, 52, -55, 20, -52, -25);
+  ctx.bezierCurveTo(-50, -50, -35, -65, 0, -65);
+  ctx.bezierCurveTo(35, -65, 50, -50, 52, -25);
+  ctx.bezierCurveTo(55, 20, 38, 52, 0, 58);
+  ctx.closePath();
+
+  const tongueGrad = ctx.createLinearGradient(0, -65, 0, 58);
+  tongueGrad.addColorStop(0, '#9F1239');
+  tongueGrad.addColorStop(0.35, '#BE123C');
+  tongueGrad.addColorStop(0.7, '#E11D48');
+  tongueGrad.addColorStop(1, '#FB7185');
+  ctx.fillStyle = tongueGrad;
+  ctx.fill();
+  ctx.strokeStyle = '#FECDD3';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Sulco Mediano da Língua
+  ctx.beginPath();
+  ctx.moveTo(0, 48);
+  ctx.lineTo(0, -12);
+  ctx.strokeStyle = 'rgba(159, 18, 57, 0.7)';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // V Lingual (Sulco Terminal)
+  ctx.beginPath();
+  ctx.moveTo(-38, -24);
+  ctx.lineTo(0, -12);
+  ctx.lineTo(38, -24);
+  ctx.strokeStyle = '#881337';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // Forame Cego
+  ctx.beginPath();
+  ctx.arc(0, -12, 3, 0, Math.PI * 2);
+  ctx.fillStyle = '#4C0519';
+  ctx.fill();
+  ctx.strokeStyle = '#FDA4AF';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Papilas Circunvaladas / Valadas
+  const circumvallate = [
+    { x: -32, y: -22 },
+    { x: -24, y: -19 },
+    { x: -16, y: -16 },
+    { x: -8, y: -14 },
+    { x: 8, y: -14 },
+    { x: 16, y: -16 },
+    { x: 24, y: -19 },
+    { x: 32, y: -22 },
+  ];
+  circumvallate.forEach(p => {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 3.2, 0, Math.PI * 2);
+    ctx.fillStyle = '#F43F5E';
+    ctx.fill();
+    ctx.strokeStyle = '#FFE4E6';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  });
+
+  // Raiz Lingual (Folículos Linfóides / Tonsila Lingual)
+  ctx.fillStyle = 'rgba(136, 19, 55, 0.6)';
+  for (let i = 0; i < 18; i++) {
+    const rx = -28 + (i % 6) * 11 + ((i * 7) % 5);
+    const ry = -32 - Math.floor(i / 6) * 10;
+    ctx.beginPath();
+    ctx.arc(rx, ry, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Papilas Fungiformes
+  ctx.fillStyle = '#FDA4AF';
+  [
+    { x: -18, y: 12 }, { x: 18, y: 15 }, { x: -8, y: 32 }, { x: 10, y: 34 },
+    { x: -25, y: 28 }, { x: 24, y: 26 }, { x: 0, y: 44 }, { x: -14, y: 2 },
+    { x: 14, y: 0 }, { x: -26, y: -4 }, { x: 28, y: -2 }
+  ].forEach(p => {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 1.8, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // Callout V Lingual
+  ctx.strokeStyle = 'rgba(0, 201, 246, 0.6)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([2, 2]);
+  ctx.beginPath();
+  ctx.moveTo(28, -20);
+  ctx.lineTo(58, -32);
+  ctx.lineTo(75, -32);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = '#00C9F6';
+  ctx.beginPath();
+  ctx.arc(75, -32, 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#38BDF8';
+  ctx.font = 'bold 8.5px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('Papilas Valadas (V Lingual)', 42, -37);
+
+  ctx.restore();
+}
+
+/** Tonsilas Palatinas & Orofaringe (Amígdalas com Criptas) */
+function drawTonsilsIllustration(ctx: CanvasRenderingContext2D) {
+  const radial = ctx.createRadialGradient(0, 0, 15, 0, 0, 135);
+  radial.addColorStop(0, 'rgba(225, 29, 72, 0.22)');
+  radial.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = radial;
+  ctx.beginPath();
+  ctx.arc(0, 0, 135, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.save();
+  ctx.scale(1.15, 1.15);
+
+  // Palato Mole Superior & Arcada Orofaringea
+  ctx.beginPath();
+  ctx.moveTo(-75, -35);
+  ctx.bezierCurveTo(-50, -60, 50, -60, 75, -35);
+  ctx.bezierCurveTo(60, 15, 45, 45, 0, 50);
+  ctx.bezierCurveTo(-45, 45, -60, 15, -75, -35);
+  ctx.closePath();
+  ctx.fillStyle = '#4C0519';
+  ctx.fill();
+
+  // Arco Palatoglosso & Palato Mole
+  ctx.beginPath();
+  ctx.moveTo(-70, -35);
+  ctx.bezierCurveTo(-40, -50, 0, -52, 0, -52);
+  ctx.bezierCurveTo(0, -52, 40, -50, 70, -35);
+  ctx.bezierCurveTo(60, 5, 45, 30, 40, 42);
+  ctx.bezierCurveTo(36, 15, 28, -25, 0, -25);
+  ctx.bezierCurveTo(-28, -25, -36, 15, -40, 42);
+  ctx.bezierCurveTo(-45, 30, -60, 5, -70, -35);
+  ctx.closePath();
+
+  const mucosaGrad = ctx.createLinearGradient(0, -52, 0, 42);
+  mucosaGrad.addColorStop(0, '#FB7185');
+  mucosaGrad.addColorStop(0.6, '#E11D48');
+  mucosaGrad.addColorStop(1, '#9F1239');
+  ctx.fillStyle = mucosaGrad;
+  ctx.fill();
+  ctx.strokeStyle = '#FECDD3';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Úvula Palatina Suspensa na Linha Média
+  ctx.beginPath();
+  ctx.moveTo(-9, -25);
+  ctx.bezierCurveTo(-8, -5, -6, 8, 0, 12);
+  ctx.bezierCurveTo(6, 8, 8, -5, 9, -25);
+  ctx.closePath();
+  const uvulaGrad = ctx.createLinearGradient(0, -25, 0, 12);
+  uvulaGrad.addColorStop(0, '#FDA4AF');
+  uvulaGrad.addColorStop(1, '#E11D48');
+  ctx.fillStyle = uvulaGrad;
+  ctx.fill();
+  ctx.strokeStyle = '#FFE4E6';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Amígdala Esquerda (Tonsila Palatina na fossa tonsilar)
+  ctx.beginPath();
+  ctx.ellipse(-48, 2, 16, 26, -0.2, 0, Math.PI * 2);
+  const leftTonsilGrad = ctx.createRadialGradient(-48, 2, 4, -48, 2, 24);
+  leftTonsilGrad.addColorStop(0, '#FDA4AF');
+  leftTonsilGrad.addColorStop(0.7, '#E11D48');
+  leftTonsilGrad.addColorStop(1, '#881337');
+  ctx.fillStyle = leftTonsilGrad;
+  ctx.fill();
+  ctx.strokeStyle = '#38BDF8';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Criptas da Amígdala Esquerda
+  ctx.fillStyle = '#4C0519';
+  [
+    { x: -50, y: -12, w: 5, h: 2, rot: 0.2 },
+    { x: -44, y: -4, w: 7, h: 2.5, rot: -0.3 },
+    { x: -52, y: 5, w: 6, h: 2.2, rot: 0.1 },
+    { x: -45, y: 14, w: 5, h: 2, rot: -0.2 },
+    { x: -49, y: 20, w: 4, h: 1.8, rot: 0.3 }
+  ].forEach(c => {
+    ctx.save();
+    ctx.translate(c.x, c.y);
+    ctx.rotate(c.rot);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, c.w, c.h, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  });
+
+  // Amígdala Direita (Tonsila Palatina)
+  ctx.beginPath();
+  ctx.ellipse(48, 2, 16, 26, 0.2, 0, Math.PI * 2);
+  const rightTonsilGrad = ctx.createRadialGradient(48, 2, 4, 48, 2, 24);
+  rightTonsilGrad.addColorStop(0, '#FDA4AF');
+  rightTonsilGrad.addColorStop(0.7, '#E11D48');
+  rightTonsilGrad.addColorStop(1, '#881337');
+  ctx.fillStyle = rightTonsilGrad;
+  ctx.fill();
+  ctx.strokeStyle = '#38BDF8';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Criptas da Amígdala Direita
+  ctx.fillStyle = '#4C0519';
+  [
+    { x: 50, y: -12, w: 5, h: 2, rot: -0.2 },
+    { x: 44, y: -4, w: 7, h: 2.5, rot: 0.3 },
+    { x: 52, y: 5, w: 6, h: 2.2, rot: -0.1 },
+    { x: 45, y: 14, w: 5, h: 2, rot: 0.2 },
+    { x: 49, y: 20, w: 4, h: 1.8, rot: -0.3 }
+  ].forEach(c => {
+    ctx.save();
+    ctx.translate(c.x, c.y);
+    ctx.rotate(c.rot);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, c.w, c.h, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  });
+
+  // Callout da Amígdala
+  ctx.strokeStyle = 'rgba(0, 201, 246, 0.7)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([2, 2]);
+  ctx.beginPath();
+  ctx.moveTo(56, 4);
+  ctx.lineTo(82, -8);
+  ctx.lineTo(100, -8);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = '#00C9F6';
+  ctx.beginPath();
+  ctx.arc(100, -8, 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#38BDF8';
+  ctx.font = 'bold 8.5px sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText('Criptas Tonsilares', 98, -13);
+
+  ctx.restore();
+}
+
+/** Palato Mole & Úvula Palatina */
+function drawUvulaIllustration(ctx: CanvasRenderingContext2D) {
+  const radial = ctx.createRadialGradient(0, 0, 15, 0, 0, 130);
+  radial.addColorStop(0, 'rgba(244, 63, 94, 0.2)');
+  radial.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = radial;
+  ctx.beginPath();
+  ctx.arc(0, 0, 130, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.save();
+  ctx.scale(1.15, 1.15);
+
+  // Palato Mole Arqueado
+  ctx.beginPath();
+  ctx.moveTo(-80, -45);
+  ctx.bezierCurveTo(-45, -55, 45, -55, 80, -45);
+  ctx.bezierCurveTo(70, -10, 40, 15, 14, 0);
+  // Úvula central pendente
+  ctx.bezierCurveTo(12, 20, 8, 38, 0, 42);
+  ctx.bezierCurveTo(-8, 38, -12, 20, -14, 0);
+  ctx.bezierCurveTo(-40, 15, -70, -10, -80, -45);
+  ctx.closePath();
+
+  const palGrad = ctx.createLinearGradient(0, -55, 0, 42);
+  palGrad.addColorStop(0, '#FB7185');
+  palGrad.addColorStop(0.6, '#F43F5E');
+  palGrad.addColorStop(1, '#BE123C');
+  ctx.fillStyle = palGrad;
+  ctx.fill();
+  ctx.strokeStyle = '#38BDF8';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Rafe do Palato
+  ctx.beginPath();
+  ctx.moveTo(0, -52);
+  ctx.lineTo(0, 36);
+  ctx.strokeStyle = '#FFE4E6';
+  ctx.lineWidth = 1.8;
+  ctx.stroke();
+
+  // Callout da Úvula
+  ctx.strokeStyle = 'rgba(0, 201, 246, 0.7)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([2, 2]);
+  ctx.beginPath();
+  ctx.moveTo(6, 26);
+  ctx.lineTo(40, 32);
+  ctx.lineTo(65, 32);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = '#00C9F6';
+  ctx.beginPath();
+  ctx.arc(65, 32, 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#38BDF8';
+  ctx.font = 'bold 8.5px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('Úvula Palatina', 38, 25);
+
+  ctx.restore();
+}
+
+/** Gengiva Inserida e Mucosa Alveolar */
+function drawGingivaIllustration(ctx: CanvasRenderingContext2D) {
+  const radial = ctx.createRadialGradient(0, 0, 15, 0, 0, 130);
+  radial.addColorStop(0, 'rgba(244, 63, 94, 0.2)');
+  radial.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = radial;
+  ctx.beginPath();
+  ctx.arc(0, 0, 130, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.save();
+  ctx.scale(1.15, 1.15);
+
+  // Mucosa Alveolar (fundo vermelho vivo não queratinizado)
+  ctx.beginPath();
+  ctx.rect(-80, -50, 160, 40);
+  ctx.fillStyle = '#BE123C';
+  ctx.fill();
+
+  // Junção Mucogengival (linha festonada divisória)
+  ctx.beginPath();
+  ctx.moveTo(-80, -10);
+  for (let x = -80; x <= 80; x += 20) {
+    ctx.quadraticCurveTo(x + 10, -5, x + 20, -10);
+  }
+  ctx.strokeStyle = '#FDA4AF';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Faixa de Gengiva Inserida (rósea queratinizada)
+  ctx.beginPath();
+  ctx.moveTo(-80, -10);
+  for (let x = -80; x <= 80; x += 20) {
+    ctx.quadraticCurveTo(x + 10, -5, x + 20, -10);
+  }
+  ctx.lineTo(80, 22);
+  ctx.bezierCurveTo(60, 30, 40, 15, 20, 22);
+  ctx.bezierCurveTo(0, 30, -20, 15, -40, 22);
+  ctx.bezierCurveTo(-60, 30, -70, 15, -80, 22);
+  ctx.closePath();
+
+  const gingivaGrad = ctx.createLinearGradient(0, -10, 0, 25);
+  gingivaGrad.addColorStop(0, '#FB7185');
+  gingivaGrad.addColorStop(0.5, '#F43F5E');
+  gingivaGrad.addColorStop(1, '#FDA4AF');
+  ctx.fillStyle = gingivaGrad;
+  ctx.fill();
+  ctx.strokeStyle = '#FFE4E6';
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+
+  // Pontilhado característico em casca de laranja (Stippling)
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+  for (let row = -2; row <= 16; row += 5) {
+    for (let col = -65; col <= 65; col += 7) {
+      if ((row + col) % 3 === 0) {
+        ctx.beginPath();
+        ctx.arc(col + ((row * 3) % 4), row, 0.9, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+
+  // Coroas Dentais Emergindo da Gengiva
+  ctx.fillStyle = '#FFFFFF';
+  ctx.strokeStyle = '#94A3B8';
+  ctx.lineWidth = 1.5;
+  [-50, -10, 30, 70].forEach(cx => {
+    ctx.beginPath();
+    ctx.moveTo(cx - 14, 20);
+    ctx.bezierCurveTo(cx - 15, 45, cx - 12, 58, cx, 58);
+    ctx.bezierCurveTo(cx + 12, 58, cx + 15, 45, cx + 14, 20);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  });
+
+  // Callout da Gengiva Inserida
+  ctx.strokeStyle = 'rgba(0, 201, 246, 0.7)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([2, 2]);
+  ctx.beginPath();
+  ctx.moveTo(10, 8);
+  ctx.lineTo(45, -25);
+  ctx.lineTo(75, -25);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = '#00C9F6';
+  ctx.beginPath();
+  ctx.arc(75, -25, 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#38BDF8';
+  ctx.font = 'bold 8.5px sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText('Gengiva Ceratinizada', 72, -30);
+
+  ctx.restore();
+}
+
+/** Osso Hioide (Vista Anterior/Superior em U) */
+function drawHyoidIllustration(ctx: CanvasRenderingContext2D) {
+  const radial = ctx.createRadialGradient(0, 0, 15, 0, 0, 130);
+  radial.addColorStop(0, 'rgba(56, 189, 248, 0.2)');
+  radial.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = radial;
+  ctx.beginPath();
+  ctx.arc(0, 0, 130, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.save();
+  ctx.scale(1.15, 1.15);
+
+  // Corpo do Osso Hioide
+  ctx.beginPath();
+  ctx.moveTo(-35, 12);
+  ctx.bezierCurveTo(-20, 22, 20, 22, 35, 12);
+  ctx.bezierCurveTo(32, 2, -32, 2, -35, 12);
+  ctx.closePath();
+  const hyoidGrad = ctx.createLinearGradient(0, 0, 0, 22);
+  hyoidGrad.addColorStop(0, '#F8FAFC');
+  hyoidGrad.addColorStop(0.5, '#CBD5E1');
+  hyoidGrad.addColorStop(1, '#94A3B8');
+  ctx.fillStyle = hyoidGrad;
+  ctx.fill();
+  ctx.strokeStyle = '#38BDF8';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Cornos Maiores
+  ctx.beginPath();
+  ctx.moveTo(-32, 8);
+  ctx.bezierCurveTo(-55, 0, -75, -25, -78, -48);
+  ctx.bezierCurveTo(-72, -49, -65, -30, -32, 3);
+  ctx.closePath();
+  ctx.fillStyle = hyoidGrad;
+  ctx.fill();
+  ctx.strokeStyle = '#38BDF8';
+  ctx.lineWidth = 1.8;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(32, 8);
+  ctx.bezierCurveTo(55, 0, 75, -25, 78, -48);
+  ctx.bezierCurveTo(72, -49, 65, -30, 32, 3);
+  ctx.closePath();
+  ctx.fillStyle = hyoidGrad;
+  ctx.fill();
+  ctx.strokeStyle = '#38BDF8';
+  ctx.lineWidth = 1.8;
+  ctx.stroke();
+
+  // Cornos Menores
+  ctx.beginPath();
+  ctx.moveTo(-28, 5);
+  ctx.lineTo(-32, -12);
+  ctx.lineTo(-24, 4);
+  ctx.closePath();
+  ctx.fillStyle = '#E2E8F0';
+  ctx.fill();
+  ctx.strokeStyle = '#00C9F6';
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(28, 5);
+  ctx.lineTo(32, -12);
+  ctx.lineTo(24, 4);
+  ctx.closePath();
+  ctx.fillStyle = '#E2E8F0';
+  ctx.fill();
+  ctx.strokeStyle = '#00C9F6';
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+
+  // Callout Corno Maior
+  ctx.strokeStyle = 'rgba(0, 201, 246, 0.7)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([2, 2]);
+  ctx.beginPath();
+  ctx.moveTo(70, -32);
+  ctx.lineTo(92, -32);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = '#00C9F6';
+  ctx.beginPath();
+  ctx.arc(92, -32, 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#38BDF8';
+  ctx.font = 'bold 8.5px sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText('Corno Maior', 90, -37);
 
   ctx.restore();
 }

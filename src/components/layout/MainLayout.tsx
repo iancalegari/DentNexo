@@ -47,7 +47,9 @@ export const MainLayout: React.FC = () => {
         setActiveAnesthesia(null);
       }
 
-      resetCamera();
+      if (!preserveIsolation) {
+        resetCamera();
+      }
       prevPathRef.current = location.pathname;
     }
   }, [

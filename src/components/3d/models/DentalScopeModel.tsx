@@ -99,6 +99,11 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
       name.startsWith('tongue-') ||
       name.startsWith('tongue_') ||
       name.startsWith('oral-tongue') ||
+      name === 'assoalho_boca' ||
+      name.startsWith('oral-floor') ||
+      name === 'tonsilas_palatinas' ||
+      name.startsWith('oral-tonsils') ||
+      name.includes('tonsil') ||
       name === 'uvula' ||
       name.startsWith('uvula-') ||
       name.startsWith('uvula_') ||
@@ -199,6 +204,19 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
       name.startsWith('oral-tongue')
     ) {
       return 'lingua';
+    }
+    if (
+      name === 'assoalho_boca' ||
+      name.startsWith('oral-floor')
+    ) {
+      return 'assoalho_boca';
+    }
+    if (
+      name === 'tonsilas_palatinas' ||
+      name.startsWith('oral-tonsils') ||
+      name.includes('tonsil')
+    ) {
+      return 'tonsilas_palatinas';
     }
     if (
       name === 'uvula' ||

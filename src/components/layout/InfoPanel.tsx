@@ -54,6 +54,7 @@ export const InfoPanel: React.FC = () => {
     setInfoPanelOpen,
     setActivePathology,
     setSurfaceExplorationMode,
+    setActiveToothFdi,
   } = useAnatomyStore();
 
   const [isFavorite, setIsFavorite] = useState<boolean>(() => {
@@ -302,8 +303,12 @@ export const InfoPanel: React.FC = () => {
                 fullWidth
                 startIcon={<CenterFocusStrongIcon fontSize="small" />}
                 onClick={() => {
-                  const fdi = structure.id.replace('dente_', '');
+                  const fdi = structure.id.replace('dente_', '').replace('tooth-', '');
+                  setActiveToothFdi(fdi);
+                  setSelectedStructure(`dente_${fdi}`);
                   setSurfaceExplorationMode(true, fdi);
+                  setInfoPanelOpen(false);
+                  navigate('/dental', { state: { preserveIsolation: true } });
                 }}
                 sx={{
                   mt: 1.2,
