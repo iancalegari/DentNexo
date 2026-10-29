@@ -38,15 +38,26 @@ export const QuizView: React.FC = () => {
   const {
     selectedStructureId,
     setSelectedStructure,
+    isolateStructure,
+    setInfoPanelOpen,
     resetVisibility,
     resetCamera,
   } = useAnatomyStore();
 
-  // Ao entrar em Questionários, ativar todas as camadas com opacidade total, sem seleção e visão panorâmica sem zoom
+  // Ao entrar em Questionários, fechar qualquer descrição ou painel e resetar seleções
   React.useEffect(() => {
     resetVisibility();
     resetCamera();
-  }, [resetVisibility, resetCamera]);
+    setSelectedStructure(null);
+    isolateStructure(null);
+    setInfoPanelOpen(false);
+
+    return () => {
+      setSelectedStructure(null);
+      isolateStructure(null);
+      setInfoPanelOpen(false);
+    };
+  }, [resetVisibility, resetCamera, setSelectedStructure, isolateStructure, setInfoPanelOpen]);
 
   const currentQ = quizQuestions[currentIdx];
 
@@ -71,11 +82,14 @@ export const QuizView: React.FC = () => {
   };
 
   const handleNextQuestion = () => {
+    setSelectedStructure(null);
+    isolateStructure(null);
+    setInfoPanelOpen(false);
+
     if (currentIdx + 1 < quizQuestions.length) {
       setCurrentIdx((prev) => prev + 1);
       setSelectedOption('');
       setIsAnswered(false);
-      setSelectedStructure(null);
     } else {
       setQuizFinished(true);
       storageService.saveQuizResult({
@@ -95,6 +109,8 @@ export const QuizView: React.FC = () => {
     setScore(0);
     setQuizFinished(false);
     setSelectedStructure(null);
+    isolateStructure(null);
+    setInfoPanelOpen(false);
   };
 
   const progress = Math.round(((currentIdx + 1) / quizQuestions.length) * 100);

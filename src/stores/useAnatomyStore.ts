@@ -57,7 +57,7 @@ interface AnatomyState {
   setFocusedSystem: (system: AnatomicalCategory | null) => void;
   toggleLayer: (layer: keyof LayerVisibility) => void;
   setLayerOpacity: (layer: keyof LayerOpacity, opacity: number) => void;
-  isolateStructure: (id: string | null) => void;
+  isolateStructure: (id: string | null, force?: boolean) => void;
   hideStructure: (id: string) => void;
   unhideStructure: (id: string) => void;
   resetVisibility: () => void;
@@ -159,8 +159,8 @@ export const useAnatomyStore = create<AnatomyState>((set, get) => ({
     },
   })),
   
-  isolateStructure: (id) => set((state) => ({
-    isolatedStructureId: id === null || state.isolatedStructureId === id ? null : id,
+  isolateStructure: (id, force) => set((state) => ({
+    isolatedStructureId: id === null ? null : (force ? id : (state.isolatedStructureId === id ? null : id)),
     selectedStructureId: id,
     infoPanelOpen: id !== null,
   })),

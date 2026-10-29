@@ -41,7 +41,7 @@ import { getStructureIllustration } from '@/utils/anatomicalDrawings';
 
 export const FavoritesNotesView: React.FC = () => {
   const navigate = useNavigate();
-  const { setSelectedStructure, isolateStructure, setInfoPanelOpen, selectedStructureId } = useAnatomyStore();
+  const { setSelectedStructure, isolateStructure, setInfoPanelOpen, setFocusedSystem, selectedStructureId } = useAnatomyStore();
   const [activeTab, setActiveTab] = useState<'favorites' | 'notes' | 'recents'>('favorites');
   const [favorites, setFavorites] = useState<string[]>([]);
   const [notes, setNotes] = useState<UserNote[]>([]);
@@ -104,49 +104,35 @@ export const FavoritesNotesView: React.FC = () => {
   };
 
   const handleSelectAndNavigate = (structureId: string) => {
-    setSelectedStructure(structureId);
+    let cleanId = structureId;
+    if (!isNaN(Number(structureId))) {
+      cleanId = `dente_${structureId}`;
+    } else if (structureId.startsWith('tooth-')) {
+      cleanId = structureId.replace('tooth-', 'dente_');
+    }
+    setFocusedSystem(null);
+    setSelectedStructure(cleanId);
+    isolateStructure(cleanId, true);
+    setInfoPanelOpen(true);
     navigate('/atlas');
   };
 
   /**
-   * Ao clicar em uma anotação, navega para a visão 3D correspondente
+   * Ao clicar em uma anotação, navega para o Atlas 3D com a estrutura isolada,
+   * o restante com baixa opacidade de referência e o painel lateral aberto mostrando a anotação
    */
   const handleNoteClick = (note: UserNote) => {
-    const structureId = note.structureId;
-    const structure = anatomicalStructures[structureId];
-
-    if (structure) {
-      setSelectedStructure(structureId);
-      isolateStructure(structureId);
-      setInfoPanelOpen(true);
-
-      switch (structure.category) {
-        case 'skeletal':
-          navigate('/skeletal');
-          break;
-        case 'dental':
-          navigate('/dental');
-          break;
-        case 'muscular':
-          navigate('/muscular');
-          break;
-        case 'nervous':
-          navigate('/nervous');
-          break;
-        case 'vascular':
-          navigate('/vascular');
-          break;
-        case 'oral_tissue':
-          navigate('/periodontal');
-          break;
-        default:
-          navigate('/skeletal');
-          break;
-      }
-    } else {
-      setSelectedStructure(structureId);
-      navigate('/atlas');
+    let cleanId = note.structureId;
+    if (!isNaN(Number(cleanId))) {
+      cleanId = `dente_${cleanId}`;
+    } else if (cleanId.startsWith('tooth-')) {
+      cleanId = cleanId.replace('tooth-', 'dente_');
     }
+    setFocusedSystem(null);
+    setSelectedStructure(cleanId);
+    isolateStructure(cleanId, true);
+    setInfoPanelOpen(true);
+    navigate('/atlas');
   };
 
   /**

@@ -196,7 +196,33 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
       return 'maxila';
     }
 
-    // Neurocrânio e ossos da calvária/base (frontal, parietal, occipital, temporal, esfenóide)
+    // Ossos específicos do crânio
+    if (name.includes('frontal')) {
+      return 'osso_frontal';
+    }
+    if (name.includes('parietal')) {
+      return 'osso_parietal';
+    }
+    if (name.includes('occipital')) {
+      return 'osso_occipital';
+    }
+    if (name.includes('temporal') && !name.includes('temporalis')) {
+      return 'osso_temporal';
+    }
+    if (name.includes('sphenoid') || name.includes('esfenoid')) {
+      return 'osso_esfenoide';
+    }
+    if (name.includes('ethmoid') || name.includes('etmoid')) {
+      return 'osso_etmoide';
+    }
+    if (name.includes('zygomatic') || name.includes('zigomatic')) {
+      return 'osso_zigomatico';
+    }
+    if (name.includes('nasal')) {
+      return 'osso_nasal';
+    }
+
+    // Neurocrânio e ossos da calvária/base
     return 'neurocranio';
   };
 
@@ -351,9 +377,49 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
       const isTooth = name.startsWith('tooth-');
       const isGingiva = name.startsWith('gingiva-');
 
+      const isToothMatch = (idA: string, idB: string) => {
+        const cleanA = idA.replace('dente_', '').replace('tooth-', '');
+        const cleanB = idB.replace('dente_', '').replace('tooth-', '');
+        return cleanA === cleanB;
+      };
+
+      const isCranialBone = (id: string) =>
+        id === 'neurocranio' ||
+        id === 'osso_frontal' ||
+        id === 'osso_parietal' ||
+        id === 'osso_temporal' ||
+        id === 'osso_occipital' ||
+        id === 'osso_esfenoide' ||
+        id === 'osso_etmoide' ||
+        id === 'osso_zigomatico' ||
+        id === 'osso_nasal';
+
+      const normalizeId = (id: string | null) => {
+        if (!id) return '';
+        if (id.startsWith('tooth-')) return `dente_${id.replace('tooth-', '')}`;
+        if (!isNaN(Number(id))) return `dente_${id}`;
+        return id;
+      };
+
+      const matchesTarget = (targetId: string | null) => {
+        if (!targetId) return false;
+        if (targetId === structureId) return true;
+        const normTarget = normalizeId(targetId);
+        const normStruct = normalizeId(structureId);
+        if (normTarget === normStruct) return true;
+        if (isTooth && isToothMatch(targetId, structureId)) return true;
+        if (targetId === 'neurocranio' && isCranialBone(structureId)) return true;
+        if (structureId === 'neurocranio' && isCranialBone(targetId)) return true;
+        return false;
+      };
+
+      const isSelected = matchesTarget(selectedStructureId);
+      const isHovered = matchesTarget(hoveredStructureId);
+      const isIsolated = matchesTarget(isolatedStructureId);
+
       // MODO APENAS ARCADAS E GENGIVA:
       // Oculta completamente ossos, crânio, músculos e neurovascular
-      if (archesOnlyMode && !isTooth && !isGingiva) {
+      if (archesOnlyMode && !isTooth && !isGingiva && !isIsolated) {
         mesh.visible = false;
         continue;
       }
@@ -361,7 +427,8 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
       const isVisible = layers[category as keyof typeof layers];
       const isHidden = hiddenStructureIds.includes(structureId);
 
-      if (!isVisible || isHidden) {
+      // Se a estrutura está isolada, ela DEVE ser sempre visível
+      if (!isIsolated && (!isVisible || isHidden)) {
         mesh.visible = false;
         continue;
       }
@@ -457,9 +524,6 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
         }
       }
 
-      const isSelected = selectedStructureId === structureId;
-      const isHovered = hoveredStructureId === structureId;
-      const isIsolated = isolatedStructureId === structureId;
 
       // ================= MODO RAIO X =================
       if (xrayMode) {
@@ -508,7 +572,22 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
       let targetEmissive = defaultEmissive;
       let targetEmissiveIntensity = defaultEmissiveIntensity;
 
-      if (focusedSystem) {
+      // ISOLAMENTO DE ESTRUTURA (PRIORIDADE MÁXIMA):
+      // A estrutura isolada fica com 100% de opacidade e realce ciano.
+      // Todo o restante do modelo recebe opacidade baixa (0.15), garantindo o isolamento perfeito com referência sutil.
+      if (hasIsolation) {
+        if (isIsolated) {
+          targetColor = cyanColor;
+          targetEmissive = cyanEmissive;
+          targetEmissiveIntensity = 0.6;
+          opacityMultiplier = 1.0;
+        } else {
+          // O restante fica com opacidade baixa (0.15)
+          opacityMultiplier = 0.15;
+          targetEmissive = blackColor;
+          targetEmissiveIntensity = 0;
+        }
+      } else if (focusedSystem) {
         const isTargetSystem = category === focusedSystem;
         const isLpoSelected = selectedStructureId === 'ligamento_periodontal';
 
@@ -548,15 +627,6 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
             opacityMultiplier = 0.20;
           }
         }
-      } else if (hasIsolation) {
-        if (isIsolated) {
-          targetColor = cyanColor;
-          targetEmissive = cyanEmissive;
-          targetEmissiveIntensity = 0.55;
-          opacityMultiplier = 1.0;
-        } else {
-          opacityMultiplier = 0.12;
-        }
       } else {
         // Modo Normal (Atlas Geral)
         if (activePathologyId === 'gengivite' && isGingiva) {
@@ -580,8 +650,12 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
         }
       }
 
-      // A opacidade final é o produto do controle do usuário (slider de camadas) pelo multiplicador de foco
-      const effectiveOpacity = Math.max(0.0, Math.min(1.0, userLayerOpacity * opacityMultiplier));
+      // A opacidade final é o produto do controle do usuário pelo multiplicador de foco,
+      // sendo que em isolamento forçado a peça alvo fica 100% e as demais 15% (ghost de referência).
+      let effectiveOpacity = Math.max(0.0, Math.min(1.0, userLayerOpacity * opacityMultiplier));
+      if (hasIsolation) {
+        effectiveOpacity = isIsolated ? 1.0 : 0.15;
+      }
       const isSolid = effectiveOpacity >= 0.98 && !name.includes('sinus');
 
       material.color.copy(targetColor);
@@ -589,13 +663,13 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
       material.metalness = defaultMetalness;
       material.emissive.copy(targetEmissive);
       material.emissiveIntensity = targetEmissiveIntensity;
-      material.transparent = true;
+      material.transparent = effectiveOpacity < 0.98 || name.includes('sinus');
       material.opacity = name.includes('sinus') ? 0.65 : effectiveOpacity;
       material.depthWrite = isSolid;
       material.side = THREE.DoubleSide;
       mesh.castShadow = isSolid;
       mesh.receiveShadow = true;
-      mesh.visible = isVisible && effectiveOpacity > 0.01;
+      mesh.visible = (isIsolated || isVisible) && !isHidden && effectiveOpacity > 0.01;
     }
   }, [
     meshList,

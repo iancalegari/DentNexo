@@ -17,6 +17,9 @@ import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ViewInArIcon from '@mui/icons-material/ViewInAr';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import ContentCutIcon from '@mui/icons-material/ContentCut';
+import ContrastIcon from '@mui/icons-material/Contrast';
+import FlareIcon from '@mui/icons-material/Flare';
 
 import { useAnatomyStore } from '@/stores/useAnatomyStore';
 import { oralPathologies } from '@/data/pathologies/pathologiesData';
@@ -28,6 +31,8 @@ export const PathologiesView: React.FC = () => {
   const {
     activePathologyId,
     activeToothFdi,
+    toothViewMode,
+    setToothViewMode,
     layers,
     toggleLayer,
     setActivePathology,
@@ -362,7 +367,91 @@ export const PathologiesView: React.FC = () => {
             </ButtonGroup>
           )}
 
-          <Typography variant="caption" sx={{ color: themeTokens.colors.textMuted, display: 'block', fontSize: '0.72rem' }}>
+          {/* Seletor de Modo Anatômico do Dente Afetado */}
+          {viewMode === 'tooth' && isToothPathology && (
+            <Box sx={{ mt: 1, pt: 1.2, borderTop: `1px solid ${themeTokens.colors.borderSubtle}` }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: themeTokens.colors.brandCyan,
+                  fontWeight: 700,
+                  display: 'block',
+                  mb: 0.8,
+                  fontSize: '0.72rem',
+                }}
+              >
+                Modo Anatômico:
+              </Typography>
+              <ButtonGroup size="small" variant="outlined" sx={{ flexWrap: 'wrap', gap: 0.6 }}>
+                <Button
+                  variant={toothViewMode === 'external' ? 'contained' : 'outlined'}
+                  onClick={() => setToothViewMode('external')}
+                  startIcon={<ViewInArIcon sx={{ fontSize: 14 }} />}
+                  sx={{
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    px: 1,
+                    py: 0.4,
+                    backgroundColor: toothViewMode === 'external' ? themeTokens.colors.brandCyan : undefined,
+                    color: toothViewMode === 'external' ? '#0B0F14' : themeTokens.colors.textPrimary,
+                    borderColor: toothViewMode === 'external' ? themeTokens.colors.brandCyan : themeTokens.colors.borderSubtle,
+                  }}
+                >
+                  Externo
+                </Button>
+                <Button
+                  variant={toothViewMode === 'cross_section' ? 'contained' : 'outlined'}
+                  onClick={() => setToothViewMode('cross_section')}
+                  startIcon={<ContentCutIcon sx={{ fontSize: 14 }} />}
+                  sx={{
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    px: 1,
+                    py: 0.4,
+                    backgroundColor: toothViewMode === 'cross_section' ? themeTokens.colors.brandCyan : undefined,
+                    color: toothViewMode === 'cross_section' ? '#0B0F14' : themeTokens.colors.textPrimary,
+                    borderColor: toothViewMode === 'cross_section' ? themeTokens.colors.brandCyan : themeTokens.colors.borderSubtle,
+                  }}
+                >
+                  Corte Sagital
+                </Button>
+                <Button
+                  variant={toothViewMode === 'xray' ? 'contained' : 'outlined'}
+                  onClick={() => setToothViewMode('xray')}
+                  startIcon={<ContrastIcon sx={{ fontSize: 14 }} />}
+                  sx={{
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    px: 1,
+                    py: 0.4,
+                    backgroundColor: toothViewMode === 'xray' ? themeTokens.colors.brandCyan : undefined,
+                    color: toothViewMode === 'xray' ? '#0B0F14' : themeTokens.colors.textPrimary,
+                    borderColor: toothViewMode === 'xray' ? themeTokens.colors.brandCyan : themeTokens.colors.borderSubtle,
+                  }}
+                >
+                  Translúcido
+                </Button>
+                <Button
+                  variant={toothViewMode === 'pulp_isolation' ? 'contained' : 'outlined'}
+                  onClick={() => setToothViewMode('pulp_isolation')}
+                  startIcon={<FlareIcon sx={{ fontSize: 14 }} />}
+                  sx={{
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    px: 1,
+                    py: 0.4,
+                    backgroundColor: toothViewMode === 'pulp_isolation' ? themeTokens.colors.brandCyan : undefined,
+                    color: toothViewMode === 'pulp_isolation' ? '#0B0F14' : themeTokens.colors.textPrimary,
+                    borderColor: toothViewMode === 'pulp_isolation' ? themeTokens.colors.brandCyan : themeTokens.colors.borderSubtle,
+                  }}
+                >
+                  Câmara e Canais
+                </Button>
+              </ButtonGroup>
+            </Box>
+          )}
+
+          <Typography variant="caption" sx={{ color: themeTokens.colors.textMuted, display: 'block', mt: 1.2, fontSize: '0.72rem' }}>
             {viewMode === 'tooth' && isToothPathology
               ? 'Exibindo anatomia 3D de alta fidelidade com camadas histológicas (esmalte, dentina e polpa).'
               : 'Exibindo conjunto ósseo e craniofacial.'}

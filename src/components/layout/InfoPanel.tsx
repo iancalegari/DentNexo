@@ -34,10 +34,11 @@ import { scientificReferences } from '@/data/anatomy/references';
 import { storageService } from '@/services/storageService';
 import { ttsService } from '@/services/ttsService';
 import { themeTokens } from '@/theme/tokens';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export const InfoPanel: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const {
     selectedStructureId,
     isolatedStructureId,
@@ -61,11 +62,26 @@ export const InfoPanel: React.FC = () => {
   const [showAnnotation, setShowAnnotation] = useState(false);
   const [annotationTitle, setAnnotationTitle] = useState('');
   const [annotationContent, setAnnotationContent] = useState('');
+  const [notesVersion, setNotesVersion] = useState(0);
 
   const structure = selectedStructureId
     ? (anatomicalStructures[selectedStructureId] || anatomicalStructures[`dente_${selectedStructureId}`] || null)
     : null;
   const isIsolated = isolatedStructureId === selectedStructureId;
+
+  // Carregar anotações salvas pelo usuário para esta estrutura
+  const structureNotes = React.useMemo(() => {
+    if (!structure?.id) return [];
+    const allNotes = storageService.getNotes();
+    const cleanId = structure.id.replace('dente_', '').replace('tooth-', '');
+    return allNotes.filter((n) => {
+      if (n.structureId === structure.id) return true;
+      const nClean = n.structureId.replace('dente_', '').replace('tooth-', '');
+      if (nClean === cleanId) return true;
+      if (structure.name && n.structureName && n.structureName.toLowerCase() === structure.name.toLowerCase()) return true;
+      return false;
+    });
+  }, [structure?.id, structure?.name, showAnnotation, notesVersion]);
 
   // Atualizar estado de favorito se a estrutura mudar
   React.useEffect(() => {
@@ -152,7 +168,13 @@ export const InfoPanel: React.FC = () => {
     setShowAnnotation(false);
     setAnnotationTitle('');
     setAnnotationContent('');
+    setNotesVersion((v) => v + 1);
   };
+
+  // Na tela de Questionários/Quiz, NUNCA exibir o painel lateral de descrição
+  if (location.pathname === '/quiz') {
+    return null;
+  }
 
   if (!infoPanelOpen) {
     return (
@@ -441,6 +463,79 @@ export const InfoPanel: React.FC = () => {
 
           {/* Conteúdo Rolável Cientificamente Fundamentado */}
           <Box sx={{ flex: 1, overflowY: 'auto', p: 2 }}>
+            {/* Bloco de Anotações Pessoais de Estudo Vinculadas */}
+            {structureNotes.length > 0 && (
+              <Box
+                sx={{
+                  mb: 2.5,
+                  p: 1.8,
+                  backgroundColor: 'rgba(245, 158, 11, 0.08)',
+                  border: '1px solid rgba(245, 158, 11, 0.45)',
+                  borderRadius: 1.5,
+                  boxShadow: '0 2px 10px rgba(245, 158, 11, 0.1)',
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ color: '#F59E0B', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 0.8 }}
+                  >
+                    <NoteAltIcon fontSize="small" />
+                    Minha Anotação de Estudo ({structureNotes.length})
+                  </Typography>
+                  <Button
+                    size="small"
+                    variant="text"
+                    onClick={() => navigate('/favorites')}
+                    sx={{ fontSize: '0.7rem', color: '#F59E0B', textTransform: 'none', p: 0 }}
+                  >
+                    Abrir Caderno →
+                  </Button>
+                </Box>
+
+                <Stack spacing={1.5}>
+                  {structureNotes.map((note) => (
+                    <Box
+                      key={note.id}
+                      sx={{
+                        p: 1.2,
+                        backgroundColor: 'rgba(15, 23, 42, 0.65)',
+                        borderRadius: 1,
+                        border: '1px solid rgba(245, 158, 11, 0.25)',
+                      }}
+                    >
+                      <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#FDE68A', fontSize: '0.86rem' }}>
+                        {note.title}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: '#94A3B8', display: 'block', mb: 0.6, fontSize: '0.7rem' }}>
+                        {new Date(note.updatedAt || note.createdAt).toLocaleDateString('pt-BR')} • {note.structureName}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: '#F1F5F9', fontSize: '0.82rem', whiteSpace: 'pre-wrap' }}>
+                        {note.content}
+                      </Typography>
+                      {note.tags && note.tags.length > 0 && (
+                        <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 0.8 }}>
+                          {note.tags.map((tag) => (
+                            <Chip
+                              key={tag}
+                              label={tag}
+                              size="small"
+                              sx={{
+                                fontSize: '0.62rem',
+                                height: 18,
+                                backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                                color: '#FBBF24',
+                              }}
+                            />
+                          ))}
+                        </Box>
+                      )}
+                    </Box>
+                  ))}
+                </Stack>
+              </Box>
+            )}
+
             {/* Descrição Anatômica */}
             <Box sx={{ mb: 2.5 }}>
               <Typography variant="subtitle2" sx={{ color: themeTokens.colors.brandCyan, mb: 0.6 }}>
