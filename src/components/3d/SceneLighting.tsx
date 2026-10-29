@@ -19,51 +19,53 @@ export const SceneLighting: React.FC<SceneLightingProps> = ({ xrayMode }) => {
 
   return (
     <>
-      {/* Luz ambiente clínica balanceada (baixo ganho para preservar profundidade 3D e relevo) */}
-      <ambientLight intensity={0.32} color="#F8FAFC" />
+      {/* Luz ambiente clínica balanceada e luminosa (garante visibilidade total sem áreas escuras) */}
+      <ambientLight intensity={0.88} color="#FFFFFF" />
 
-      {/* Iluminação hemisférica (Céu clínico claro / Solo escuro para realçar volume anatômico) */}
+      {/* Iluminação hemisférica com céu marfim e solo suave */}
       <hemisphereLight
-        args={['#F8FAFC', '#0F172A', 0.55]}
-        position={[0, 25, 0]}
+        args={['#FFFFFF', '#475569', 0.75]}
+        position={[0, 30, 0]}
       />
       
-      {/* Luz principal superior (Key Light frontal/ântero-superior) */}
+      {/* Luz principal frontal superior (Key Light suave sem sombra excessiva) */}
       <directionalLight
-        position={[7, 12, 9]}
-        intensity={1.85}
+        position={[10, 15, 12]}
+        intensity={2.2}
         color="#FFFFFF"
-        castShadow
-        shadow-mapSize-width={2048}
-        shadow-mapSize-height={2048}
-        shadow-camera-near={0.5}
-        shadow-camera-far={50}
-        shadow-bias={-0.0001}
+        castShadow={false}
       />
       
-      {/* Luz de preenchimento lateral suave (Fill Light suave azulada) */}
+      {/* Luz de preenchimento lateral esquerda */}
       <directionalLight
-        position={[-8, 4, 6]}
-        intensity={0.65}
+        position={[-12, 6, 10]}
+        intensity={1.5}
+        color="#F0F9FF"
+      />
+
+      {/* Luz frontal inferior (ilumina a mandíbula e dentes inferiores) */}
+      <directionalLight
+        position={[0, -8, 10]}
+        intensity={1.0}
+        color="#FFFFFF"
+      />
+      
+      {/* Luz de recorte posterior superior para destacar a curvatura craniana */}
+      <directionalLight
+        position={[-6, 10, -12]}
+        intensity={1.4}
+        color="#E0F2FE"
+      />
+
+      {/* Luz de recorte lateral direita posterior */}
+      <directionalLight
+        position={[10, -4, -10]}
+        intensity={1.1}
         color="#BAE6FD"
       />
       
-      {/* Luz de recorte posterior superior (Rim Light 1) para destacar silhueta do crânio */}
-      <directionalLight
-        position={[-4, 8, -10]}
-        intensity={1.35}
-        color="#38BDF8"
-      />
-
-      {/* Luz de recorte posterior inferior (Rim Light 2) para destacar ângulo da mandíbula e masseter */}
-      <directionalLight
-        position={[6, -5, -8]}
-        intensity={0.95}
-        color="#0EA5E9"
-      />
-      
-      {/* Luz pontual suave para iluminar a cavidade bucal e arcadas dentárias */}
-      <pointLight position={[0, -0.5, 2.2]} intensity={0.8} color="#FFFBEB" distance={12} />
+      {/* Luz pontual direta nas arcadas e cavidade oral */}
+      <pointLight position={[0, 0.5, 5.0]} intensity={1.2} color="#FFFBEB" distance={25} />
     </>
   );
 };

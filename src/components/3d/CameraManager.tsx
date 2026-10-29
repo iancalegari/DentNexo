@@ -19,8 +19,8 @@ export const CameraManager: React.FC<CameraManagerProps> = ({ controlsRef }) => 
     activeToothFace,
   } = useAnatomyStore();
 
-  const targetPos = useRef<THREE.Vector3>(new THREE.Vector3(0, 0, 7));
-  const targetLookAt = useRef<THREE.Vector3>(new THREE.Vector3(0, 0, 0));
+  const targetPos = useRef<THREE.Vector3>(new THREE.Vector3(8.5, 6.2, 11.5));
+  const targetLookAt = useRef<THREE.Vector3>(new THREE.Vector3(0, 0.5, 0));
   const isTransitioning = useRef<boolean>(false);
 
   // Animação para modo de exploração de superfície do dente
@@ -33,43 +33,44 @@ export const CameraManager: React.FC<CameraManagerProps> = ({ controlsRef }) => 
     }
   }, [surfaceExplorationMode, activeToothFdi, activeToothFace]);
 
-  // Mapear presets gerais de câmera
+  // Mapear presets gerais de câmera para enquadramento completo e panorâmico do crânio
   useEffect(() => {
     if (surfaceExplorationMode) return;
 
     switch (cameraPreset) {
       case 'frontal':
-        targetPos.current.set(0, 0, 7.5);
-        targetLookAt.current.set(0, 0, 0);
+        targetPos.current.set(0, 0.5, 15.5);
+        targetLookAt.current.set(0, 0.5, 0);
         break;
       case 'lateral_right':
-        targetPos.current.set(-7.5, 0, 0);
-        targetLookAt.current.set(0, 0, 0);
+        targetPos.current.set(-15.5, 0.5, 0);
+        targetLookAt.current.set(0, 0.5, 0);
         break;
       case 'lateral_left':
-        targetPos.current.set(7.5, 0, 0);
-        targetLookAt.current.set(0, 0, 0);
+        targetPos.current.set(15.5, 0.5, 0);
+        targetLookAt.current.set(0, 0.5, 0);
         break;
       case 'superior':
-        targetPos.current.set(0, 7.5, 0.1);
-        targetLookAt.current.set(0, 0, 0);
+        targetPos.current.set(0, 16.0, 0.1);
+        targetLookAt.current.set(0, 0.5, 0);
         break;
       case 'inferior':
-        targetPos.current.set(0, -7.5, 0.1);
-        targetLookAt.current.set(0, 0, 0);
+        targetPos.current.set(0, -15.0, 0.1);
+        targetLookAt.current.set(0, 0.5, 0);
         break;
       case 'occlusal_upper':
-        targetPos.current.set(0, -5.5, 2.0);
-        targetLookAt.current.set(0, 0, 1.2);
+        targetPos.current.set(0, -7.5, 2.0);
+        targetLookAt.current.set(0, 0.5, 1.2);
         break;
       case 'occlusal_lower':
-        targetPos.current.set(0, 5.5, 1.5);
-        targetLookAt.current.set(0, -1.0, 1.2);
+        targetPos.current.set(0, 7.5, 1.5);
+        targetLookAt.current.set(0, -0.8, 1.2);
         break;
       case 'isometric':
       default:
-        targetPos.current.set(4.5, 3.2, 5.8);
-        targetLookAt.current.set(0, -0.2, 0);
+        // Posição panorâmica exata mostrando todo o crânio confortavelmente enquadrado
+        targetPos.current.set(8.5, 6.2, 11.5);
+        targetLookAt.current.set(0, 0.5, 0);
         break;
     }
     isTransitioning.current = true;

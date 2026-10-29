@@ -214,17 +214,23 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
     const setupMesh = (child: THREE.Object3D) => {
       if (!(child instanceof THREE.Mesh)) return;
 
+      // Garantir cálculo de normais de vértices suaves se a malha original não possuir normais
+      if (!child.geometry.attributes.normal) {
+        child.geometry.computeVertexNormals();
+      }
+
       const name = child.name;
       const category = getMeshCategory(name);
       if (!category) return;
 
       const structureId = getStructureId(name);
+      const hasUV = Boolean(child.geometry.attributes.uv);
 
       let hex = ANATOMY_PALETTE.bone;
-      let roughness = 0.40; // Brilho suave característico do osso cortical
-      let metalness = 0.04;
-      let bumpMap: THREE.Texture | null = boneBump;
-      let bumpScale = 0.016;
+      let roughness = 0.35;
+      let metalness = 0.02;
+      let bumpMap: THREE.Texture | null = null;
+      let bumpScale = 0;
       let emissiveHex = '#000000';
       let emissiveIntensity = 0;
       let transparent = false;
@@ -233,44 +239,45 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
       if (category === 'dental') {
         hex = ANATOMY_PALETTE.enamel;
         roughness = 0.16; // Esmalte dental vítreo liso e de alto reflexo especular
-        metalness = 0.05;
-        bumpMap = null;
-        bumpScale = 0;
+        metalness = 0.04;
       } else if (category === 'muscular') {
         hex = ANATOMY_PALETTE.muscle;
         roughness = 0.28; // Superfície tecidual úmida com reflexo especular vívido
-        metalness = 0.08;
-        bumpMap = muscleBump;
-        bumpScale = 0.038; // Estriações nítidas dos fascículos musculares
+        metalness = 0.06;
+        if (hasUV) {
+          bumpMap = muscleBump;
+          bumpScale = 0.035;
+        }
         emissiveHex = '#2C0604';
         emissiveIntensity = 0.06;
       } else if (category === 'nervous') {
         hex = ANATOMY_PALETTE.nerve;
-        roughness = 0.38;
-        bumpMap = null;
-        bumpScale = 0;
+        roughness = 0.35;
         emissiveHex = '#713F12';
-        emissiveIntensity = 0.25;
+        emissiveIntensity = 0.35;
       } else if (category === 'vascular') {
         hex = name.includes('vein') ? ANATOMY_PALETTE.vein : ANATOMY_PALETTE.artery;
-        roughness = 0.32;
-        bumpMap = null;
-        bumpScale = 0;
+        roughness = 0.30;
       } else if (category === 'oral_tissue') {
         hex = ANATOMY_PALETTE.gingiva;
         roughness = 0.35;
-        bumpMap = gingivaBump;
-        bumpScale = 0.014; // Pontilhado em casca de laranja
+        if (hasUV) {
+          bumpMap = gingivaBump;
+          bumpScale = 0.014;
+        }
       } else if (name.includes('sinus')) {
         hex = ANATOMY_PALETTE.sinus;
         roughness = 0.22;
-        bumpMap = null;
-        bumpScale = 0;
         transparent = true;
         opacity = 0.65;
+      } else {
+        if (hasUV) {
+          bumpMap = boneBump;
+          bumpScale = 0.015;
+        }
       }
 
-      // Material dedicado persistente por malha com FrontSide para máximo desempenho
+      // Material dedicado persistente por malha com DoubleSide e transparent: true para suporte pleno a opacidade
       const material = new THREE.MeshStandardMaterial({
         color: new THREE.Color(hex),
         roughness,
@@ -279,13 +286,13 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
         bumpScale,
         emissive: new THREE.Color(emissiveHex),
         emissiveIntensity,
-        transparent,
-        opacity,
-        side: THREE.FrontSide,
+        transparent: true,
+        opacity: 1.0,
+        side: THREE.DoubleSide,
       });
 
       child.material = material;
-      child.castShadow = !transparent;
+      child.castShadow = false;
       child.receiveShadow = true;
 
       meshes.push({
@@ -521,170 +528,101 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
         continue;
       }
 
-      // ================= MODO FOCO EM SISTEMA ANATÔMICO (ISOLAMENTO DO SISTEMA COM OPACIDADE REDUZIDA NAS DEMAIS PARTES) =================
-      if (focusedSystem) {
-        const isTargetSystem = category === focusedSystem;
-
-        if (isTargetSystem) {
-          // O sistema anatômico foco fica em destaque total com opacidade 100%
-          const isLpoSelected = selectedStructureId === 'ligamento_periodontal';
-          const isGingivaTranslucent = focusedSystem === 'oral_tissue' && isLpoSelected && isGingiva;
-
-          const highlightColor = isSelected ? cyanColor : (isHovered ? hoverColor : defaultColor);
-          const highlightEmissive = isSelected ? cyanEmissive : (isHovered ? hoverEmissive : defaultEmissive);
-          const highlightIntensity = isSelected ? 0.6 : (isHovered ? 0.3 : defaultEmissiveIntensity);
-          const targetOpacity = isGingivaTranslucent ? 0.22 : 1.0;
-
-          material.color.copy(highlightColor);
-          material.roughness = defaultRoughness;
-          material.metalness = defaultMetalness;
-          material.transparent = isGingivaTranslucent;
-          material.opacity = targetOpacity;
-          material.emissive.copy(highlightEmissive);
-          material.emissiveIntensity = highlightIntensity;
-          material.depthWrite = !isGingivaTranslucent;
-          material.side = THREE.FrontSide;
-          mesh.castShadow = !isGingivaTranslucent;
-          mesh.receiveShadow = true;
-          mesh.visible = true;
-        } else {
-          // Demais partes com opacidade reduzida elegante (ghost / referência anatômica)
-          let ghostOpacity = 0.14;
-          let shouldShowGhost = false;
-
-          if (focusedSystem === 'skeletal') {
-            // Em ossos: dentes ficam visíveis a 85% para orientar o arco dental
-            if (category === 'dental') {
-              ghostOpacity = 0.85;
-              shouldShowGhost = true;
-            }
-          } else if (focusedSystem === 'oral_tissue') {
-            // Em periodonto: dentes ficam a 40% (se LPO) ou 70%, e ossos alveolares a 10% (se LPO) ou 20%
-            if (category === 'dental') {
-              ghostOpacity = selectedStructureId === 'ligamento_periodontal' ? 0.40 : 0.70;
-              shouldShowGhost = true;
-            } else if (category === 'skeletal') {
-              ghostOpacity = selectedStructureId === 'ligamento_periodontal' ? 0.10 : 0.20;
-              shouldShowGhost = true;
-            }
-          } else if (focusedSystem === 'muscular') {
-            // Em músculos: ossos ficam semitransparentes a 22% para ver inserções/origens, dentes a 18%
-            if (category === 'skeletal') {
-              ghostOpacity = 0.22;
-              shouldShowGhost = true;
-            } else if (category === 'dental') {
-              ghostOpacity = 0.18;
-              shouldShowGhost = true;
-            }
-          } else if (focusedSystem === 'nervous' || focusedSystem === 'vascular') {
-            // Em nervos e vasos: ossos a 15% (permite ver canais internos) e dentes a 18%
-            if (category === 'skeletal') {
-              ghostOpacity = 0.15;
-              shouldShowGhost = true;
-            } else if (category === 'dental') {
-              ghostOpacity = 0.18;
-              shouldShowGhost = true;
-            }
-          }
-
-          if (shouldShowGhost) {
-            material.color.copy(defaultColor);
-            material.roughness = 0.8;
-            material.metalness = 0.0;
-            material.transparent = true;
-            material.opacity = ghostOpacity;
-            material.emissive.copy(blackColor);
-            material.emissiveIntensity = 0;
-            material.depthWrite = false;
-            material.side = THREE.FrontSide;
-            mesh.castShadow = false;
-            mesh.receiveShadow = false;
-            mesh.visible = true;
-          } else {
-            mesh.visible = false;
-          }
-        }
-        continue;
-      }
-
-      // ================= MODO ISOLAMENTO (60 FPS OTIMIZADO) =================
-      if (hasIsolation) {
-        if (isIsolated) {
-          material.color.copy(cyanColor);
-          material.roughness = 0.22;
-          material.metalness = 0.08;
-          material.transparent = false;
-          material.opacity = 1.0;
-          material.emissive.copy(cyanEmissive);
-          material.emissiveIntensity = 0.55;
-          material.depthWrite = true;
-          material.side = THREE.FrontSide;
-          mesh.castShadow = true;
-          mesh.receiveShadow = true;
-        } else {
-          material.color.copy(defaultColor);
-          material.roughness = 0.8;
-          material.metalness = 0.0;
-          material.transparent = true;
-          material.opacity = 0.12;
-          material.emissive.copy(blackColor);
-          material.emissiveIntensity = 0;
-          material.depthWrite = false;
-          material.side = THREE.FrontSide;
-          mesh.castShadow = false;
-          mesh.receiveShadow = false;
-        }
-        continue;
-      }
-
-      // ================= MODO NORMAL =================
+      // ================= CÁLCULO DINÂMICO DE OPACIDADE E REALCE CLÍNICO =================
+      const userLayerOpacity = opacities[category as keyof typeof opacities] ?? 1.0;
+      let opacityMultiplier = 1.0;
       let targetColor = defaultColor;
       let targetEmissive = defaultEmissive;
       let targetEmissiveIntensity = defaultEmissiveIntensity;
 
-      if (activePathologyId === 'gengivite' && isGingiva) {
-        // Inflamação eritematosa viva e edema da gengiva marginal
-        targetColor = new THREE.Color('#E11D48');
-        targetEmissive = new THREE.Color('#991B1B');
-        targetEmissiveIntensity = 0.55;
-      } else if (isSelected) {
-        targetColor = cyanColor;
-        targetEmissive = cyanEmissive;
-        targetEmissiveIntensity = 0.5;
-      } else if (isHovered) {
-        targetColor = hoverColor;
-        targetEmissive = hoverEmissive;
-        targetEmissiveIntensity = 0.25;
-      }
+      if (focusedSystem) {
+        const isTargetSystem = category === focusedSystem;
+        const isLpoSelected = selectedStructureId === 'ligamento_periodontal';
 
-      let catOpacity = opacities[category as keyof typeof opacities] ?? 1.0;
-      let isTranslucentLpo = false;
+        if (isTargetSystem) {
+          if (focusedSystem === 'oral_tissue' && isLpoSelected && isGingiva) {
+            opacityMultiplier = 0.22;
+          } else {
+            opacityMultiplier = 1.0;
+          }
 
-      // Se o ligamento periodontal estiver selecionado no modo geral, tornar osso e gengiva translúcidos
-      if (selectedStructureId === 'ligamento_periodontal') {
-        if (isGingiva) {
-          catOpacity = 0.22;
-          isTranslucentLpo = true;
-        } else if (category === 'skeletal') {
-          catOpacity = 0.10;
-          isTranslucentLpo = true;
-        } else if (category === 'dental') {
-          catOpacity = 0.40;
-          isTranslucentLpo = true;
+          if (isSelected) {
+            targetColor = cyanColor;
+            targetEmissive = cyanEmissive;
+            targetEmissiveIntensity = 0.6;
+          } else if (isHovered) {
+            targetColor = hoverColor;
+            targetEmissive = hoverEmissive;
+            targetEmissiveIntensity = 0.3;
+          }
+        } else {
+          // Demais sistemas no modo foco atuam como referência anatômica (ghost elegante)
+          if (focusedSystem === 'oral_tissue') {
+            if (category === 'dental') {
+              opacityMultiplier = isLpoSelected ? 0.40 : 0.65;
+            } else if (category === 'skeletal') {
+              opacityMultiplier = isLpoSelected ? 0.12 : 0.22;
+            } else {
+              opacityMultiplier = 0.12;
+            }
+          } else if (focusedSystem === 'skeletal') {
+            opacityMultiplier = category === 'dental' ? 0.85 : 0.15;
+          } else if (focusedSystem === 'muscular') {
+            opacityMultiplier = category === 'skeletal' ? 0.25 : (category === 'dental' ? 0.20 : 0.12);
+          } else if (focusedSystem === 'nervous' || focusedSystem === 'vascular') {
+            opacityMultiplier = category === 'skeletal' ? 0.18 : (category === 'dental' ? 0.25 : 0.12);
+          } else {
+            opacityMultiplier = 0.20;
+          }
+        }
+      } else if (hasIsolation) {
+        if (isIsolated) {
+          targetColor = cyanColor;
+          targetEmissive = cyanEmissive;
+          targetEmissiveIntensity = 0.55;
+          opacityMultiplier = 1.0;
+        } else {
+          opacityMultiplier = 0.12;
+        }
+      } else {
+        // Modo Normal (Atlas Geral)
+        if (activePathologyId === 'gengivite' && isGingiva) {
+          targetColor = new THREE.Color('#E11D48');
+          targetEmissive = new THREE.Color('#991B1B');
+          targetEmissiveIntensity = 0.55;
+        } else if (isSelected) {
+          targetColor = cyanColor;
+          targetEmissive = cyanEmissive;
+          targetEmissiveIntensity = 0.55;
+        } else if (isHovered) {
+          targetColor = hoverColor;
+          targetEmissive = hoverEmissive;
+          targetEmissiveIntensity = 0.25;
+        }
+
+        if (selectedStructureId === 'ligamento_periodontal') {
+          if (isGingiva) opacityMultiplier = 0.22;
+          else if (category === 'skeletal') opacityMultiplier = 0.12;
+          else if (category === 'dental') opacityMultiplier = 0.40;
         }
       }
+
+      // A opacidade final é o produto do controle do usuário (slider de camadas) pelo multiplicador de foco
+      const effectiveOpacity = Math.max(0.0, Math.min(1.0, userLayerOpacity * opacityMultiplier));
+      const isSolid = effectiveOpacity >= 0.98 && !name.includes('sinus');
 
       material.color.copy(targetColor);
       material.roughness = defaultRoughness;
       material.metalness = defaultMetalness;
       material.emissive.copy(targetEmissive);
       material.emissiveIntensity = targetEmissiveIntensity;
-      material.transparent = isTranslucentLpo || catOpacity < 1.0 || name.includes('sinus');
-      material.opacity = name.includes('sinus') ? 0.65 : catOpacity;
-      material.depthWrite = !isTranslucentLpo && catOpacity >= 0.9 && !name.includes('sinus');
-      material.side = THREE.FrontSide;
-      mesh.castShadow = !isTranslucentLpo && catOpacity > 0.5 && !name.includes('sinus');
-      mesh.receiveShadow = catOpacity > 0.5;
+      material.transparent = true;
+      material.opacity = name.includes('sinus') ? 0.65 : effectiveOpacity;
+      material.depthWrite = isSolid;
+      material.side = THREE.DoubleSide;
+      mesh.castShadow = isSolid;
+      mesh.receiveShadow = true;
+      mesh.visible = isVisible && effectiveOpacity > 0.01;
     }
   }, [
     meshList,

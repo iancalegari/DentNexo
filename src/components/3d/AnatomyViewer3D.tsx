@@ -56,9 +56,9 @@ export const AnatomyViewer3D: React.FC<AnatomyViewer3DProps> = ({
       }}
     >
       <Canvas
-        camera={{ position: [4.5, 3.2, 5.8], fov: 42, near: 0.1, far: 100 }}
+        camera={{ position: [8.5, 6.2, 11.5], fov: 42, near: 0.1, far: 100 }}
         dpr={[1, 1.5]}
-        shadows
+        shadows={false}
         gl={{
           antialias: true,
           preserveDrawingBuffer: true,
@@ -77,6 +77,7 @@ export const AnatomyViewer3D: React.FC<AnatomyViewer3DProps> = ({
         <OrbitControls
           ref={controlsRef}
           makeDefault
+          target={[0, 0.5, 0]}
           enableDamping
           dampingFactor={0.06}
           rotateSpeed={0.85}

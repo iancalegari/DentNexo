@@ -57,6 +57,7 @@ export const SystemFocusView: React.FC<SystemFocusViewProps> = ({
     setFocusedSystem,
     toggleLayer,
     layers,
+    resetCamera,
   } = useAnatomyStore();
 
   useEffect(() => {
@@ -67,11 +68,12 @@ export const SystemFocusView: React.FC<SystemFocusViewProps> = ({
       toggleLayer(layerKey);
     }
     setSelectedStructure(initialStructureId);
+    resetCamera();
 
     return () => {
       setFocusedSystem(null);
     };
-  }, [initialStructureId, systemType, setFocusedSystem, toggleLayer, layers, setSelectedStructure]);
+  }, [initialStructureId, systemType, setFocusedSystem, toggleLayer, layers, setSelectedStructure, resetCamera]);
 
   const structuresList = SYSTEM_STRUCTURES[systemType] || [];
 
