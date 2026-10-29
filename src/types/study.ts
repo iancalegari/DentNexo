@@ -9,6 +9,7 @@ export interface UserNote {
   createdAt: string;
   updatedAt: string;
   tags: string[];
+  imageUrl?: string;
 }
 
 export interface SavedView {

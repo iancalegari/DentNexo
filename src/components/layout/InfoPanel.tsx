@@ -130,12 +130,24 @@ export const InfoPanel: React.FC = () => {
 
   const handleSaveAnnotation = () => {
     if (!selectedStructureId || !annotationTitle.trim() || !annotationContent.trim()) return;
+
+    let snapshotUrl: string | undefined = undefined;
+    try {
+      const canvas = document.querySelector('canvas');
+      if (canvas) {
+        snapshotUrl = canvas.toDataURL('image/jpeg', 0.85);
+      }
+    } catch (e) {
+      console.warn('Canvas snapshot could not be captured:', e);
+    }
+
     storageService.saveNote({
       structureId: selectedStructureId,
       structureName: structure?.name || selectedStructureId,
       title: annotationTitle,
       content: annotationContent,
       tags: ['Anotação', structure?.category || 'Geral'],
+      imageUrl: snapshotUrl,
     });
     setShowAnnotation(false);
     setAnnotationTitle('');
