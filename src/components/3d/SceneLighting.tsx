@@ -19,53 +19,55 @@ export const SceneLighting: React.FC<SceneLightingProps> = ({ xrayMode }) => {
 
   return (
     <>
-      {/* Luz ambiente clínica balanceada e luminosa (garante visibilidade total sem áreas escuras) */}
-      <ambientLight intensity={0.88} color="#FFFFFF" />
+      {/* Luz ambiente suave que permite sombras naturais nas órbitas oculares e fossas */}
+      <ambientLight intensity={0.32} color="#E2E8F0" />
 
-      {/* Iluminação hemisférica com céu marfim e solo suave */}
+      {/* Iluminação hemisférica para contraste volumétrico: céu suave / solo escuro */}
       <hemisphereLight
-        args={['#FFFFFF', '#475569', 0.75]}
-        position={[0, 30, 0]}
+        args={['#F8FAFC', '#0F172A', 0.45]}
+        position={[0, 25, 0]}
       />
       
-      {/* Luz principal frontal superior (Key Light suave sem sombra excessiva) */}
+      {/* Luz principal superior (Key Light) com sombras que definem o fundo dos olhos e relevos anatômicos */}
       <directionalLight
-        position={[10, 15, 12]}
-        intensity={2.2}
-        color="#FFFFFF"
-        castShadow={false}
+        position={[6, 12, 9]}
+        intensity={1.6}
+        color="#FFFDF7"
+        castShadow
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+        shadow-camera-near={1}
+        shadow-camera-far={35}
+        shadow-camera-left={-7}
+        shadow-camera-right={7}
+        shadow-camera-top={7}
+        shadow-camera-bottom={-7}
+        shadow-bias={-0.00015}
       />
       
-      {/* Luz de preenchimento lateral esquerda */}
+      {/* Luz de preenchimento lateral suave (Fill Light para iluminar sem lavar as sombras dos olhos) */}
       <directionalLight
-        position={[-12, 6, 10]}
-        intensity={1.5}
-        color="#F0F9FF"
+        position={[-8, 4, 6]}
+        intensity={0.45}
+        color="#CBD5E1"
       />
 
-      {/* Luz frontal inferior (ilumina a mandíbula e dentes inferiores) */}
+      {/* Luz de recorte posterior superior para desenhar a curvatura da calvária */}
       <directionalLight
-        position={[0, -8, 10]}
-        intensity={1.0}
-        color="#FFFFFF"
-      />
-      
-      {/* Luz de recorte posterior superior para destacar a curvatura craniana */}
-      <directionalLight
-        position={[-6, 10, -12]}
-        intensity={1.4}
-        color="#E0F2FE"
+        position={[-2, 10, -10]}
+        intensity={0.85}
+        color="#38BDF8"
       />
 
-      {/* Luz de recorte lateral direita posterior */}
+      {/* Luz de recorte lateral para contorno do ramo mandibular */}
       <directionalLight
-        position={[10, -4, -10]}
-        intensity={1.1}
-        color="#BAE6FD"
+        position={[7, -5, -8]}
+        intensity={0.55}
+        color="#0EA5E9"
       />
-      
-      {/* Luz pontual direta nas arcadas e cavidade oral */}
-      <pointLight position={[0, 0.5, 5.0]} intensity={1.2} color="#FFFBEB" distance={25} />
+
+      {/* Luz pontual sutil focada na cavidade oral para destacar os dentes */}
+      <pointLight position={[0, -0.2, 3.5]} intensity={0.4} color="#FFFBEB" distance={15} />
     </>
   );
 };

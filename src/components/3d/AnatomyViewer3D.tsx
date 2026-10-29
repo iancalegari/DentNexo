@@ -58,7 +58,7 @@ export const AnatomyViewer3D: React.FC<AnatomyViewer3DProps> = ({
       <Canvas
         camera={{ position: [8.5, 6.2, 11.5], fov: 42, near: 0.1, far: 100 }}
         dpr={[1, 1.5]}
-        shadows={false}
+        shadows
         gl={{
           antialias: true,
           preserveDrawingBuffer: true,

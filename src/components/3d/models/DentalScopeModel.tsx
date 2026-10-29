@@ -12,10 +12,10 @@ import { PeriodontalLigaments } from './PeriodontalLigaments';
 
 // Paleta Anatômica Calibrada com tons orgânicos realistas de alta fidelidade
 const ANATOMY_PALETTE = {
-  bone: '#EAE5D6',         // Osso cortical marfim clássico aquecido
-  boneAlveolar: '#E6DFC8', // Osso alveolar e septos interdentais
-  boneCondyle: '#E8E1CE',  // Côndilo mandibular
-  enamel: '#F7F4EA',       // Esmalte dental vítreo polido e translúcido
+  bone: '#E2DAC8',         // Osso cortical marfim clássico aquecido natural
+  boneAlveolar: '#DDD3BF', // Osso alveolar e septos interdentais
+  boneCondyle: '#E0D7C4',  // Côndilo mandibular
+  enamel: '#F4F1E6',       // Esmalte dental vítreo suave
   cementum: '#CCA377',     // Cemento radicular
   gingiva: '#D8727B',      // Mucosa gengival queratinizada saudável
   muscle: '#8C2220',       // Músculo estriado esquelético carmesim rico
@@ -227,8 +227,8 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
       const hasUV = Boolean(child.geometry.attributes.uv);
 
       let hex = ANATOMY_PALETTE.bone;
-      let roughness = 0.35;
-      let metalness = 0.02;
+      let roughness = 0.48; // Textura osteológica difusa natural sem reflexos plásticos excessivos
+      let metalness = 0.03;
       let bumpMap: THREE.Texture | null = null;
       let bumpScale = 0;
       let emissiveHex = '#000000';
@@ -238,7 +238,7 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
 
       if (category === 'dental') {
         hex = ANATOMY_PALETTE.enamel;
-        roughness = 0.16; // Esmalte dental vítreo liso e de alto reflexo especular
+        roughness = 0.22; // Esmalte dental vítreo suave
         metalness = 0.04;
       } else if (category === 'muscular') {
         hex = ANATOMY_PALETTE.muscle;
@@ -292,7 +292,7 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
       });
 
       child.material = material;
-      child.castShadow = false;
+      child.castShadow = true;
       child.receiveShadow = true;
 
       meshes.push({
