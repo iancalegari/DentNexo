@@ -5,6 +5,37 @@ import { spawn, ChildProcess } from 'child_process';
 import http from 'http';
 
 /**
+ * Converte automaticamente caminhos de Open Graph (/linkpreviewimg.png) em URLs absolutas HTTPS
+ * quando variáveis de deploy (como URL / DEPLOY_PRIME_URL do Netlify ou VITE_SITE_URL) estão presentes,
+ * garantindo compatibilidade máxima no WhatsApp, LinkedIn, Telegram, Discord e X/Twitter.
+ */
+function socialLinkPreviewPlugin(): Plugin {
+  return {
+    name: 'dentnexo-social-link-preview',
+    transformIndexHtml(html) {
+      const rawSiteUrl =
+        process.env.VITE_SITE_URL ||
+        process.env.URL ||
+        process.env.DEPLOY_PRIME_URL ||
+        '';
+      const siteUrl = rawSiteUrl.trim().replace(/\/+$/, '');
+      if (!siteUrl) return html;
+
+      const absPreview = `${siteUrl}/linkpreviewimg.png`;
+      let updated = html.replace(/content="\/linkpreviewimg\.png"/g, `content="${absPreview}"`);
+      updated = updated.replace(/href="\/linkpreviewimg\.png"/g, `href="${absPreview}"`);
+      if (!updated.includes('property="og:url"')) {
+        updated = updated.replace(
+          '<meta property="og:type" content="website" />',
+          `<meta property="og:type" content="website" />\n    <meta property="og:url" content="${siteUrl}/" />`
+        );
+      }
+      return updated;
+    },
+  };
+}
+
+/**
  * Inicia automaticamente o motor local Kokoro TTS (server_kokoro.py na porta 5005)
  * exclusivamente em ambiente de desenvolvimento (`npm run dev`).
  * Em `vite build` (ex: Netlify CI), este plugin é ignorado (`apply: 'serve'`).
@@ -43,7 +74,7 @@ function kokoroAutoStartPlugin(): Plugin {
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(), kokoroAutoStartPlugin()],
+  plugins: [react(), socialLinkPreviewPlugin(), kokoroAutoStartPlugin()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
