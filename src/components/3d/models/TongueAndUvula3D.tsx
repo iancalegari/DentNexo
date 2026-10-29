@@ -361,7 +361,7 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
       );
     }
 
-    let opacity = opacities.oral_tissue ?? 1.0;
+    let opacity = focusedSystem === 'oral_tissue' ? 1.0 : (opacities.oral_tissue ?? 1.0);
     if (hasIsolation && !isTongueIsolated) {
       opacity = 0.15;
     }
@@ -410,7 +410,7 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
       );
     }
 
-    let opacity = opacities.oral_tissue ?? 1.0;
+    let opacity = focusedSystem === 'oral_tissue' ? 1.0 : (opacities.oral_tissue ?? 1.0);
     if (hasIsolation && !isUvulaIsolated) {
       opacity = 0.15;
     }
@@ -460,7 +460,7 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
       );
     }
 
-    let opacity = opacities.nervous ?? 1.0;
+    let opacity = focusedSystem === 'nervous' ? 1.0 : (opacities.nervous ?? 1.0);
     if (hasIsolation && !isLingualNerveIsolated) {
       opacity = 0.15;
     }

@@ -606,8 +606,32 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
         continue;
       }
 
-      const isVisible = activeAnesthesia ? true : layers[category as keyof typeof layers];
-      const isHidden = !activeAnesthesia && hiddenStructureIds.includes(structureId);
+      // Visibilidade da malha:
+      // No modo de Sistemas Anatômicos (focusedSystem ativo) ou Anestesia,
+      // as camadas do sistema alvo e referências NUNCA são desligadas por camadas ou ocultações do Atlas Geral
+      let isVisible = true;
+      let isHidden = false;
+
+      if (activeAnesthesia) {
+        isVisible = true;
+        isHidden = false;
+      } else if (focusedSystem) {
+        if (category === focusedSystem) {
+          isVisible = true;
+          isHidden = hiddenStructureIds.includes(structureId);
+        } else if (category === 'skeletal' || category === 'dental') {
+          // Crânio e dentes fornecem contexto anatômico de referência
+          isVisible = true;
+          isHidden = false;
+        } else {
+          // Outros sistemas não pertinentes ao foco
+          isVisible = false;
+          isHidden = false;
+        }
+      } else {
+        isVisible = layers[category as keyof typeof layers];
+        isHidden = hiddenStructureIds.includes(structureId);
+      }
 
       // Se a estrutura está isolada, ela DEVE ser sempre visível
       if (!isIsolated && (!isVisible || isHidden)) {
@@ -782,7 +806,13 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
       }
 
       // ================= CÁLCULO DINÂMICO DE OPACIDADE E REALCE CLÍNICO =================
-      const userLayerOpacity = activeAnesthesia ? 1.0 : (opacities[category as keyof typeof opacities] ?? 1.0);
+      // Em Sistemas Anatômicos e Anestesia, a opacidade do sistema e do contexto de referência é calibrada e não herda sliders zerados do Atlas 3D
+      let userLayerOpacity = 1.0;
+      if (activeAnesthesia || focusedSystem) {
+        userLayerOpacity = 1.0;
+      } else {
+        userLayerOpacity = opacities[category as keyof typeof opacities] ?? 1.0;
+      }
       let opacityMultiplier = 1.0;
       let targetColor = defaultColor;
       let targetEmissive = defaultEmissive;

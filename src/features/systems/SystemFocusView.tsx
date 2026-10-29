@@ -94,6 +94,22 @@ export const SystemFocusView: React.FC<SystemFocusViewProps> = ({
     // Garantir que nenhuma patologia continue ativa no sistema anatômico
     setActivePathology(null);
 
+    // Limpar isolamentos ou ocultações residuais do Atlas 3D e garantir que o sistema focado esteja sempre 100% ativo
+    useAnatomyStore.setState((state) => ({
+      isolatedStructureId: null,
+      hiddenStructureIds: [],
+      layers: {
+        ...state.layers,
+        [systemType]: true,
+        dental: true,
+        skeletal: true,
+      },
+      opacities: {
+        ...state.opacities,
+        [systemType]: 1.0,
+      },
+    }));
+
     // Ativar modo de isolamento e foco anatômico do sistema selecionado
     setFocusedSystem(systemType);
     setSelectedStructure(initialStructureId);
