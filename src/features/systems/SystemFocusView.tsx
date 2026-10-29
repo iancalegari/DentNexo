@@ -58,9 +58,13 @@ export const SystemFocusView: React.FC<SystemFocusViewProps> = ({
     toggleLayer,
     layers,
     resetCamera,
+    setActivePathology,
   } = useAnatomyStore();
 
   useEffect(() => {
+    // Garantir que nenhuma patologia continue ativa no sistema anatômico
+    setActivePathology(null);
+
     // Ativar modo de isolamento e foco anatômico do sistema selecionado
     setFocusedSystem(systemType);
     const layerKey = systemType as unknown as keyof typeof layers;
@@ -73,7 +77,7 @@ export const SystemFocusView: React.FC<SystemFocusViewProps> = ({
     return () => {
       setFocusedSystem(null);
     };
-  }, [initialStructureId, systemType, setFocusedSystem, toggleLayer, layers, setSelectedStructure, resetCamera]);
+  }, [initialStructureId, systemType, setFocusedSystem, toggleLayer, layers, setSelectedStructure, resetCamera, setActivePathology]);
 
   const structuresList = SYSTEM_STRUCTURES[systemType] || [];
 

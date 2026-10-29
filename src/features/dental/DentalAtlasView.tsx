@@ -46,7 +46,13 @@ export const DentalAtlasView: React.FC = () => {
     setAlignmentState,
     setSurfaceExplorationMode,
     setInfoPanelOpen,
+    setActivePathology,
   } = useAnatomyStore();
+
+  // Ao entrar em Anatomia Dental & FDI, garantir que patologias não apareçam no dente ou arcada
+  React.useEffect(() => {
+    setActivePathology(null);
+  }, [setActivePathology]);
 
   const currentTooth = (permanentTeethData[activeToothFdi] as any) || (deciduousTeethData[activeToothFdi] as any) || permanentTeethData['36'];
 
