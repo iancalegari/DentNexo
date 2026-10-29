@@ -49,6 +49,7 @@ export const AnatomyViewer3D: React.FC<AnatomyViewer3DProps> = ({
     setSelectedStructure,
     isolateStructure,
     setInfoPanelOpen,
+    surfaceExplorationMode,
   } = useAnatomyStore();
 
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
@@ -323,13 +324,13 @@ export const AnatomyViewer3D: React.FC<AnatomyViewer3DProps> = ({
         </Box>
       )}
 
-      {/* Badge Flutuante de Estrutura Selecionada com Botão Rápido de Desmarcar */}
-      {selectedStructureId && (
+      {/* Badge Flutuante de Estrutura Selecionada com Botão Rápido de Desmarcar (posicionado acima da barra de câmera) */}
+      {selectedStructureId && !surfaceExplorationMode && (
         <Paper
           elevation={4}
           sx={{
             position: 'absolute',
-            bottom: 24,
+            bottom: 74,
             left: '50%',
             transform: 'translateX(-50%)',
             zIndex: 100,

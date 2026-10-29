@@ -102,24 +102,23 @@ export const SystemFocusView: React.FC<SystemFocusViewProps> = ({
           sx={{
             position: 'absolute',
             top: 14,
-            left: infoPanelOpen ? 'calc((100% - 390px) / 2)' : '50%',
+            left: '50%',
             transform: 'translateX(-50%)',
             zIndex: 1000,
             backgroundColor: 'rgba(15, 23, 42, 0.94)',
             backdropFilter: 'blur(16px)',
             border: `1px solid ${themeTokens.colors.borderSubtle}`,
             borderRadius: '24px',
-            px: 1.5,
+            px: 2,
             py: 0.6,
             display: 'flex',
             alignItems: 'center',
             gap: 0.8,
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
-            maxWidth: infoPanelOpen ? 'calc(100vw - 440px)' : 'calc(100vw - 80px)',
+            maxWidth: 'calc(100% - 400px)',
             overflowX: 'auto',
             scrollbarWidth: 'none',
             '&::-webkit-scrollbar': { display: 'none' },
-            transition: 'left 0.2s ease, max-width 0.2s ease',
           }}
         >
           <Typography

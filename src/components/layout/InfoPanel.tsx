@@ -310,7 +310,11 @@ export const InfoPanel: React.FC = () => {
                 size="small"
                 fullWidth
                 startIcon={<VisibilityOffIcon fontSize="small" />}
-                onClick={() => hideStructure(structure.id)}
+                onClick={() => {
+                  hideStructure(structure.id);
+                  setSelectedStructure(null);
+                  setInfoPanelOpen(false);
+                }}
                 sx={{ fontSize: '0.75rem', py: 0.4 }}
               >
                 Ocultar

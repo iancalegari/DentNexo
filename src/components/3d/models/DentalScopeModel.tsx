@@ -545,26 +545,53 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
       }
 
       // ================= MODO EXPLORAÇÃO DE SUPERFÍCIE DENTAL (DENTAL SCOPE) =================
-      // Isolamento do dente ativo com opacidade total (1.0), iluminação clínica e alta taxa de quadros (60 FPS)
+      // Crânio oculto, dente ativo com opacidade total (1.0), dentes adjacentes translúcidos (0.15) e gengiva de contexto (0.10)
       if (surfaceExplorationMode) {
-        const isActiveTooth = name === `tooth-${activeToothFdi}`;
-        if (!isActiveTooth) {
+        if (!isTooth && !isGingiva) {
           mesh.visible = false;
           continue;
         }
 
+        const isActiveTooth = name === `tooth-${activeToothFdi}`;
         mesh.visible = true;
-        material.color.copy(defaultColor);
-        material.roughness = 0.28;
-        material.metalness = 0.04;
-        material.transparent = false;
-        material.opacity = 1.0;
-        material.emissive.copy(cyanEmissive);
-        material.emissiveIntensity = 0.18;
-        material.depthWrite = true;
-        material.side = THREE.DoubleSide;
-        mesh.castShadow = true;
-        mesh.receiveShadow = true;
+
+        if (isActiveTooth) {
+          material.color.copy(defaultColor);
+          material.roughness = 0.22;
+          material.metalness = 0.05;
+          material.transparent = false;
+          material.opacity = 1.0;
+          material.emissive.copy(cyanEmissive);
+          material.emissiveIntensity = 0.25;
+          material.depthWrite = true;
+          material.side = THREE.FrontSide;
+          mesh.castShadow = true;
+          mesh.receiveShadow = true;
+        } else if (isTooth) {
+          // Demais dentes com opacidade suave de referência (15%)
+          material.color.copy(defaultColor);
+          material.roughness = 0.6;
+          material.metalness = 0.0;
+          material.transparent = true;
+          material.opacity = 0.15;
+          material.emissive.copy(blackColor);
+          material.emissiveIntensity = 0;
+          material.depthWrite = false;
+          material.side = THREE.FrontSide;
+          mesh.castShadow = false;
+          mesh.receiveShadow = false;
+        } else if (isGingiva) {
+          // Gengiva com transparência suave de contexto anatômico (10%)
+          material.color.copy(defaultColor);
+          material.roughness = 0.7;
+          material.transparent = true;
+          material.opacity = 0.10;
+          material.emissive.copy(blackColor);
+          material.emissiveIntensity = 0;
+          material.depthWrite = false;
+          mesh.castShadow = false;
+          mesh.receiveShadow = false;
+        }
         continue;
       }
 
@@ -702,9 +729,11 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
   // Handlers de interação
   const handlePointerOver = (e: any) => {
     e.stopPropagation();
+    if (surfaceExplorationMode) return;
     const meshName = e.object?.name;
     if (meshName) {
       const id = getStructureId(meshName);
+      if (hiddenStructureIds.includes(id)) return;
       setHoveredStructure(id);
       document.body.style.cursor = 'pointer';
     }
@@ -717,9 +746,13 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
 
   const handleClick = (e: any) => {
     e.stopPropagation();
+    // Em Dentro do Dente, cliques no 3D não abrem painel de detalhes (apenas pelo odontograma)
+    if (surfaceExplorationMode) return;
     const meshName = e.object?.name;
     if (meshName) {
       const id = getStructureId(meshName);
+      // Se a estrutura está oculta, não seleciona (permite o raycast atingir o que está atrás)
+      if (hiddenStructureIds.includes(id)) return;
       const isQuiz = typeof window !== 'undefined' && window.location.pathname.includes('/quiz');
       setSelectedStructure(id);
       if (isQuiz) {
@@ -730,9 +763,11 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
 
   const handleContextMenu = (e: any) => {
     e.stopPropagation();
+    if (surfaceExplorationMode) return;
     const meshName = e.object?.name;
     if (meshName) {
       const id = getStructureId(meshName);
+      if (hiddenStructureIds.includes(id)) return;
       const isQuiz = typeof window !== 'undefined' && window.location.pathname.includes('/quiz');
       if (!isQuiz) {
         setSelectedStructure(id);
