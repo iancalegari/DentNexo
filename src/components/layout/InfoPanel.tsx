@@ -250,8 +250,15 @@ export const InfoPanel: React.FC = () => {
                     )}
                   </IconButton>
                 </Tooltip>
-                <Tooltip title="Fechar painel">
-                  <IconButton size="small" onClick={() => setInfoPanelOpen(false)}>
+                <Tooltip title="Fechar painel e desmarcar estrutura">
+                  <IconButton
+                    size="small"
+                    onClick={() => {
+                      setInfoPanelOpen(false);
+                      setSelectedStructure(null);
+                      isolateStructure(null);
+                    }}
+                  >
                     <CloseIcon fontSize="small" />
                   </IconButton>
                 </Tooltip>
@@ -279,6 +286,26 @@ export const InfoPanel: React.FC = () => {
                 sx={{ fontSize: '0.75rem', py: 0.4 }}
               >
                 Ocultar
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                fullWidth
+                startIcon={<CloseIcon fontSize="small" />}
+                onClick={() => {
+                  setSelectedStructure(null);
+                  isolateStructure(null);
+                  setInfoPanelOpen(false);
+                }}
+                sx={{
+                  fontSize: '0.75rem',
+                  py: 0.4,
+                  color: '#94A3B8',
+                  borderColor: 'rgba(148, 163, 184, 0.3)',
+                  '&:hover': { borderColor: '#EF4444', color: '#EF4444' },
+                }}
+              >
+                Desmarcar
               </Button>
             </Stack>
 

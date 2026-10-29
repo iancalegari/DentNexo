@@ -1,11 +1,13 @@
-import React, { useRef, useState, Suspense } from 'react';
+import React, { useRef, useState, useEffect, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, GizmoHelper, GizmoViewport } from '@react-three/drei';
 import { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
-import { Box, Typography, Button, CircularProgress } from '@mui/material';
+import { Box, Typography, Button, CircularProgress, Paper, Chip, Tooltip } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import CloseIcon from '@mui/icons-material/Close';
 
 import { useAnatomyStore } from '@/stores/useAnatomyStore';
+import { anatomicalStructures } from '@/data/anatomy/structures';
 import { SceneLighting } from './SceneLighting';
 import { CameraManager } from './CameraManager';
 import { DentalScopeModel } from './models/DentalScopeModel';
@@ -38,10 +40,76 @@ export const AnatomyViewer3D: React.FC<AnatomyViewer3DProps> = ({
   hideCredits = false,
   hideGizmo = false,
 }) => {
-  const { xrayMode, toothViewMode, hiddenStructureIds, unhideStructure } = useAnatomyStore();
+  const {
+    xrayMode,
+    toothViewMode,
+    hiddenStructureIds,
+    unhideStructure,
+    selectedStructureId,
+    setSelectedStructure,
+    isolateStructure,
+    setInfoPanelOpen,
+  } = useAnatomyStore();
+
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
   const [isInteracting, setIsInteracting] = useState<boolean>(false);
   const [isModelLoading, setIsModelLoading] = useState<boolean>(true);
+
+  // Armazena a coordenada inicial do ponteiro para distinguir clique estático de arraste para rotação
+  const pointerDownPos = useRef<{ x: number; y: number; time: number } | null>(null);
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    setIsInteracting(true);
+    pointerDownPos.current = { x: e.clientX, y: e.clientY, time: Date.now() };
+  };
+
+  const handlePointerUp = () => {
+    setIsInteracting(false);
+  };
+
+  // Desmarca ao pressionar a tecla Escape
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (selectedStructureId) {
+          setSelectedStructure(null);
+          isolateStructure(null);
+          setInfoPanelOpen(false);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedStructureId, setSelectedStructure, isolateStructure, setInfoPanelOpen]);
+
+  /**
+   * Chamado quando o clique cai no espaço vazio (fora de qualquer malha do esqueleto).
+   * Se o usuário arrastou para rotacionar (dist > 5px), NÃO desmarca.
+   * Se foi um clique estático (dist <= 5px), desmarca a estrutura selecionada.
+   */
+  const handlePointerMissed = (e: MouseEvent) => {
+    // Apenas responde ao botão primário (esquerdo)
+    if (e.button !== 0) return;
+    if (!pointerDownPos.current) return;
+
+    const dx = e.clientX - pointerDownPos.current.x;
+    const dy = e.clientY - pointerDownPos.current.y;
+    const dist = Math.hypot(dx, dy);
+
+    // Se houve arraste de rotação de câmera com OrbitControls, preserva a seleção intacta
+    if (dist > 5) {
+      return;
+    }
+
+    // Clique intencional no espaço vazio fora do esqueleto: desmarca
+    if (selectedStructureId) {
+      setSelectedStructure(null);
+      isolateStructure(null);
+      setInfoPanelOpen(false);
+    }
+  };
+
+  const selectedStructure = selectedStructureId ? anatomicalStructures[selectedStructureId] : null;
 
   return (
     <Box
@@ -64,8 +132,9 @@ export const AnatomyViewer3D: React.FC<AnatomyViewer3DProps> = ({
           preserveDrawingBuffer: true,
           powerPreference: 'high-performance',
         }}
-        onPointerDown={() => setIsInteracting(true)}
-        onPointerUp={() => setIsInteracting(false)}
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
+        onPointerMissed={handlePointerMissed}
       >
         {/* Iluminação de Estúdio / Negatoscópio Radiográfico */}
         <SceneLighting xrayMode={xrayMode} />
@@ -247,6 +316,77 @@ export const AnatomyViewer3D: React.FC<AnatomyViewer3DProps> = ({
             </Box>
           </Typography>
         </Box>
+      )}
+
+      {/* Badge Flutuante de Estrutura Selecionada com Botão Rápido de Desmarcar */}
+      {selectedStructureId && (
+        <Paper
+          elevation={4}
+          sx={{
+            position: 'absolute',
+            bottom: 24,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 100,
+            backgroundColor: 'rgba(15, 23, 42, 0.92)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(56, 189, 248, 0.45)',
+            borderRadius: '24px',
+            px: 2,
+            py: 0.8,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.55)',
+            transition: 'opacity 0.2s ease',
+            opacity: isInteracting ? 0.35 : 1.0,
+          }}
+        >
+          <Box sx={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#00C9F6' }} />
+          <Typography
+            variant="caption"
+            sx={{
+              color: '#F8FAFC',
+              fontWeight: 700,
+              fontSize: '0.82rem',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {selectedStructure?.name || selectedStructureId}
+          </Typography>
+          <Tooltip title="Desmarcar seleção (ou clique no espaço vazio / pressione Esc)">
+            <Chip
+              label="Desmarcar"
+              size="small"
+              onDelete={() => {
+                setSelectedStructure(null);
+                isolateStructure(null);
+                setInfoPanelOpen(false);
+              }}
+              onClick={() => {
+                setSelectedStructure(null);
+                isolateStructure(null);
+                setInfoPanelOpen(false);
+              }}
+              sx={{
+                height: 22,
+                fontSize: '0.72rem',
+                fontWeight: 600,
+                backgroundColor: 'rgba(239, 68, 68, 0.18)',
+                color: '#FCA5A5',
+                border: '1px solid rgba(239, 68, 68, 0.35)',
+                cursor: 'pointer',
+                '&:hover': {
+                  backgroundColor: 'rgba(239, 68, 68, 0.35)',
+                },
+                '& .MuiChip-deleteIcon': {
+                  color: '#FCA5A5',
+                  fontSize: 14,
+                },
+              }}
+            />
+          </Tooltip>
+        </Paper>
       )}
     </Box>
   );
