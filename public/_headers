@@ -3,15 +3,15 @@
 
 /models/*.glb
   Content-Type: model/gltf-binary
-  Cache-Control: public, max-age=604800
+  Cache-Control: public, max-age=2592000
 
 /models/dental-scope/*.glb
   Content-Type: model/gltf-binary
-  Cache-Control: public, max-age=604800
+  Cache-Control: public, max-age=2592000
 
 /models/dental-scope/teeth/*.glb
   Content-Type: model/gltf-binary
-  Cache-Control: public, max-age=604800
+  Cache-Control: public, max-age=2592000
 
 /audio/tts/*.mp3
   Content-Type: audio/mpeg

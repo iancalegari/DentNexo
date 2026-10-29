@@ -1,13 +1,26 @@
 import React, { useRef, useState, useEffect, Suspense } from 'react';
 import * as THREE from 'three';
 import { Canvas, events } from '@react-three/fiber';
-import { OrbitControls, GizmoHelper, GizmoViewport } from '@react-three/drei';
+import { OrbitControls, GizmoHelper, GizmoViewport, useProgress } from '@react-three/drei';
 import { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
-import { Box, Typography, Button, CircularProgress, Paper, Chip, Tooltip, IconButton, useMediaQuery } from '@mui/material';
+import {
+  Box,
+  Typography,
+  Button,
+  CircularProgress,
+  LinearProgress,
+  Fade,
+  Paper,
+  Chip,
+  Tooltip,
+  IconButton,
+  useMediaQuery,
+} from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import CloseIcon from '@mui/icons-material/Close';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import HighlightIcon from '@mui/icons-material/Highlight';
+import ViewInArIcon from '@mui/icons-material/ViewInAr';
 
 import { useAnatomyStore } from '@/stores/useAnatomyStore';
 import { anatomicalStructures } from '@/data/anatomy/structures';
@@ -31,14 +44,158 @@ const isObjectVisibleInHierarchy = (obj: THREE.Object3D | null): boolean => {
 };
 
 /**
- * Fallback de carregamento para os modelos GLB
+ * Rastreador de Suspense interno ao Canvas: mantém o estado de carregamento ativo
+ * desde o download até a decodificação Meshopt e montagem efetiva das malhas 3D na GPU.
  */
-const LoadingFallback: React.FC = () => (
-  <mesh>
-    <boxGeometry args={[0.5, 0.5, 0.5]} />
-    <meshStandardMaterial color="#1E293B" wireframe />
-  </mesh>
-);
+const SuspenseFallbackTracker: React.FC<{ onPendingChange: (pending: boolean) => void }> = ({
+  onPendingChange,
+}) => {
+  useEffect(() => {
+    onPendingChange(true);
+    return () => {
+      onPendingChange(false);
+    };
+  }, [onPendingChange]);
+
+  return null;
+};
+
+/**
+ * Overlay visual de carregamento 3D em tempo real para todas as telas (Atlas, Sistemas, Dental, Anestesia, Patologias, Quiz)
+ */
+const ModelLoadingOverlay: React.FC<{
+  isSuspensePending: boolean;
+  soloToothMode: boolean;
+  archesOnlyMode: boolean;
+  teethLineupMode: boolean;
+  activeToothFdi: string;
+}> = ({ isSuspensePending, soloToothMode, archesOnlyMode, teethLineupMode, activeToothFdi }) => {
+  const { active, progress } = useProgress();
+  const isVisible = active || isSuspensePending;
+  const clampedProgress = Math.min(100, Math.max(0, Math.round(progress)));
+
+  const title = soloToothMode
+    ? `Carregando Dente FDI ${activeToothFdi} em 3D...`
+    : archesOnlyMode || teethLineupMode
+    ? 'Carregando Arcadas Dentárias 3D...'
+    : 'Carregando Atlas Craniofacial 3D...';
+
+  const subtitle =
+    clampedProgress >= 96 && isSuspensePending
+      ? 'Decodificando geometria anatômica e preparando iluminação...'
+      : 'Baixando malhas 3D otimizadas • salvo automaticamente no navegador';
+
+  return (
+    <Fade in={isVisible} timeout={{ enter: 120, exit: 280 }} unmountOnExit>
+      <Box
+        sx={{
+          position: 'absolute',
+          inset: 0,
+          zIndex: 115,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          pointerEvents: 'none',
+          background: 'radial-gradient(circle at center, rgba(8, 12, 17, 0.72) 0%, rgba(8, 12, 17, 0.42) 100%)',
+          px: 2,
+        }}
+      >
+        <Paper
+          elevation={8}
+          sx={{
+            width: '100%',
+            maxWidth: { xs: 285, sm: 340 },
+            px: { xs: 2.2, sm: 3 },
+            py: { xs: 2.2, sm: 2.6 },
+            borderRadius: '16px',
+            backgroundColor: 'rgba(13, 20, 30, 0.92)',
+            backdropFilter: 'blur(14px)',
+            border: '1px solid rgba(0, 201, 246, 0.28)',
+            boxShadow: '0 16px 40px rgba(0, 0, 0, 0.65), 0 0 24px rgba(0, 201, 246, 0.12)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            textAlign: 'center',
+            gap: 1.4,
+          }}
+        >
+          <Box sx={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+            <CircularProgress
+              variant={clampedProgress > 0 && clampedProgress < 100 ? 'determinate' : 'indeterminate'}
+              value={clampedProgress}
+              size={54}
+              thickness={3.6}
+              sx={{
+                color: themeTokens.colors.brandCyan,
+                filter: 'drop-shadow(0 0 8px rgba(0, 201, 246, 0.45))',
+              }}
+            />
+            <ViewInArIcon
+              sx={{
+                position: 'absolute',
+                fontSize: 24,
+                color: '#38BDF8',
+              }}
+            />
+          </Box>
+
+          <Box sx={{ width: '100%' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mb: 0.7 }}>
+              <Typography
+                sx={{
+                  fontSize: { xs: '0.82rem', sm: '0.88rem' },
+                  fontWeight: 800,
+                  color: '#F8FAFC',
+                  textAlign: 'left',
+                  lineHeight: 1.25,
+                }}
+              >
+                {title}
+              </Typography>
+              {clampedProgress > 0 && (
+                <Typography
+                  sx={{
+                    fontSize: '0.76rem',
+                    fontWeight: 800,
+                    color: themeTokens.colors.brandCyan,
+                    flexShrink: 0,
+                  }}
+                >
+                  {clampedProgress}%
+                </Typography>
+              )}
+            </Box>
+
+            <LinearProgress
+              variant={clampedProgress > 0 && clampedProgress < 100 ? 'determinate' : 'indeterminate'}
+              value={clampedProgress}
+              sx={{
+                height: 6,
+                borderRadius: 999,
+                backgroundColor: 'rgba(148, 163, 184, 0.16)',
+                '& .MuiLinearProgress-bar': {
+                  borderRadius: 999,
+                  background: 'linear-gradient(90deg, #0284C7 0%, #00C9F6 50%, #38BDF8 100%)',
+                },
+              }}
+            />
+
+            <Typography
+              sx={{
+                mt: 1,
+                fontSize: { xs: '0.7rem', sm: '0.73rem' },
+                color: themeTokens.colors.textSecondary,
+                lineHeight: 1.35,
+              }}
+            >
+              {subtitle}
+            </Typography>
+          </Box>
+        </Paper>
+      </Box>
+    </Fade>
+  );
+};
 
 interface AnatomyViewer3DProps {
   soloToothMode?: boolean;
@@ -73,13 +230,14 @@ export const AnatomyViewer3D: React.FC<AnatomyViewer3DProps> = ({
     infoPanelOpen,
     setInfoPanelOpen,
     surfaceExplorationMode,
+    activeToothFdi,
   } = useAnatomyStore();
 
   const isCompactCanvas = useMediaQuery('(max-width: 899px), (max-height: 700px)');
 
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
   const [isInteracting, setIsInteracting] = useState<boolean>(false);
-  const [isModelLoading, setIsModelLoading] = useState<boolean>(true);
+  const [isModelLoading, setIsModelLoading] = useState<boolean>(false);
 
   // Armazena a coordenada inicial do ponteiro para distinguir clique estático de arraste para rotação
   const pointerDownPos = useRef<{ x: number; y: number; time: number } | null>(null);
@@ -212,18 +370,18 @@ export const AnatomyViewer3D: React.FC<AnatomyViewer3DProps> = ({
 
         {/* Modelos Tridimensionais Interativos Dental Scope */}
         {soloToothMode ? (
-          <Suspense fallback={<LoadingFallback />}>
+          <Suspense fallback={<SuspenseFallbackTracker onPendingChange={setIsModelLoading} />}>
             <DentalScopeTooth />
             <PathologyOverlays isSoloTooth={true} />
           </Suspense>
         ) : teethLineupMode ? (
-          <Suspense fallback={<LoadingFallback />}>
+          <Suspense fallback={<SuspenseFallbackTracker onPendingChange={setIsModelLoading} />}>
             <TeethLineup3D targetStructureId={quizTargetId} quizAnswered={quizAnswered} />
           </Suspense>
         ) : (
           <group position={[0, -0.2, 0]}>
             {/* Modelo Mestre Dental Scope (Crânio, Mandíbula, Dentes, Músculos, Neurovascular) */}
-            <Suspense fallback={<LoadingFallback />}>
+            <Suspense fallback={<SuspenseFallbackTracker onPendingChange={setIsModelLoading} />}>
               <DentalScopeModel archesOnlyMode={archesOnlyMode} />
             </Suspense>
 
@@ -235,6 +393,15 @@ export const AnatomyViewer3D: React.FC<AnatomyViewer3DProps> = ({
           </group>
         )}
       </Canvas>
+
+      {/* Indicador Visual de Carregamento 3D em Tempo Real (Progresso % + Status) */}
+      <ModelLoadingOverlay
+        isSuspensePending={isModelLoading}
+        soloToothMode={soloToothMode}
+        archesOnlyMode={archesOnlyMode}
+        teethLineupMode={teethLineupMode}
+        activeToothFdi={activeToothFdi || '36'}
+      />
 
       {/* Painel Flutuante Dental Scope de Anatomia de Superfície & Faces */}
       <SurfaceAnatomyPanel />

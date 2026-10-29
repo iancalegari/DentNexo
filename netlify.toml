@@ -21,7 +21,7 @@
 [[headers]]
   for = "/models/*"
   [headers.values]
-    Cache-Control = "public, max-age=604800"
+    Cache-Control = "public, max-age=2592000"
 
 # Vozes Neurais Kokoro TTS Pré-Renderizadas (.mp3)
 [[headers]]

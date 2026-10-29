@@ -12,10 +12,16 @@ import {
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
+import { useGLTF } from '@react-three/drei';
 import { useAnatomyStore } from '@/stores/useAnatomyStore';
 import { permanentTeethData } from '@/data/dental/teethData';
-import { deciduousTeethData } from '@/data/dental/deciduousTeethData';
+import { deciduousTeethData, DECIDUOUS_TO_HOMOLOGOUS_MAP } from '@/data/dental/deciduousTeethData';
 import { themeTokens } from '@/theme/tokens';
+
+const preloadToothGlb = (fdi: string) => {
+  const modelFdi = DECIDUOUS_TO_HOMOLOGOUS_MAP[fdi] || fdi;
+  useGLTF.preload(`/models/dental-scope/teeth/tooth-${modelFdi}.glb`);
+};
 
 // ==================== ÍCONES SVG ANATÔMICOS DOS DENTES (SILHUETAS DIDÁTICAS) ====================
 
@@ -168,6 +174,7 @@ export const OdontogramFDI: React.FC<OdontogramFDIProps> = ({ allowDeciduous = t
         placement="top"
       >
         <Box
+          onPointerEnter={() => preloadToothGlb(fdi)}
           onClick={() => handleSelectTooth(fdi)}
           sx={{
             width: { xs: 28, sm: 32, md: 34, xl: 38 },
