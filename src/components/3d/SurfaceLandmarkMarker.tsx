@@ -19,6 +19,9 @@ export const SurfaceLandmarkMarker: React.FC = () => {
   const ringRef = useRef<THREE.Mesh>(null);
 
   useFrame(({ clock }) => {
+    if (!surfaceExplorationMode || hideSurfaceFeatures || !selectedSurfaceFeature) return;
+    if (!pulseRef.current && !ringRef.current) return;
+
     const elapsed = clock.getElapsedTime();
     if (pulseRef.current) {
       const scale = 1 + Math.sin(elapsed * 4) * 0.18;
@@ -52,8 +55,6 @@ export const SurfaceLandmarkMarker: React.FC = () => {
 
   return (
     <group position={markerPosition}>
-      {/* Luz focal sobre o acidente anatômico */}
-      <pointLight color="#818CF8" intensity={1.8} distance={2.5} />
 
       {/* Esfera central do pin indicador */}
       <mesh ref={pulseRef}>

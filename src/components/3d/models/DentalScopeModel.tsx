@@ -478,53 +478,26 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
       }
 
       // ================= MODO EXPLORAÇÃO DE SUPERFÍCIE DENTAL (DENTAL SCOPE) =================
-      // Crânio oculto, dente ativo com opacidade total (1.0) e outros dentes com opacidade reduzida (0.15)
+      // Isolamento do dente ativo com opacidade total (1.0), iluminação clínica e alta taxa de quadros (60 FPS)
       if (surfaceExplorationMode) {
-        if (!isTooth && !isGingiva) {
+        const isActiveTooth = name === `tooth-${activeToothFdi}`;
+        if (!isActiveTooth) {
           mesh.visible = false;
           continue;
         }
 
-        const isActiveTooth = name === `tooth-${activeToothFdi}`;
         mesh.visible = true;
-
-        if (isActiveTooth) {
-          material.color.copy(defaultColor);
-          material.roughness = 0.22;
-          material.metalness = 0.05;
-          material.transparent = false;
-          material.opacity = 1.0;
-          material.emissive.copy(cyanEmissive);
-          material.emissiveIntensity = 0.25;
-          material.depthWrite = true;
-          material.side = THREE.FrontSide;
-          mesh.castShadow = true;
-          mesh.receiveShadow = true;
-        } else if (isTooth) {
-          // Demais dentes com opacidade reduzida a 15%
-          material.color.copy(defaultColor);
-          material.roughness = 0.6;
-          material.metalness = 0.0;
-          material.transparent = true;
-          material.opacity = 0.15;
-          material.emissive.copy(blackColor);
-          material.emissiveIntensity = 0;
-          material.depthWrite = false;
-          material.side = THREE.FrontSide;
-          mesh.castShadow = false;
-          mesh.receiveShadow = false;
-        } else if (isGingiva) {
-          // Gengiva com transparência suave de contexto
-          material.color.copy(defaultColor);
-          material.roughness = 0.7;
-          material.transparent = true;
-          material.opacity = 0.1;
-          material.emissive.copy(blackColor);
-          material.emissiveIntensity = 0;
-          material.depthWrite = false;
-          mesh.castShadow = false;
-          mesh.receiveShadow = false;
-        }
+        material.color.copy(defaultColor);
+        material.roughness = 0.28;
+        material.metalness = 0.04;
+        material.transparent = false;
+        material.opacity = 1.0;
+        material.emissive.copy(cyanEmissive);
+        material.emissiveIntensity = 0.18;
+        material.depthWrite = true;
+        material.side = THREE.DoubleSide;
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
         continue;
       }
 
@@ -694,9 +667,9 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
       onContextMenu={handleContextMenu}
     >
       <primitive object={coreClone} />
-      {!archesOnlyMode && <primitive object={contextClone} />}
-      {!archesOnlyMode && <primitive object={neuroClone} />}
-      <PeriodontalLigaments archesOnlyMode={archesOnlyMode} />
+      {!archesOnlyMode && !surfaceExplorationMode && <primitive object={contextClone} />}
+      {!archesOnlyMode && !surfaceExplorationMode && <primitive object={neuroClone} />}
+      {!surfaceExplorationMode && <PeriodontalLigaments archesOnlyMode={archesOnlyMode} />}
     </group>
   );
 };

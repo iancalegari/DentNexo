@@ -34,8 +34,8 @@ export const SceneLighting: React.FC<SceneLightingProps> = ({ xrayMode }) => {
         intensity={1.6}
         color="#FFFDF7"
         castShadow
-        shadow-mapSize-width={2048}
-        shadow-mapSize-height={2048}
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
         shadow-camera-near={1}
         shadow-camera-far={35}
         shadow-camera-left={-7}
