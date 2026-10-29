@@ -1,7 +1,5 @@
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
-import { Html } from '@react-three/drei';
-import { Box, Typography } from '@mui/material';
 import { useAnatomyStore } from '@/stores/useAnatomyStore';
 import { themeTokens } from '@/theme/tokens';
 import { TOOTH_3D_CENTERS } from '@/data/dental/surfaceFeaturesData';
@@ -10,22 +8,27 @@ interface PeriodontalLigamentsProps {
   archesOnlyMode?: boolean;
 }
 
-export const PeriodontalLigaments: React.FC<PeriodontalLigamentsProps> = () => {
+export const PeriodontalLigaments: React.FC<PeriodontalLigamentsProps> = ({ archesOnlyMode = false }) => {
   const {
     selectedStructureId,
     hoveredStructureId,
     focusedSystem,
-    layers,
     setSelectedStructure,
     setHoveredStructure,
   } = useAnatomyStore();
 
   const isSelected = selectedStructureId === 'ligamento_periodontal';
   const isHovered = hoveredStructureId === 'ligamento_periodontal';
-  const isAnotherSelected = selectedStructureId !== null && !isSelected;
-  const isVisible = layers.oral_tissue || focusedSystem === 'oral_tissue' || isSelected;
 
-  // Gerar mangas tridimensionais do ligamento periodontal ao redor das raízes para todos os 32 dentes
+  // O Ligamento Periodontal é uma microestrutura interna fisiológica (0.15 a 0.38 mm) situada no espaço alvéolo-dental.
+  // Deve ser exibido quando:
+  // 1. Está explicitamente selecionado (via chip no Sistema Oral, busca, odontograma ou clique 3D)
+  // 2. O usuário passa o mouse por cima (hover)
+  // 3. No foco de tecidos orais quando selecionado
+  // No modo "Arcadas & Alinhamento" (archesOnlyMode), nunca polui a visualização dental a menos que selecionado.
+  const isVisible = (isSelected || isHovered) || (focusedSystem === 'oral_tissue' && isSelected);
+
+  // Gerar mangas anatômicas calibradas para os 32 dentes, contidas estritamente no alvéolo ósseo/gengival
   const pdlItems = useMemo(() => {
     const teethList = [
       // Maxila (Superior)
@@ -66,58 +69,62 @@ export const PeriodontalLigaments: React.FC<PeriodontalLigamentsProps> = () => {
 
     return teethList.map(({ fdi, type, isUpper }) => {
       const center = TOOTH_3D_CENTERS[fdi] || [0, 0, 0];
-      let height = 0.55;
-      let rTop = 0.16;
-      let rBottom = 0.12;
+
+      // Alturas anatômicas contidas estritamente no rebordo alveolar (nunca passam da gengiva para fora)
+      let height = 0.24;
+      let rCervical = 0.15;
+      let rApical = 0.10;
 
       if (type === 'molar') {
-        height = 0.65;
-        rTop = 0.28;
-        rBottom = 0.22;
+        height = 0.28;
+        rCervical = 0.24;
+        rApical = 0.16;
       } else if (type === 'canine') {
-        height = 0.75;
-        rTop = 0.20;
-        rBottom = 0.14;
+        height = 0.30;
+        rCervical = 0.18;
+        rApical = 0.12;
       } else if (type === 'premolar') {
-        height = 0.60;
-        rTop = 0.21;
-        rBottom = 0.16;
+        height = 0.25;
+        rCervical = 0.19;
+        rApical = 0.13;
       }
 
       // No arco superior a raiz cresce para cima (+Y); no inferior para baixo (-Y)
-      const posY = isUpper ? center[1] + height * 0.45 : center[1] - height * 0.45;
+      // Ajuste de centro para manter a manga no terço cervical-médio radicular sem perfurar corticais
+      const posY = isUpper ? center[1] + height * 0.38 : center[1] - height * 0.38;
       const pos: [number, number, number] = [center[0], posY, center[2]];
 
-      // Ajuste de rotação para acompanhar inclinação radicular
-      const rotZ = center[0] * 0.05;
+      // Leve inclinação para acompanhar o longo eixo dental
+      const rotZ = center[0] * 0.04;
 
       return {
         fdi,
         pos,
         geometryArgs: isUpper
-          ? ([rBottom, rTop, height, 16] as [number, number, number, number])
-          : ([rTop, rBottom, height, 16] as [number, number, number, number]),
+          ? ([rApical, rCervical, height, 16] as [number, number, number, number])
+          : ([rCervical, rApical, height, 16] as [number, number, number, number]),
         rotation: [0, 0, rotZ] as [number, number, number],
       };
     });
   }, []);
 
+  if (archesOnlyMode && !isSelected) return null;
   if (!isVisible) return null;
 
   const matColor = isSelected
     ? themeTokens.colors.brandCyan
     : isHovered
-    ? '#FB923C'
+    ? '#7DD3FC'
     : '#F97316';
 
   const emissiveColor = isSelected
-    ? '#00C9F6'
+    ? '#00E5FF'
     : isHovered
-    ? '#EA580C'
+    ? '#0284C7'
     : '#C2410C';
 
-  const emissiveIntensity = isSelected ? 0.85 : isHovered ? 0.45 : 0.2;
-  const opacity = isSelected ? 0.95 : isAnotherSelected ? 0.22 : 0.78;
+  const emissiveIntensity = isSelected ? 0.9 : isHovered ? 0.5 : 0.2;
+  const opacity = isSelected ? 0.92 : 0.65;
 
   return (
     <group
@@ -129,8 +136,12 @@ export const PeriodontalLigaments: React.FC<PeriodontalLigamentsProps> = () => {
       onPointerOver={(e) => {
         e.stopPropagation();
         setHoveredStructure('ligamento_periodontal');
+        document.body.style.cursor = 'pointer';
       }}
-      onPointerOut={() => setHoveredStructure(null)}
+      onPointerOut={() => {
+        setHoveredStructure(null);
+        document.body.style.cursor = 'grab';
+      }}
     >
       {pdlItems.map((item) => (
         <mesh
@@ -138,110 +149,21 @@ export const PeriodontalLigaments: React.FC<PeriodontalLigamentsProps> = () => {
           position={item.pos}
           rotation={item.rotation}
           castShadow={false}
-          receiveShadow
+          receiveShadow={false}
         >
           <cylinderGeometry args={item.geometryArgs} />
           <meshStandardMaterial
             color={matColor}
             emissive={emissiveColor}
             emissiveIntensity={emissiveIntensity}
-            roughness={0.42}
-            metalness={0.06}
+            roughness={0.35}
+            metalness={0.05}
             transparent
             opacity={opacity}
             side={THREE.DoubleSide}
           />
         </mesh>
       ))}
-
-      {/* Etiqueta Flutuante 3D Exclusiva ao Selecionar o Ligamento Periodontal (Posicionada nos Incisivos Centrais Frontais) */}
-      {isSelected && (
-        <Html
-          position={[-0.065, 1.45, 2.72]}
-          center
-          distanceFactor={6}
-          style={{ pointerEvents: 'none' }}
-        >
-          <Box
-            sx={{
-              backgroundColor: 'rgba(15, 23, 42, 0.95)',
-              backdropFilter: 'blur(10px)',
-              border: `1.5px solid ${themeTokens.colors.brandCyan}`,
-              borderRadius: '8px',
-              px: 1.5,
-              py: 0.8,
-              whiteSpace: 'nowrap',
-              boxShadow: '0 4px 24px rgba(0, 201, 246, 0.55)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              userSelect: 'none',
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
-              <Box
-                sx={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: '50%',
-                  backgroundColor: themeTokens.colors.brandCyan,
-                  boxShadow: `0 0 8px ${themeTokens.colors.brandCyan}`,
-                }}
-              />
-              <Typography
-                sx={{
-                  fontFamily: themeTokens.typography.fontFamily,
-                  fontSize: '0.82rem',
-                  fontWeight: 800,
-                  color: themeTokens.colors.brandCyan,
-                  letterSpacing: '0.02em',
-                }}
-              >
-                Ligamento Periodontal (LPO)
-              </Typography>
-            </Box>
-            <Typography
-              sx={{
-                fontFamily: themeTokens.typography.fontFamily,
-                fontSize: '0.68rem',
-                fontWeight: 600,
-                color: '#E0F2FE',
-                mt: 0.3,
-              }}
-            >
-              Fibras de Sharpey inseridas no alvéolo • Amortecimento e propriocepção
-            </Typography>
-            <Typography
-              sx={{
-                fontFamily: themeTokens.typography.fontFamily,
-                fontSize: '0.62rem',
-                fontWeight: 700,
-                color: '#38BDF8',
-                mt: 0.2,
-                backgroundColor: 'rgba(0, 201, 246, 0.12)',
-                px: 0.8,
-                py: 0.15,
-                borderRadius: '4px',
-              }}
-            >
-              Espessura fisiológica: 0,15 mm - 0,38 mm
-            </Typography>
-            <Box
-              sx={{
-                width: 0,
-                height: 0,
-                borderLeft: '6px solid transparent',
-                borderRight: '6px solid transparent',
-                borderTop: `6px solid ${themeTokens.colors.brandCyan}`,
-                position: 'absolute',
-                bottom: -6,
-                left: '50%',
-                transform: 'translateX(-50%)',
-              }}
-            />
-          </Box>
-        </Html>
-      )}
     </group>
   );
 };
