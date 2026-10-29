@@ -133,10 +133,8 @@ export const OdontogramFDI: React.FC = () => {
   const handleSelectTooth = (fdi: string) => {
     setActiveToothFdi(fdi);
     setSelectedStructure(`dente_${fdi}`);
-    // Na exploração de superfície dental, manter o painel de detalhes fechado para não sobrepor
-    if (!surfaceExplorationMode) {
-      setInfoPanelOpen(true);
-    }
+    // Ao clicar em algum dente no odontograma, abre o painel de Detalhes
+    setInfoPanelOpen(true);
   };
 
   const renderToothCard = (fdi: string) => {

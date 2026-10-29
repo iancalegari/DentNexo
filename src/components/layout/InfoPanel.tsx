@@ -42,6 +42,7 @@ export const InfoPanel: React.FC = () => {
   const {
     selectedStructureId,
     isolatedStructureId,
+    surfaceExplorationMode,
     infoPanelOpen,
     setSelectedStructure,
     isolateStructure,
@@ -177,6 +178,11 @@ export const InfoPanel: React.FC = () => {
   }
 
   if (!infoPanelOpen) {
+    // Em "Dentro do Dente", não exibir o botão flutuante "Detalhes"
+    if (surfaceExplorationMode) {
+      return null;
+    }
+
     return (
       <Box sx={{ position: 'absolute', top: '50%', right: 0, transform: 'translateY(-50%)', zIndex: 1000 }}>
         <Tooltip title="Abrir painel de informações anatômicas" placement="left">

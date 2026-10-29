@@ -69,12 +69,11 @@ export const DentalAtlasView: React.FC = () => {
   // Se o usuário fechar o painel de superfície 3D, refletir na tab
   React.useEffect(() => {
     if (activeTab === 'surface') {
-      setInfoPanelOpen(false);
       if (!surfaceExplorationMode) {
         setActiveTab('solo_tooth');
       }
     }
-  }, [surfaceExplorationMode, activeTab, setInfoPanelOpen]);
+  }, [surfaceExplorationMode, activeTab]);
 
   return (
     <Box sx={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
