@@ -311,7 +311,8 @@ export const ttsService = {
     if (options.audioId) {
       const baseUrl = ((import.meta as any).env?.BASE_URL as string | undefined) || '/';
       const normalizedBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
-      const staticUrl = `${normalizedBase}audio/tts/${encodeURIComponent(options.audioId)}.mp3`;
+      // Versão de cache estático para invalidar qualquer cache antigo/resposta SPA HTML de deploys anteriores
+      const staticUrl = `${normalizedBase}audio/tts/${encodeURIComponent(options.audioId)}.mp3?v=20261029_v2`;
 
       const audio = new Audio(staticUrl);
       audio.preload = 'auto';
@@ -323,10 +324,11 @@ export const ttsService = {
       let started = false;
       let handledFallback = false;
 
-      const triggerFallback = () => {
+      const triggerFallback = (reason?: string) => {
         if (handledFallback || sessionId !== currentSessionId) return;
         handledFallback = true;
         currentAudio = null;
+        console.warn(`[DentNexo TTS] Acionando fallback para '${options.audioId}'. Motivo: ${reason || 'desconhecido'}`);
         void speakDynamicOrFallback(options, sessionId, signal);
       };
 
@@ -346,10 +348,11 @@ export const ttsService = {
         options.onEnd?.();
       };
 
-      audio.onerror = () => {
+      audio.onerror = (e) => {
+        console.warn(`[DentNexo TTS] Erro no elemento de áudio para '${options.audioId}' (${staticUrl}):`, e);
         if (sessionId !== currentSessionId) return;
         if (!started) {
-          triggerFallback();
+          triggerFallback('audio.onerror');
         } else {
           isPlaying = false;
           currentAudio = null;
@@ -368,7 +371,8 @@ export const ttsService = {
         return;
       } catch (err: any) {
         if (err?.name === 'AbortError' || sessionId !== currentSessionId) return;
-        triggerFallback();
+        console.warn(`[DentNexo TTS] audio.play() rejeitado para '${options.audioId}':`, err);
+        triggerFallback(`audio.play() catch: ${err?.message || err}`);
         return;
       }
     }

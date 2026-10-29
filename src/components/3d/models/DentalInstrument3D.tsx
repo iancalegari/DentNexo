@@ -153,9 +153,8 @@ export const DentalInstrument3D: React.FC<DentalInstrument3DProps> = ({ instrume
       ctx.fillStyle = '#1E3A8A';
       ctx.font = 'bold 16px "Segoe UI", Arial, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('MÉDIO', 430, 68);
-      ctx.font = 'bold 18px "Segoe UI", Arial, sans-serif';
-      ctx.fillText('NEUTRO', 430, 92);
+      ctx.fillText('MÉDIO', 430, 85);
+
 
       // Texto Principal: LENÇOL DE BORRACHA
       ctx.textAlign = 'left';
@@ -168,30 +167,24 @@ export const DentalInstrument3D: React.FC<DentalInstrument3DProps> = ({ instrume
       // Subtítulo: RUBBER DAM | GOMA DIQUE
       ctx.font = 'bold 17px "Segoe UI", Arial, sans-serif';
       ctx.fillStyle = '#64748B';
-      ctx.fillText('RUBBER DAM   |   GOMA DIQUE', 40, 180);
+      ctx.fillText('GOMA DIQUE', 40, 180);
 
       // Chamada: ALTA RESISTÊNCIA!
       ctx.font = 'bold 26px "Segoe UI", Arial, sans-serif';
       ctx.fillStyle = '#1D4ED8';
       ctx.fillText('ALTA RESISTÊNCIA!', 40, 226);
 
-      // Detalhes: Não estéril / Látex natural
-      ctx.font = '16px "Segoe UI", Arial, sans-serif';
-      ctx.fillStyle = '#475569';
-      ctx.fillText('Não estéril   |   Látex Natural', 40, 265);
-      ctx.fillText('Non-sterile   |   Natural Latex', 40, 288);
-
       // Quantidade: 26 UNIDADES
       ctx.font = 'bold 62px "Segoe UI", Arial, sans-serif';
       ctx.fillStyle = '#1E3A8A';
-      ctx.fillText('26', 130, 395);
+      ctx.fillText('26', 130, 300);
       ctx.font = 'bold 20px "Segoe UI", Arial, sans-serif';
-      ctx.fillText('UNIDADES / UNITS', 90, 430);
+      ctx.fillText('UNIDADES / UNITS', 80, 330);
 
-      // Rodapé: @microdont | www.microdont.com.br
+      // Rodapé: @Dentnexo | dentnexo.com.br
       ctx.font = '16px "Segoe UI", Arial, sans-serif';
-      ctx.fillStyle = '#93C5FD';
-      ctx.fillText('@microdont  •  www.microdont.com.br', 95, 485);
+      ctx.fillStyle = '#e8ecf8ff';
+      ctx.fillText('@DENTNEXO •  dentnexo.com.br', 95, 485);
     }
     const texture = new THREE.CanvasTexture(canvas);
     return texture;
