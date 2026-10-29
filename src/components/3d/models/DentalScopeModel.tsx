@@ -183,8 +183,11 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
     if (name.includes('medial-pterygoid') || name.includes('pterygoid')) {
       return 'pterigoideo_medial';
     }
-    if (name.includes('orbicularis') || name.includes('buccinator') || name.includes('mentalis')) {
-      return 'masseter';
+    if (name.includes('orbicularis') || name.includes('mentalis')) {
+      return 'musculo_orbicular_boca';
+    }
+    if (name.includes('buccinator')) {
+      return 'musculo_bucinador';
     }
 
     // Mandíbula e Côndilos
@@ -410,7 +413,6 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
         if (normTarget === normStruct) return true;
         if (isTooth && isToothMatch(targetId, structureId)) return true;
         if (targetId === 'neurocranio' && isCranialBone(structureId)) return true;
-        if (structureId === 'neurocranio' && isCranialBone(targetId)) return true;
         return false;
       };
 

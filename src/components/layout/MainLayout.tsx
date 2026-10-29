@@ -9,9 +9,19 @@ import { GlobalSearchDialog } from '@/components/search/GlobalSearchDialog';
 import { ExportDialog } from '@/components/controls/ExportDialog';
 import { ContextMenu3D } from '@/components/3d/ContextMenu3D';
 import { themeTokens } from '@/theme/tokens';
+import { useAnatomyStore } from '@/stores/useAnatomyStore';
 
 export const MainLayout: React.FC = () => {
   const location = useLocation();
+  const { surfaceExplorationMode, setSurfaceExplorationMode, resetCamera } = useAnatomyStore();
+
+  React.useEffect(() => {
+    // Ao navegar para qualquer rota fora de /dental, desativar o modo de exploração isolada de dente e restaurar crânio/arcadas
+    if (location.pathname !== '/dental' && surfaceExplorationMode) {
+      setSurfaceExplorationMode(false);
+      resetCamera();
+    }
+  }, [location.pathname, surfaceExplorationMode, setSurfaceExplorationMode, resetCamera]);
 
   const getSectionTitle = () => {
     switch (location.pathname) {
@@ -20,7 +30,7 @@ export const MainLayout: React.FC = () => {
       case '/skeletal':
         return 'Esqueleto Craniofacial & Mandíbula';
       case '/muscular':
-        return 'Músculos da Mastigação';
+        return 'Músculos da Cabeça & Face';
       case '/nervous':
         return 'Inervação Trigeminal & Canais Nervosos';
       case '/vascular':

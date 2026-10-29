@@ -30,8 +30,16 @@ import { useAnatomyStore } from '@/stores/useAnatomyStore';
 import { LayerOpacity, LayerVisibility } from '@/types/anatomy';
 import { themeTokens } from '@/theme/tokens';
 
-export const LayerControls: React.FC = () => {
-  const [expanded, setExpanded] = useState<boolean>(true);
+interface LayerControlsProps {
+  top?: number | string;
+  defaultExpanded?: boolean;
+}
+
+export const LayerControls: React.FC<LayerControlsProps> = ({
+  top = 16,
+  defaultExpanded = true,
+}) => {
+  const [expanded, setExpanded] = useState<boolean>(defaultExpanded);
   const { layers, opacities, toggleLayer, setLayerOpacity } = useAnatomyStore();
 
   const layerItems: {
@@ -43,7 +51,7 @@ export const LayerControls: React.FC = () => {
   }[] = [
     { key: 'skeletal', label: 'Esqueleto & Crânio', icon: <AccessibilityNewIcon fontSize="small" />, color: '#CBD5E1', hasOpacity: true },
     { key: 'dental', label: 'Dentes & Arcadas', icon: <MedicalServicesIcon fontSize="small" />, color: '#F8FAFC', hasOpacity: true },
-    { key: 'muscular', label: 'Músculos da Mastigação', icon: <FitnessCenterIcon fontSize="small" />, color: '#EF4444', hasOpacity: true },
+    { key: 'muscular', label: 'Músculos', icon: <FitnessCenterIcon fontSize="small" />, color: '#EF4444', hasOpacity: true },
     { key: 'nervous', label: 'Nervos Cranianos', icon: <PsychologyIcon fontSize="small" />, color: '#FACC15', hasOpacity: true },
     { key: 'vascular', label: 'Vasos Sanguíneos', icon: <BloodtypeIcon fontSize="small" />, color: '#DC2626', hasOpacity: true },
     { key: 'oral_tissue', label: 'Gengiva & Periodonto', icon: <ScienceIcon fontSize="small" />, color: '#F472B6', hasOpacity: true },
@@ -54,7 +62,7 @@ export const LayerControls: React.FC = () => {
       elevation={4}
       sx={{
         position: 'absolute',
-        top: 16,
+        top,
         left: 16,
         zIndex: 1000,
         backgroundColor: themeTokens.colors.bgOverlay,

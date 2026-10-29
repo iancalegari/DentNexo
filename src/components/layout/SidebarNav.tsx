@@ -68,7 +68,7 @@ export const SidebarNav: React.FC = () => {
     {
       id: 'muscular',
       path: '/muscular',
-      label: 'Músculos da Mastigação',
+      label: 'Músculos',
       icon: <FitnessCenterIcon fontSize="small" />,
       category: 'Sistemas Anatômicos',
     },

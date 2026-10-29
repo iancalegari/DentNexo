@@ -124,7 +124,12 @@ export const AnatomyViewer3D: React.FC<AnatomyViewer3DProps> = ({
       }}
     >
       <Canvas
-        camera={{ position: [8.5, 6.2, 11.5], fov: 42, near: 0.1, far: 100 }}
+        camera={{
+          position: archesOnlyMode ? [7.5, 4.5, 9.5] : [11.5, 8.5, 15.5],
+          fov: 42,
+          near: 0.1,
+          far: 100,
+        }}
         dpr={[1, 1.5]}
         shadows
         gl={{
@@ -140,13 +145,13 @@ export const AnatomyViewer3D: React.FC<AnatomyViewer3DProps> = ({
         <SceneLighting xrayMode={xrayMode} />
 
         {/* Gerenciador de Animação e Presets de Câmera */}
-        <CameraManager controlsRef={controlsRef} />
+        <CameraManager controlsRef={controlsRef} archesOnlyMode={archesOnlyMode} />
 
         {/* Rotação Livre 360° em todos os eixos sem travas restritivas */}
         <OrbitControls
           ref={controlsRef}
           makeDefault
-          target={[0, 0.5, 0]}
+          target={[0, archesOnlyMode ? 0.3 : 1.2, 0]}
           enableDamping
           dampingFactor={0.06}
           rotateSpeed={0.85}

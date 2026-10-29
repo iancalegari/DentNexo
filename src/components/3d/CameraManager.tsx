@@ -7,9 +7,10 @@ import { getToothFaceCameraPreset } from '@/data/dental/surfaceFeaturesData';
 
 interface CameraManagerProps {
   controlsRef: React.RefObject<OrbitControlsImpl | null>;
+  archesOnlyMode?: boolean;
 }
 
-export const CameraManager: React.FC<CameraManagerProps> = ({ controlsRef }) => {
+export const CameraManager: React.FC<CameraManagerProps> = ({ controlsRef, archesOnlyMode = false }) => {
   const { camera } = useThree();
   const {
     cameraPreset,
@@ -19,10 +20,13 @@ export const CameraManager: React.FC<CameraManagerProps> = ({ controlsRef }) => 
     activeToothFace,
   } = useAnatomyStore();
 
+  const targetY = archesOnlyMode ? 0.3 : 1.2;
   const startPos = useRef<THREE.Vector3>(new THREE.Vector3());
   const startLookAt = useRef<THREE.Vector3>(new THREE.Vector3());
-  const targetPos = useRef<THREE.Vector3>(new THREE.Vector3(8.5, 6.2, 11.5));
-  const targetLookAt = useRef<THREE.Vector3>(new THREE.Vector3(0, 0.5, 0));
+  const targetPos = useRef<THREE.Vector3>(
+    archesOnlyMode ? new THREE.Vector3(7.5, 4.5, 9.5) : new THREE.Vector3(11.5, 8.5, 15.5)
+  );
+  const targetLookAt = useRef<THREE.Vector3>(new THREE.Vector3(0, targetY, 0));
   const isTransitioning = useRef<boolean>(false);
   const transitionProgress = useRef<number>(1);
 
@@ -45,7 +49,7 @@ export const CameraManager: React.FC<CameraManagerProps> = ({ controlsRef }) => 
   // Função auxiliar para iniciar uma transição limpa
   const initiateTransition = (newPos: THREE.Vector3, newLookAt: THREE.Vector3) => {
     startPos.current.copy(camera.position);
-    startLookAt.current.copy(controlsRef.current?.target || new THREE.Vector3(0, 0.5, 0));
+    startLookAt.current.copy(controlsRef.current?.target || new THREE.Vector3(0, targetY, 0));
     targetPos.current.copy(newPos);
     targetLookAt.current.copy(newLookAt);
     transitionProgress.current = 0;
@@ -67,23 +71,23 @@ export const CameraManager: React.FC<CameraManagerProps> = ({ controlsRef }) => 
     if (surfaceExplorationMode) return;
 
     const nextPos = new THREE.Vector3();
-    const nextLookAt = new THREE.Vector3(0, 0.5, 0);
+    const nextLookAt = new THREE.Vector3(0, targetY, 0);
 
     switch (cameraPreset) {
       case 'frontal':
-        nextPos.set(0, 0.5, 15.5);
+        nextPos.set(0, targetY, archesOnlyMode ? 14.0 : 21.0);
         break;
       case 'lateral_right':
-        nextPos.set(-15.5, 0.5, 0);
+        nextPos.set(archesOnlyMode ? -14.0 : -21.0, targetY, 0);
         break;
       case 'lateral_left':
-        nextPos.set(15.5, 0.5, 0);
+        nextPos.set(archesOnlyMode ? 14.0 : 21.0, targetY, 0);
         break;
       case 'superior':
-        nextPos.set(0, 16.0, 0.1);
+        nextPos.set(0, archesOnlyMode ? 15.0 : 21.0, 0.1);
         break;
       case 'inferior':
-        nextPos.set(0, -15.0, 0.1);
+        nextPos.set(0, archesOnlyMode ? -14.0 : -19.0, 0.1);
         break;
       case 'occlusal_upper':
         nextPos.set(0, -7.5, 2.0);
@@ -95,13 +99,17 @@ export const CameraManager: React.FC<CameraManagerProps> = ({ controlsRef }) => 
         break;
       case 'isometric':
       default:
-        // Posição panorâmica exata mostrando todo o crânio confortavelmente enquadrado
-        nextPos.set(8.5, 6.2, 11.5);
+        if (archesOnlyMode) {
+          nextPos.set(7.5, 4.5, 9.5);
+        } else {
+          // Posição panorâmica exata mostrando todo o crânio confortavelmente enquadrado (Imagem 2)
+          nextPos.set(11.5, 8.5, 15.5);
+        }
         break;
     }
 
     initiateTransition(nextPos, nextLookAt);
-  }, [cameraPreset, surfaceExplorationMode, cameraResetKey]);
+  }, [cameraPreset, surfaceExplorationMode, cameraResetKey, archesOnlyMode, targetY]);
 
   // Transição suave determinística (sem lutar com o OrbitControls e garantindo 60 FPS)
   useFrame((_, delta) => {
