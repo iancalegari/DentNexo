@@ -112,7 +112,7 @@ export const SidebarNav: React.FC = () => {
     {
       id: 'periodontal',
       path: '/periodontal',
-      label: 'Gengiva & Periodonto',
+      label: 'Gengiva, Língua & Periodonto',
       icon: <ScienceIcon fontSize="small" />,
       category: 'Sistemas Anatômicos',
     },

@@ -58,6 +58,8 @@ const SYSTEM_STRUCTURES: Record<string, { id: string; label: string }[]> = {
     { id: 'plexo_pterigoideo', label: 'Plexo Pterigóideo' },
   ],
   oral_tissue: [
+    { id: 'lingua', label: 'Língua' },
+    { id: 'uvula', label: 'Úvula Palatina' },
     { id: 'gengiva_inserida', label: 'Gengiva Inserida' },
     { id: 'ligamento_periodontal', label: 'Ligamento Periodontal' },
   ],

@@ -69,7 +69,7 @@ export const LayerControls: React.FC<LayerControlsProps> = ({
     { key: 'muscular', label: 'Músculos', icon: <FitnessCenterIcon fontSize="small" />, color: '#EF4444', hasOpacity: true },
     { key: 'nervous', label: 'Nervos Cranianos', icon: <PsychologyIcon fontSize="small" />, color: '#FACC15', hasOpacity: true },
     { key: 'vascular', label: 'Vasos Sanguíneos', icon: <BloodtypeIcon fontSize="small" />, color: '#DC2626', hasOpacity: true },
-    { key: 'oral_tissue', label: 'Gengiva & Periodonto', icon: <ScienceIcon fontSize="small" />, color: '#F472B6', hasOpacity: true },
+    { key: 'oral_tissue', label: 'Gengiva, Língua & Tecidos Orais', icon: <ScienceIcon fontSize="small" />, color: '#F472B6', hasOpacity: true },
   ];
 
   return (

@@ -9,6 +9,7 @@ import {
   getGingivaBumpTexture,
 } from '@/utils/proceduralTextures';
 import { PeriodontalLigaments } from './PeriodontalLigaments';
+import { TongueAndUvula3D } from './TongueAndUvula3D';
 import { AnesthesiaOverlay3D } from './AnesthesiaOverlay3D';
 import { ANESTHESIA_MAP } from '@/data/clinical/anesthesiaData';
 
@@ -81,7 +82,32 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
   // Função para classificar cada malha no seu sistema anatômico
   const getMeshCategory = (name: string): keyof typeof layers | null => {
     if (name.startsWith('tooth-')) return 'dental';
-    if (name.startsWith('gingiva-')) return 'oral_tissue';
+    // Nervos Cranianos e Canais Nervosos (precisa vir antes de qualquer teste de língua para não colidir com lingual-nerve)
+    if (
+      name.includes('nerve') ||
+      name.includes('branch') ||
+      name.includes('mandibular-canal') ||
+      name.includes('canal-envelope') ||
+      name.includes('ganglion')
+    ) {
+      return 'nervous';
+    }
+    if (
+      name.startsWith('gingiva-') ||
+      name === 'lingua' ||
+      name === 'tongue' ||
+      name.startsWith('tongue-') ||
+      name.startsWith('tongue_') ||
+      name.startsWith('oral-tongue') ||
+      name === 'uvula' ||
+      name.startsWith('uvula-') ||
+      name.startsWith('uvula_') ||
+      name.startsWith('oral-uvula') ||
+      name.includes('soft-palate') ||
+      name.includes('palato_mole')
+    ) {
+      return 'oral_tissue';
+    }
     if (
       name.includes('masseter') ||
       name.includes('temporalis') ||
@@ -94,15 +120,6 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
     }
     if (name.includes('artery') || name.includes('vein') || name.includes('plexus')) {
       return 'vascular';
-    }
-    if (
-      name.includes('nerve') ||
-      name.includes('branch') ||
-      name.includes('mandibular-canal') ||
-      name.includes('canal-envelope') ||
-      name.includes('ganglion')
-    ) {
-      return 'nervous';
     }
     // Ossos: frontal, parietal, occipital, temporal, mandíbula, maxila, seios
     return 'skeletal';
@@ -123,28 +140,12 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
       return 'gengiva_inserida';
     }
 
-    // ATM (Articulação Temporomandibular)
-    if (name.includes('articular-disc') || name.includes('articular-fossa')) {
-      return 'atm';
+    // Nervos Cranianos Odontológicos (checar antes de estruturas orais para lingual-nerve nunca cair em língua)
+    if (name.includes('lingual-nerve') || name === 'nervo_lingual') {
+      return 'nervo_lingual';
     }
-
-    // Seios paranasais da face (mapeamento individual por cavidade)
-    if (name.includes('frontal-sinus') || (name.includes('sinus') && name.includes('frontal'))) {
-      return 'seio_frontal';
-    }
-    if (name.includes('sphenoidal-sinus') || (name.includes('sinus') && name.includes('sphenoid'))) {
-      return 'seio_esfenoidal';
-    }
-    if (name.includes('maxillary-sinus') || name.includes('sinus')) {
-      return 'seio_maxilar';
-    }
-
-    // Nervos Cranianos Odontológicos e Motores Faciais (precisão individual)
     if (name.includes('inferior-alveolar-nerve') || name.includes('mandibular-canal')) {
       return 'nervo_alveolar_inferior';
-    }
-    if (name.includes('lingual-nerve')) {
-      return 'nervo_lingual';
     }
     if (name.includes('buccal-nerve')) {
       return 'nervo_bucal';
@@ -187,6 +188,27 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
       name.includes('nerve')
     ) {
       return 'nervo_trigemeo';
+    }
+
+    // Língua e Úvula (apenas malhas específicas da língua e úvula)
+    if (
+      name === 'lingua' ||
+      name === 'tongue' ||
+      name.startsWith('tongue-') ||
+      name.startsWith('tongue_') ||
+      name.startsWith('oral-tongue')
+    ) {
+      return 'lingua';
+    }
+    if (
+      name === 'uvula' ||
+      name.startsWith('uvula-') ||
+      name.startsWith('uvula_') ||
+      name.startsWith('oral-uvula') ||
+      name.includes('soft-palate') ||
+      name.includes('palato_mole')
+    ) {
+      return 'uvula';
     }
 
     // Vasos Sanguíneos (Artérias, Veias e Plexo Pterigóideo)
@@ -1055,6 +1077,9 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
       {!archesOnlyMode && !surfaceExplorationMode && <primitive object={neuroClone} />}
       {!surfaceExplorationMode && !activeAnesthesiaId && explosionFactor < 0.01 && (
         <PeriodontalLigaments archesOnlyMode={archesOnlyMode} />
+      )}
+      {!surfaceExplorationMode && (
+        <TongueAndUvula3D archesOnlyMode={archesOnlyMode} />
       )}
       {!archesOnlyMode && !surfaceExplorationMode && activeAnesthesiaId && <AnesthesiaOverlay3D />}
     </group>

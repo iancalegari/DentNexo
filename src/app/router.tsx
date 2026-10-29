@@ -80,8 +80,8 @@ export const router = createBrowserRouter([
         element: (
           <SystemFocusView
             systemType="oral_tissue"
-            title="Gengiva & Tecidos Periodontais"
-            subtitle="Ligamento Periodontal, Cemento e Margem Livre"
+            title="Gengiva, Língua & Tecidos Orais"
+            subtitle="Língua, Úvula, Gengiva Inserida e Ligamento Periodontal"
             initialStructureId="gengiva_inserida"
           />
         ),
