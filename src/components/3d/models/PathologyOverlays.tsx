@@ -366,5 +366,22 @@ export const PathologyOverlays: React.FC<PathologyOverlaysProps> = ({ isSoloToot
     );
   }
 
+  // ================= 7. LÍNGUA GEOGRÁFICA (GLOSSITE MIGRATÓRIA BENIGNA) =================
+  if (activePathologyId === 'lingua_geografica') {
+    return (
+      <group position={[0, -0.15, 0.95]}>
+        <pointLight color="#F43F5E" intensity={1.8} distance={2.5} />
+        {renderFloatingBadge(
+          'Língua Geográfica (Glossite Migratória Benigna)',
+          'Despapilação com bordas serpiginosas salientes e ranhuras dorsais',
+          '#F43F5E',
+          'rgba(244, 63, 94, 0.55)',
+          '#FFE4E6',
+          '#FDA4AF'
+        )}
+      </group>
+    );
+  }
+
   return null;
 };

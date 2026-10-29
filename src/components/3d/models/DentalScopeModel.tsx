@@ -606,6 +606,14 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
         continue;
       }
 
+      // PATOLOGIA: LÍNGUA GEOGRÁFICA
+      // Oculta todas as malhas do DentalScopeModel (crânio, mandíbula, dentes, músculos, neurovascular)
+      // para mostrar EXCLUSIVAMENTE a língua isolada em alta evidência clínica
+      if (activePathologyId === 'lingua_geografica') {
+        mesh.visible = false;
+        continue;
+      }
+
       // Visibilidade da malha:
       // No modo de Sistemas Anatômicos (focusedSystem ativo) ou Anestesia,
       // as camadas do sistema alvo e referências NUNCA são desligadas por camadas ou ocultações do Atlas Geral

@@ -13,6 +13,7 @@ export const PeriodontalLigaments: React.FC<PeriodontalLigamentsProps> = ({ arch
     selectedStructureId,
     hoveredStructureId,
     focusedSystem,
+    activePathologyId,
     setSelectedStructure,
     setHoveredStructure,
   } = useAnatomyStore();
@@ -108,6 +109,7 @@ export const PeriodontalLigaments: React.FC<PeriodontalLigamentsProps> = ({ arch
     });
   }, []);
 
+  if (activePathologyId === 'lingua_geografica') return null;
   if (archesOnlyMode && !isSelected) return null;
   if (!isVisible) return null;
 

@@ -126,7 +126,8 @@ export const PathologiesView: React.FC = () => {
   const isGingivalOrMucosal =
     selectedPathology?.id === 'gengivite' ||
     selectedPathology?.id === 'periodontite' ||
-    selectedPathology?.id === 'afta_oral';
+    selectedPathology?.id === 'afta_oral' ||
+    selectedPathology?.id === 'lingua_geografica';
 
   const isToothPathology = !isGingivalOrMucosal && affectedTeeth.length > 0;
 

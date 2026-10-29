@@ -19,6 +19,7 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
     xrayMode,
     explosionFactor,
     activeAnesthesiaId,
+    activePathologyId,
     focusedSystem,
     surfaceExplorationMode,
     setSelectedStructure,
@@ -27,23 +28,34 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
 
   const tongueRef = useRef<THREE.Mesh>(null);
   const anesthesiaGlowRef = useRef<THREE.Mesh>(null);
+  const geographicPatchGroupRef = useRef<THREE.Group>(null);
 
-  // Animação de pulso para difusão anestésica na hemilíngua
+  const isGeographicTongue = activePathologyId === 'lingua_geografica';
+
+  // Animação de pulso para difusão anestésica ou inflamação nas bordas serpiginosas
   useFrame(({ clock }) => {
+    const t = clock.getElapsedTime();
     if (anesthesiaGlowRef.current) {
-      const t = clock.getElapsedTime();
       const pulse = 0.35 + Math.sin(t * 3.2) * 0.15;
       (anesthesiaGlowRef.current.material as THREE.MeshStandardMaterial).emissiveIntensity = pulse;
+    }
+    if (geographicPatchGroupRef.current) {
+      const haloShimmer = 0.45 + Math.sin(t * 2.8) * 0.12;
+      geographicPatchGroupRef.current.traverse((child) => {
+        if (child instanceof THREE.Mesh && child.name.includes('halo')) {
+          (child.material as THREE.MeshStandardMaterial).emissiveIntensity = haloShimmer;
+        }
+      });
     }
   });
 
   // Visibilidade de camadas e isolamento
-  const isLayerVisibleOral = layers.oral_tissue || focusedSystem === 'oral_tissue';
-  const isLayerVisibleNerves = layers.nervous || focusedSystem === 'nervous';
+  const isLayerVisibleOral = isGeographicTongue || layers.oral_tissue || focusedSystem === 'oral_tissue';
+  const isLayerVisibleNerves = !isGeographicTongue && (layers.nervous || focusedSystem === 'nervous');
 
-  const isTongueHidden = hiddenStructureIds.includes('lingua');
-  const isUvulaHidden = hiddenStructureIds.includes('uvula');
-  const isNerveHidden = hiddenStructureIds.includes('nervo_lingual');
+  const isTongueHidden = isGeographicTongue ? false : hiddenStructureIds.includes('lingua');
+  const isUvulaHidden = isGeographicTongue || hiddenStructureIds.includes('uvula');
+  const isNerveHidden = isGeographicTongue || hiddenStructureIds.includes('nervo_lingual');
 
   const isTongueSelected = selectedStructureId === 'lingua';
   const isTongueHovered = hoveredStructureId === 'lingua';
@@ -64,10 +76,11 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
     activeAnesthesiaId === 'bloqueio_lingual' || activeAnesthesiaId === 'bloqueio_nai';
   const isUvulaAnesthetized = activeAnesthesiaId === 'bloqueio_palatino_maior';
 
-  // 1. Geometria Anatômica Orgânica da Língua
+  // 1. Geometria Anatômica Orgânica da Língua (Normal ou Fissurada com Ranhuras profundas na Língua Geográfica)
   const tongueGeometry = useMemo(() => {
-    const slices = 32;
-    const radialSegments = 32;
+    // Quando a patologia Língua Geográfica está ativa, aumentamos os cortes para criar as ranhuras profundas da Língua Fissurada
+    const slices = isGeographicTongue ? 72 : 32;
+    const radialSegments = isGeographicTongue ? 48 : 32;
     const positions: number[] = [];
     const uvs: number[] = [];
     const indices: number[] = [];
@@ -115,14 +128,37 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
         let px = cosT * halfWidth;
         let py = centerY + sinT * (thickness * 0.5);
 
-        // Sulco mediano longitudinal característico no dorso superior
-        if (sinT > 0 && t > 0.08 && t < 0.82) {
+        // Modulações no dorso superior (sinT > 0)
+        if (sinT > 0 && t > 0.08 && t < 0.88) {
           const distFromMid = Math.abs(cosT);
-          const grooveDepth =
-            0.075 *
-            (1.0 - Math.min(1.0, distFromMid * 3.8)) *
-            Math.sin(((t - 0.08) / 0.74) * Math.PI);
-          py -= grooveDepth;
+
+          if (isGeographicTongue) {
+            // === LÍNGUA GEOGRÁFICA / LÍNGUA FISSURADA (RANHURAS PROFUNDAS) ===
+            // 1. Sulco longitudinal mediano profundo e pronunciado
+            const centralFissure = 0.15 * Math.exp(-distFromMid * 10.0) * Math.sin(((t - 0.08) / 0.80) * Math.PI);
+            py -= centralFissure;
+
+            // 2. Múltiplas ranhuras transversais profundas (sulci transversales)
+            const fissureWave = Math.sin((t - 0.10) * 44.0);
+            if (fissureWave > 0.30 && distFromMid > 0.05 && distFromMid < 0.88) {
+              const fissureDepth = 0.11 * (fissureWave - 0.30) * Math.sin(distFromMid * Math.PI);
+              py -= fissureDepth;
+            }
+
+            // 3. Fissuras oblíquas e micro-ranhuras secundárias ramificadas
+            const obliqueFissure = Math.sin(t * 32.0 + cosT * 14.0);
+            if (obliqueFissure > 0.48 && distFromMid > 0.12 && distFromMid < 0.80) {
+              const obDepth = 0.075 * (obliqueFissure - 0.48);
+              py -= obDepth;
+            }
+          } else {
+            // Sulco mediano longitudinal padrão na anatomia fisiológica
+            const grooveDepth =
+              0.075 *
+              (1.0 - Math.min(1.0, distFromMid * 3.8)) *
+              Math.sin(((t - 0.08) / 0.74) * Math.PI);
+            py -= grooveDepth;
+          }
         }
 
         // Leve afilamento ventral em direção ao frênulo lingual
@@ -153,37 +189,136 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
     geom.setIndex(indices);
     geom.computeVertexNormals();
     return geom;
-  }, []);
+  }, [isGeographicTongue]);
 
-  // 2. Geometria Anatômica Realista do Palato Mole (Véu Palatino) e Úvula Palatina
-  // Conexão direta com a borda posterior dos ossos palatinos (z = -2.18), arqueando suavemente
-  // em cortina muscular contínua com espessura real e a úvula cônica pendular na linha média.
+  // 1.1 Placas Tridimensionais das Lesões Geográficas (Eritema Despapilado com Halo Saliente)
+  const geographicPatches = useMemo(() => {
+    if (!isGeographicTongue) return [];
+
+    const createPatchGeom = (radius: number, segments: number, irregularity: number) => {
+      const corePositions: number[] = [];
+      const coreUvs: number[] = [];
+      const coreIndices: number[] = [];
+
+      const haloPositions: number[] = [];
+      const haloUvs: number[] = [];
+      const haloIndices: number[] = [];
+
+      // Vértice central do núcleo eritematoso
+      corePositions.push(0, 0.025, 0);
+      coreUvs.push(0.5, 0.5);
+
+      const rPoints: { x: number; z: number; y: number }[] = [];
+
+      for (let i = 0; i <= segments; i++) {
+        const phi = (i / segments) * Math.PI * 2;
+        // Raio ondulado com borda serpiginosa / formato cartográfico de mapa mundi
+        const modR =
+          radius *
+          (1 +
+            Math.sin(phi * 3.0) * irregularity +
+            Math.cos(phi * 5.0) * (irregularity * 0.6) +
+            Math.sin(phi * 8.0) * (irregularity * 0.3));
+
+        const px = Math.cos(phi) * modR;
+        const pz = Math.sin(phi) * modR;
+        // Leve abaulamento acompanhando o dorso lingual
+        const py = 0.02 - (modR / radius) * 0.008;
+
+        rPoints.push({ x: px, z: pz, y: py });
+        corePositions.push(px, py, pz);
+        coreUvs.push(0.5 + (px / radius) * 0.5, 0.5 + (pz / radius) * 0.5);
+      }
+
+      for (let i = 1; i <= segments; i++) {
+        coreIndices.push(0, i, i + 1);
+      }
+
+      // Halo elevado esbranquiçado/amarelado circundando a margem da lesão
+      for (let i = 0; i <= segments; i++) {
+        const pt = rPoints[i];
+        const innerX = pt.x * 0.90;
+        const innerZ = pt.z * 0.90;
+        const outerX = pt.x * 1.14;
+        const outerZ = pt.z * 1.14;
+        const innerY = pt.y + 0.012;
+        const outerY = pt.y + 0.024; // halo ligeiramente saliente
+
+        haloPositions.push(innerX, innerY, innerZ);
+        haloUvs.push(0, i / segments);
+        haloPositions.push(outerX, outerY, outerZ);
+        haloUvs.push(1, i / segments);
+      }
+
+      for (let i = 0; i < segments; i++) {
+        const a = i * 2;
+        const b = i * 2 + 1;
+        const c = (i + 1) * 2;
+        const d = (i + 1) * 2 + 1;
+        haloIndices.push(a, b, d);
+        haloIndices.push(a, d, c);
+      }
+
+      const coreGeom = new THREE.BufferGeometry();
+      coreGeom.setAttribute('position', new THREE.Float32BufferAttribute(corePositions, 3));
+      coreGeom.setAttribute('uv', new THREE.Float32BufferAttribute(coreUvs, 2));
+      coreGeom.setIndex(coreIndices);
+      coreGeom.computeVertexNormals();
+
+      const haloGeom = new THREE.BufferGeometry();
+      haloGeom.setAttribute('position', new THREE.Float32BufferAttribute(haloPositions, 3));
+      haloGeom.setAttribute('uv', new THREE.Float32BufferAttribute(haloUvs, 2));
+      haloGeom.setIndex(haloIndices);
+      haloGeom.computeVertexNormals();
+
+      return { coreGeom, haloGeom };
+    };
+
+    return [
+      {
+        id: 'patch_anterolateral_esq',
+        position: [0.38, -0.40, 1.05] as [number, number, number],
+        rotation: [-0.18, 0.22, -0.15] as [number, number, number],
+        ...createPatchGeom(0.38, 36, 0.32),
+      },
+      {
+        id: 'patch_dorsal_dir',
+        position: [-0.42, -0.37, 0.42] as [number, number, number],
+        rotation: [-0.08, -0.28, 0.18] as [number, number, number],
+        ...createPatchGeom(0.42, 36, 0.36),
+      },
+      {
+        id: 'patch_apice_anterior',
+        position: [0.06, -0.54, 1.58] as [number, number, number],
+        rotation: [0.28, 0.05, 0.04] as [number, number, number],
+        ...createPatchGeom(0.26, 28, 0.25),
+      },
+    ];
+  }, [isGeographicTongue]);
+
+  // 2. Geometria Anatômica do Palato Mole (Véu Palatino) e Úvula Palatina
   const { softPalateGeometry, uvulaGeometry } = useMemo(() => {
-    // A) Véu Palatino Volumétrico (Dupla face contínua com espessura muscular e arcos palatofaríngeos)
-    const uSegments = 20; // através do arco transversal (esquerda para direita)
-    const vSegments = 16; // profundidade anteroposterior (do palato duro à borda livre)
+    const uSegments = 20;
+    const vSegments = 16;
     const positions: number[] = [];
     const indices: number[] = [];
     const uvs: number[] = [];
 
-    // Gerar duas camadas: oral (inferior) e faríngea (superior) com espessura anatômica (~0.12)
     for (let layer = 0; layer < 2; layer++) {
       const isPharyngeal = layer === 1;
       const thicknessOffset = isPharyngeal ? 0.06 : -0.06;
 
       for (let j = 0; j <= vSegments; j++) {
-        const v = j / vSegments; // 0 = junção no palato duro (z = -2.18), 1 = borda livre (z = -2.85)
+        const v = j / vSegments;
         const z = -2.18 - v * 0.67;
 
         for (let i = 0; i <= uSegments; i++) {
-          const u = i / uSegments; // 0 (esquerda) a 1 (direita)
-          const normX = (u - 0.5) * 2; // -1 a +1
+          const u = i / uSegments;
+          const normX = (u - 0.5) * 2;
           const halfSpan = 1.42 * (1 - v * 0.12);
           const x = normX * halfSpan;
 
-          // Curvatura do arco palatino (côncavo oralmente, arqueado superiormente)
           const archHeight = Math.cos(normX * (Math.PI * 0.48)) * 0.18;
-          // Descida suave oblíqua do palato duro em direção à orofaringe
           const descentY = 0.92 - v * 0.54;
           const y = descentY + archHeight + thicknessOffset;
 
@@ -195,7 +330,6 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
 
     const vertsPerLayer = (uSegments + 1) * (vSegments + 1);
 
-    // Conectar faces da camada oral (inferior)
     for (let j = 0; j < vSegments; j++) {
       for (let i = 0; i < uSegments; i++) {
         const a = j * (uSegments + 1) + i;
@@ -205,7 +339,6 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
         indices.push(a, b, d);
         indices.push(b, c, d);
 
-        // Camada faríngea (superior - normais invertidas)
         const a2 = vertsPerLayer + a;
         const b2 = vertsPerLayer + b;
         const c2 = vertsPerLayer + c;
@@ -215,8 +348,6 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
       }
     }
 
-    // Selar as bordas laterais e a borda livre posterior para fechar o sólido anatômico
-    // Borda posterior livre (v = vSegments)
     for (let i = 0; i < uSegments; i++) {
       const topA = vSegments * (uSegments + 1) + i;
       const topB = topA + 1;
@@ -232,8 +363,6 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
     palateGeom.setIndex(indices);
     palateGeom.computeVertexNormals();
 
-    // B) Úvula Palatina Anatômica (Projeção muscular cônica suave com ápice arredondado)
-    // Suspensa exatamente na linha média da borda livre posterior do palato mole (x=0, z=-2.85, y=0.42 descendo até y=-0.12)
     const uvulaSlices = 18;
     const uvulaRadSegs = 20;
     const uPos: number[] = [];
@@ -241,10 +370,9 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
     const uUVs: number[] = [];
 
     for (let i = 0; i <= uvulaSlices; i++) {
-      const t = i / uvulaSlices; // 0 = base muscular superior, 1 = ápice inferior livre
-      const y = 0.42 - t * 0.54; // comprimento total ~0.54 unidades
+      const t = i / uvulaSlices;
+      const y = 0.42 - t * 0.54;
 
-      // Raio da úvula: largo na base (0.16), afinando suavemente (0.09) e arredondando no ápice
       let radius: number;
       if (t < 0.75) {
         radius = 0.16 * (1 - t * 0.45);
@@ -256,7 +384,6 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
       for (let j = 0; j <= uvulaRadSegs; j++) {
         const phi = (j / uvulaRadSegs) * Math.PI * 2;
         const x = Math.cos(phi) * radius;
-        // Leve compressão anteroposterior orgânica
         const z = -2.85 + Math.sin(phi) * (radius * 0.88);
 
         uPos.push(x, y, z);
@@ -284,34 +411,28 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
     return { softPalateGeometry: palateGeom, uvulaGeometry: uvGeom };
   }, []);
 
-  // 3. Ramos Terminais Bilaterais do Nervo Lingual (Nervus lingualis) Conectados Diretamente à Língua
-  // Partem da extremidade do nervo no espaço pterigomandibular (z = 0.08, y = -1.06, x = ±0.82)
-  // penetram a borda lateral da língua e ramificam-se pelos 2/3 anteriores e dorso gustatório.
+  // 3. Ramos Bilaterais do Nervo Lingual Conectados Diretamente à Língua
   const lingualNerveGeometries = useMemo(() => {
-    // Tronco principal esquerdo (lado odontológico anestesiado nos bloqueios NAI e Lingual)
     const leftMainCurve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(0.82, -1.06, 0.08), // extremidade do lingual-nerve-left do modelo
-      new THREE.Vector3(0.79, -0.96, 0.46), // sulco gengivolingual medial ao dente 37
-      new THREE.Vector3(0.72, -0.82, 0.92), // penetração na margem lateral da hemilíngua
-      new THREE.Vector3(0.54, -0.68, 1.36), // trajeto anterolateral no corpo lingual
-      new THREE.Vector3(0.26, -0.58, 1.74), // ramificação terminal próxima ao ápice
+      new THREE.Vector3(0.82, -1.06, 0.08),
+      new THREE.Vector3(0.79, -0.96, 0.46),
+      new THREE.Vector3(0.72, -0.82, 0.92),
+      new THREE.Vector3(0.54, -0.68, 1.36),
+      new THREE.Vector3(0.26, -0.58, 1.74),
     ]);
 
-    // Ramo gustatório/sensitivo dorsal esquerdo (para papilhas fungiformes e dorso)
     const leftDorsalCurve = new THREE.CatmullRomCurve3([
       new THREE.Vector3(0.72, -0.82, 0.92),
       new THREE.Vector3(0.48, -0.56, 1.06),
       new THREE.Vector3(0.22, -0.44, 1.18),
     ]);
 
-    // Ramo anteromedial esquerdo
     const leftAnteriorCurve = new THREE.CatmullRomCurve3([
       new THREE.Vector3(0.54, -0.68, 1.36),
       new THREE.Vector3(0.32, -0.52, 1.48),
       new THREE.Vector3(0.12, -0.46, 1.58),
     ]);
 
-    // Tronco principal direito (simétrico no hemisfério X negativo)
     const rightMainCurve = new THREE.CatmullRomCurve3([
       new THREE.Vector3(-0.82, -1.06, 0.08),
       new THREE.Vector3(-0.79, -0.96, 0.46),
@@ -320,14 +441,12 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
       new THREE.Vector3(-0.26, -0.58, 1.74),
     ]);
 
-    // Ramo dorsal direito
     const rightDorsalCurve = new THREE.CatmullRomCurve3([
       new THREE.Vector3(-0.72, -0.82, 0.92),
       new THREE.Vector3(-0.48, -0.56, 1.06),
       new THREE.Vector3(-0.22, -0.44, 1.18),
     ]);
 
-    // Ramo anteromedial direito
     const rightAnteriorCurve = new THREE.CatmullRomCurve3([
       new THREE.Vector3(-0.54, -0.68, 1.36),
       new THREE.Vector3(-0.32, -0.52, 1.48),
@@ -344,7 +463,7 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
     };
   }, []);
 
-  // 4. Materiais Dinâmicos (Língua, Úvula/Palato e Nervo Lingual)
+  // 4. Materiais Dinâmicos
   const getTongueMaterial = () => {
     if (xrayMode) {
       return (
@@ -361,12 +480,12 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
       );
     }
 
-    let opacity = focusedSystem === 'oral_tissue' ? 1.0 : (opacities.oral_tissue ?? 1.0);
+    let opacity = focusedSystem === 'oral_tissue' || isGeographicTongue ? 1.0 : (opacities.oral_tissue ?? 1.0);
     if (hasIsolation && !isTongueIsolated) {
       opacity = 0.15;
     }
 
-    let color = '#C84E5D'; // Tom mucoso orgânico aveludado realista
+    let color = isGeographicTongue ? '#C45160' : '#C84E5D';
     let emissive = '#000000';
     let emissiveIntensity = 0;
 
@@ -386,7 +505,7 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
     return (
       <meshStandardMaterial
         color={color}
-        roughness={0.36}
+        roughness={isGeographicTongue ? 0.44 : 0.36}
         metalness={0.03}
         emissive={emissive}
         emissiveIntensity={emissiveIntensity}
@@ -465,19 +584,16 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
       opacity = 0.15;
     }
 
-    // Cor base dourada característica do sistema nervoso trigêmeo
     let color = '#FBBF24';
     let emissive = '#713F12';
     let emissiveIntensity = 0.35;
 
-    // Realce no Bloqueio Anestésico do Nervo Lingual ou NAI
     if (isTongueAnesthetized && isLeft) {
       color = '#FDE047';
       emissive = '#D97706';
       emissiveIntensity = 0.95;
     }
 
-    // Seleção ou Hover direto
     if (isLingualNerveSelected) {
       color = themeTokens.colors.brandCyan;
       emissive = '#00E5FF';
@@ -502,10 +618,8 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
     );
   };
 
-  // Se estiver em modo exploração de superfície dental isolada, não renderizar tecidos moles
   if (surfaceExplorationMode) return null;
 
-  // Vetor de deslocamento na vista explodida (língua e nervo acompanham a mandíbula; palato/úvula acompanham a maxila)
   const tongueExplosionOffset: [number, number, number] = [0, -2.55 * explosionFactor, 0.95 * explosionFactor];
   const uvulaExplosionOffset: [number, number, number] = [0, -0.35 * explosionFactor, 1.45 * explosionFactor];
 
@@ -531,7 +645,7 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
 
   return (
     <group name="oral_tongue_and_uvula_group">
-      {/* 1. Língua (situada no assoalho bucal entre as arcadas inferiores) */}
+      {/* 1. Língua (Normal ou Fissurada com Lesões Geográficas) */}
       {!isTongueHidden && isLayerVisibleOral && (
         <group position={tongueExplosionOffset}>
           <mesh
@@ -547,8 +661,43 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
             {getTongueMaterial()}
           </mesh>
 
-          {/* Destaque visual da hemilíngua anestesiada no Bloqueio do Nervo Lingual (2/3 anteriores esquerdos) */}
-          {isTongueAnesthetized && !xrayMode && (
+          {/* Lesões Tridimensionais da Língua Geográfica (Áreas Despapiladas com Bordas Serpiginosas) */}
+          {isGeographicTongue && !xrayMode && (
+            <group ref={geographicPatchGroupRef} name="geographic-tongue-patches">
+              {geographicPatches.map((patch) => (
+                <group
+                  key={patch.id}
+                  position={patch.position}
+                  rotation={patch.rotation}
+                >
+                  {/* Centro Eritematoso Despapilado da Lesão (Glossite) */}
+                  <mesh geometry={patch.coreGeom}>
+                    <meshStandardMaterial
+                      color="#BE123C"
+                      emissive="#9F1239"
+                      emissiveIntensity={0.35}
+                      roughness={0.24}
+                      side={THREE.DoubleSide}
+                    />
+                  </mesh>
+
+                  {/* Halo Elevado Esbranquiçado/Amarelado Saliente Serpiginoso */}
+                  <mesh name="geographic-halo" geometry={patch.haloGeom}>
+                    <meshStandardMaterial
+                      color="#FEF08A"
+                      emissive="#FDE047"
+                      emissiveIntensity={0.5}
+                      roughness={0.4}
+                      side={THREE.DoubleSide}
+                    />
+                  </mesh>
+                </group>
+              ))}
+            </group>
+          )}
+
+          {/* Destaque visual da hemilíngua anestesiada no Bloqueio do Nervo Lingual */}
+          {isTongueAnesthetized && !xrayMode && !isGeographicTongue && (
             <mesh
               ref={anesthesiaGlowRef}
               position={[0.55, -0.42, 0.7]}
@@ -569,8 +718,8 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
         </group>
       )}
 
-      {/* 2. Palato Mole (Véu Palatino) e Úvula Palatina (suspensa na linha média posterior) */}
-      {!isUvulaHidden && isLayerVisibleOral && !archesOnlyMode && (
+      {/* 2. Palato Mole e Úvula Palatina (oculta durante Língua Geográfica para mostrar somente a língua) */}
+      {!isUvulaHidden && isLayerVisibleOral && !archesOnlyMode && !isGeographicTongue && (
         <group
           name="oral-uvula"
           position={uvulaExplosionOffset}
@@ -578,20 +727,17 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
           onPointerOut={handlePointerOut}
           onClick={(e) => handleClick(e, 'uvula')}
         >
-          {/* Véu Palatino Anatômico Contínuo */}
           <mesh geometry={softPalateGeometry} castShadow receiveShadow>
             {getUvulaMaterial()}
           </mesh>
-
-          {/* Úvula Palatina Cônica Suave */}
           <mesh geometry={uvulaGeometry} castShadow receiveShadow>
             {getUvulaMaterial()}
           </mesh>
         </group>
       )}
 
-      {/* 3. Ramos Bilaterais do Nervo Lingual Conectando o Crânio/Mandíbula à Língua */}
-      {!isNerveHidden && (isLayerVisibleNerves || isLingualNerveSelected || isTongueAnesthetized) && (
+      {/* 3. Ramos Bilaterais do Nervo Lingual (ocultos durante Língua Geográfica para foco exclusivo na língua) */}
+      {!isNerveHidden && !isGeographicTongue && (isLayerVisibleNerves || isLingualNerveSelected || isTongueAnesthetized) && (
         <group
           name="lingual-nerve-tongue-connections"
           position={tongueExplosionOffset}
@@ -599,7 +745,6 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
           onPointerOut={handlePointerOut}
           onClick={(e) => handleClick(e, 'nervo_lingual')}
         >
-          {/* Nervo Lingual Esquerdo (Ramos terminais e dorso gustatório) */}
           <mesh geometry={lingualNerveGeometries.leftMain} castShadow>
             {getLingualNerveMaterial(true)}
           </mesh>
@@ -609,8 +754,6 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
           <mesh geometry={lingualNerveGeometries.leftAnterior}>
             {getLingualNerveMaterial(true)}
           </mesh>
-
-          {/* Nervo Lingual Direito (Ramos simétricos) */}
           <mesh geometry={lingualNerveGeometries.rightMain} castShadow>
             {getLingualNerveMaterial(false)}
           </mesh>

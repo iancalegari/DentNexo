@@ -26,6 +26,7 @@ export const CameraManager: React.FC<CameraManagerProps> = ({
     activeToothFace,
     activeAnesthesiaId,
     anesthesiaFocusKey,
+    activePathologyId,
   } = useAnatomyStore();
 
   const targetY = archesOnlyMode ? 0.3 : 1.2;
@@ -83,6 +84,15 @@ export const CameraManager: React.FC<CameraManagerProps> = ({
     const nextLookAt = new THREE.Vector3(...tech.cameraView.lookAt);
     initiateTransition(nextPos, nextLookAt);
   }, [activeAnesthesiaId, anesthesiaFocusKey, surfaceExplorationMode]);
+
+  // Animação de enquadramento clínico exclusivo para a patologia Língua Geográfica (visão dorsal aproximada)
+  useEffect(() => {
+    if (activePathologyId === 'lingua_geografica') {
+      const nextPos = new THREE.Vector3(0, 1.8, 3.8);
+      const nextLookAt = new THREE.Vector3(0, -0.65, 0.6);
+      initiateTransition(nextPos, nextLookAt);
+    }
+  }, [activePathologyId]);
 
   // Mapear presets gerais de câmera para enquadramento completo e panorâmico do crânio
   useEffect(() => {
