@@ -229,7 +229,7 @@ export const OdontogramFDI: React.FC = () => {
         </Box>
 
         <Tabs
-          value={dentition}
+          value={surfaceExplorationMode ? 'permanent' : dentition}
           onChange={(_, val) => setDentition(val)}
           sx={{
             minHeight: 30,
@@ -243,7 +243,7 @@ export const OdontogramFDI: React.FC = () => {
           }}
         >
           <Tab value="permanent" label="Permanente (32 dentes)" />
-          <Tab value="deciduous" label="Decídua (20 dentes)" />
+          {!surfaceExplorationMode && <Tab value="deciduous" label="Decídua (20 dentes)" />}
         </Tabs>
       </Box>
 
@@ -262,7 +262,7 @@ export const OdontogramFDI: React.FC = () => {
           width: '100%',
         }}
       >
-        {dentition === 'permanent' ? (
+        {(surfaceExplorationMode || dentition === 'permanent') ? (
           <Box sx={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', minWidth: 'max-content' }}>
             {/* LINHA SUPERIOR (UPPER): 18 a 11 | 21 a 28 */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>

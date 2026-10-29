@@ -69,6 +69,7 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
     focusedSystem,
     setSelectedStructure,
     setHoveredStructure,
+    setInfoPanelOpen,
   } = useAnatomyStore();
 
   // Função para classificar cada malha no seu sistema anatômico
@@ -717,7 +718,11 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
     const meshName = e.object?.name;
     if (meshName) {
       const id = getStructureId(meshName);
+      const isQuiz = typeof window !== 'undefined' && window.location.pathname.includes('/quiz');
       setSelectedStructure(id);
+      if (isQuiz) {
+        setInfoPanelOpen(false);
+      }
     }
   };
 
@@ -726,7 +731,10 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
     const meshName = e.object?.name;
     if (meshName) {
       const id = getStructureId(meshName);
-      setSelectedStructure(id);
+      const isQuiz = typeof window !== 'undefined' && window.location.pathname.includes('/quiz');
+      if (!isQuiz) {
+        setSelectedStructure(id);
+      }
     }
   };
 

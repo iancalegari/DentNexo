@@ -28,7 +28,16 @@ import { themeTokens } from '@/theme/tokens';
 
 export const GlobalSearchDialog: React.FC = () => {
   const navigate = useNavigate();
-  const { searchModalOpen, setSearchModalOpen, setSelectedStructure, setActiveToothFdi, setActivePathology } = useAnatomyStore();
+  const {
+    searchModalOpen,
+    setSearchModalOpen,
+    setSelectedStructure,
+    isolateStructure,
+    setFocusedSystem,
+    setInfoPanelOpen,
+    setActiveToothFdi,
+    setActivePathology,
+  } = useAnatomyStore();
   const [query, setQuery] = useState<string>('');
 
   // Atalho de Teclado Global Ctrl+K / Cmd+K
@@ -104,13 +113,20 @@ export const GlobalSearchDialog: React.FC = () => {
   }, [query]);
 
   const handleSelectStructure = (structureId: string, fdi?: string) => {
-    setSelectedStructure(structureId);
+    let cleanId = structureId;
+    if (!isNaN(Number(structureId))) {
+      cleanId = `dente_${structureId}`;
+    } else if (structureId.startsWith('tooth-')) {
+      cleanId = structureId.replace('tooth-', 'dente_');
+    }
+    setFocusedSystem(null);
+    setSelectedStructure(cleanId);
+    isolateStructure(cleanId, true);
+    setInfoPanelOpen(true);
     if (fdi) {
       setActiveToothFdi(fdi);
-      navigate('/dental');
-    } else {
-      navigate('/atlas');
     }
+    navigate('/atlas');
     setSearchModalOpen(false);
     setQuery('');
   };

@@ -67,17 +67,13 @@ export const SystemFocusView: React.FC<SystemFocusViewProps> = ({
 
     // Ativar modo de isolamento e foco anatômico do sistema selecionado
     setFocusedSystem(systemType);
-    const layerKey = systemType as unknown as keyof typeof layers;
-    if (layers[layerKey] === false) {
-      toggleLayer(layerKey);
-    }
     setSelectedStructure(initialStructureId);
     resetCamera();
 
     return () => {
       setFocusedSystem(null);
     };
-  }, [initialStructureId, systemType, setFocusedSystem, toggleLayer, layers, setSelectedStructure, resetCamera, setActivePathology]);
+  }, [initialStructureId, systemType, setFocusedSystem, setSelectedStructure, resetCamera, setActivePathology]);
 
   const structuresList = SYSTEM_STRUCTURES[systemType] || [];
 
