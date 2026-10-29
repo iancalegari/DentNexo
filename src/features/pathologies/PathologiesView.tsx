@@ -39,19 +39,22 @@ export const PathologiesView: React.FC = () => {
     setActiveToothFdi,
     setSelectedStructure,
     setInfoPanelOpen,
+    setSurfaceExplorationMode,
   } = useAnatomyStore();
 
   const selectedPathology = activePathologyId ? oralPathologies[activePathologyId] : oralPathologies['carie_dentaria'];
 
-  // Limpar patologia ativa ao sair de Patologias para não vazar para Anatomia Dental ou Atlas 3D
+  // Limpar patologia ativa e modo de exploração ao entrar/sair de Patologias
   useEffect(() => {
-    // Ao entrar, manter painel de detalhes fechado
     setInfoPanelOpen(false);
+    setSurfaceExplorationMode(false);
+    setSelectedStructure(null);
 
     return () => {
       setActivePathology(null);
+      setSelectedStructure(null);
     };
-  }, [setActivePathology, setInfoPanelOpen]);
+  }, [setActivePathology, setInfoPanelOpen, setSurfaceExplorationMode, setSelectedStructure]);
 
   // Extrair dentes afetados pela patologia selecionada
   const affectedTeeth = (selectedPathology?.affectedStructures || [])
@@ -65,32 +68,26 @@ export const PathologiesView: React.FC = () => {
 
   const isToothPathology = !isGingivalOrMucosal && affectedTeeth.length > 0;
 
-  // Modo de visualização 3D: 'tooth' (mostra o dente afetado isolado) ou 'general' (arcada/gengiva/crânio)
-  const [viewMode, setViewMode] = useState<'tooth' | 'general'>(() => (isToothPathology ? 'tooth' : 'general'));
+  // Modo de visualização 3D: por padrão 'general' (mostra crânio e arcadas contextualizados)
+  const [viewMode, setViewMode] = useState<'tooth' | 'general'>('general');
 
-  // Quando trocar de patologia, focar na gengiva ou dente correspondente SEM abrir o painel de detalhes
+  // Ao trocar de patologia, focar na estrutura SEM abrir o painel de detalhes nem isolar automaticamente
   useEffect(() => {
     if (isGingivalOrMucosal) {
       setViewMode('general');
-      setSelectedStructure('gengiva_inserida');
       if (layers.oral_tissue === false) toggleLayer('oral_tissue');
       if (layers.dental === false) toggleLayer('dental');
     } else if (isToothPathology) {
-      setViewMode('tooth');
       const primaryTooth = affectedTeeth[0] || '36';
       setActiveToothFdi(primaryTooth);
-      setSelectedStructure(`dente_${primaryTooth}`);
     } else {
       setViewMode('general');
     }
-    // Garantir que os detalhes permaneçam fechados ao mudar de patologia
     setInfoPanelOpen(false);
   }, [selectedPathology?.id]);
 
   const handleSelectAffectedTooth = (fdi: string) => {
     setActiveToothFdi(fdi);
-    setSelectedStructure(`dente_${fdi}`);
-    setInfoPanelOpen(false);
   };
 
   return (

@@ -746,32 +746,31 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
 
   const handleClick = (e: any) => {
     e.stopPropagation();
-    // Em Dentro do Dente, cliques no 3D não abrem painel de detalhes (apenas pelo odontograma)
-    if (surfaceExplorationMode) return;
+    const isQuiz = typeof window !== 'undefined' && window.location.pathname.includes('/quiz');
+    const isPathology = typeof window !== 'undefined' && window.location.pathname.includes('/pathologies');
+
+    // Em Dentro do Dente, Quiz e Patologias, cliques no 3D não abrem painel de detalhes
+    if (surfaceExplorationMode || isQuiz || isPathology) return;
+
     const meshName = e.object?.name;
     if (meshName) {
       const id = getStructureId(meshName);
       // Se a estrutura está oculta, não seleciona (permite o raycast atingir o que está atrás)
       if (hiddenStructureIds.includes(id)) return;
-      const isQuiz = typeof window !== 'undefined' && window.location.pathname.includes('/quiz');
       setSelectedStructure(id);
-      if (isQuiz) {
-        setInfoPanelOpen(false);
-      }
     }
   };
 
   const handleContextMenu = (e: any) => {
     e.stopPropagation();
-    if (surfaceExplorationMode) return;
+    const isQuiz = typeof window !== 'undefined' && window.location.pathname.includes('/quiz');
+    const isPathology = typeof window !== 'undefined' && window.location.pathname.includes('/pathologies');
+    if (surfaceExplorationMode || isQuiz || isPathology) return;
     const meshName = e.object?.name;
     if (meshName) {
       const id = getStructureId(meshName);
       if (hiddenStructureIds.includes(id)) return;
-      const isQuiz = typeof window !== 'undefined' && window.location.pathname.includes('/quiz');
-      if (!isQuiz) {
-        setSelectedStructure(id);
-      }
+      setSelectedStructure(id);
     }
   };
 

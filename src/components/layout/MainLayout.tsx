@@ -99,16 +99,16 @@ export const MainLayout: React.FC = () => {
           <Outlet />
         </Box>
 
-        {/* 4. Painel Lateral Direito Contextual (Região D) - Oculto em Questionários */}
-        {!location.pathname.startsWith('/quiz') && <InfoPanel />}
+        {/* 4. Painel Lateral Direito Contextual (Região D) - Oculto em Questionários e Patologias */}
+        {!location.pathname.startsWith('/quiz') && !location.pathname.startsWith('/pathologies') && <InfoPanel />}
       </Box>
 
       {/* Diálogos Globais */}
       <GlobalSearchDialog />
       <ExportDialog />
 
-      {/* Menu de Contexto 3D (clique direito) - Oculto em Questionários */}
-      {!location.pathname.startsWith('/quiz') && <ContextMenu3D />}
+      {/* Menu de Contexto 3D (clique direito) - Oculto em Questionários e Patologias */}
+      {!location.pathname.startsWith('/quiz') && !location.pathname.startsWith('/pathologies') && <ContextMenu3D />}
     </Box>
   );
 };

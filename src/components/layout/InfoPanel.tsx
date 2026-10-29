@@ -172,8 +172,8 @@ export const InfoPanel: React.FC = () => {
     setNotesVersion((v) => v + 1);
   };
 
-  // Na tela de Questionários/Quiz, NUNCA exibir o painel lateral de descrição
-  if (location.pathname === '/quiz') {
+  // Na tela de Questionários/Quiz ou Patologias Odontológicas, NUNCA exibir o painel lateral nem o botão Detalhes
+  if (location.pathname.startsWith('/quiz') || location.pathname.startsWith('/pathologies')) {
     return null;
   }
 
