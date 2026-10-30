@@ -183,41 +183,48 @@ export const DentalScopeTooth: React.FC<DentalScopeToothProps> = ({ fdi }) => {
 
       {/* ================= LESÃO 3D DE CÁRIE DENTÁRIA (PONTO PRETO CAVITADO EM ESMALTE/DENTINA) ================= */}
       {(activePathologyId === 'carie_dentaria' || activePathologyId === 'carie') && (
-        <group position={[0.02, 0.43, 0.04]}>
-          {/* Luz focal interna na cavitação cariosa */}
-          <pointLight color="#F59E0B" intensity={1.4} distance={0.9} />
+        <group position={[-0.032, 0.662, 0.185]} rotation={[0.10, 0.20, -0.05]}>
+          {/* Luz focal quente na cavitação cariosa da superfície oclusal */}
+          <pointLight position={[0, 0.08, 0]} color="#F59E0B" intensity={1.6} distance={0.9} />
 
-          {/* 1. Halo desmineralizado de esmalte (Mancha Branca Ativa / descalcificação superficial) */}
-          <mesh rotation={[-Math.PI / 2, 0, 0]}>
-            <ringGeometry args={[0.055, 0.13, 32]} />
+          {/* 1. Halo Periférico de Desmineralização em Esmalte (Mancha Branca Ativa / descalcificação superficial de fóssula) */}
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.008, 0]}>
+            <ringGeometry args={[0.045, 0.115, 32]} />
             <meshStandardMaterial
               color="#FEF3C7"
               emissive="#D97706"
-              emissiveIntensity={0.25}
-              roughness={0.75}
+              emissiveIntensity={0.35}
+              roughness={0.7}
               side={THREE.DoubleSide}
+              polygonOffset
+              polygonOffsetFactor={-2}
+              polygonOffsetUnits={-2}
             />
           </mesh>
 
-          {/* 2. Cavitação Necrótica Central (O Ponto Preto 3D Clássico) */}
-          <mesh position={[0, -0.012, 0]} scale={[1.35, 0.55, 0.88]}>
-            <sphereGeometry args={[0.07, 24, 24]} />
+          {/* 2. Cavitação Necrótica Central (Ponto Preto Moldado à Fóssula Oclusal) */}
+          <mesh position={[0, 0.004, 0]} scale={[1.3, 0.45, 0.95]}>
+            <sphereGeometry args={[0.058, 24, 24]} />
             <meshStandardMaterial
-              color="#140803"
-              emissive="#080301"
-              roughness={0.96}
-              metalness={0.0}
+              color="#0E0502"
+              emissive="#050201"
+              roughness={0.94}
+              metalness={0.04}
             />
           </mesh>
 
-          {/* 3. Ramificações nos sulcos e fissuras de desenvolvimento oclusais */}
-          <mesh position={[-0.07, -0.008, -0.02]} scale={[1.2, 0.4, 0.6]}>
-            <sphereGeometry args={[0.038, 16, 16]} />
-            <meshStandardMaterial color="#1C0C05" roughness={0.92} />
+          {/* 3. Ramificações que se moldam aos sulcos e fissuras de desenvolvimento mésio-distal */}
+          <mesh position={[-0.052, 0.006, 0.018]} scale={[1.25, 0.35, 0.55]} rotation={[0, 0.2, 0]}>
+            <sphereGeometry args={[0.034, 16, 16]} />
+            <meshStandardMaterial color="#160804" roughness={0.92} />
           </mesh>
-          <mesh position={[0.08, -0.008, 0.03]} scale={[1.15, 0.4, 0.6]}>
-            <sphereGeometry args={[0.035, 16, 16]} />
-            <meshStandardMaterial color="#1C0C05" roughness={0.92} />
+          <mesh position={[0.055, 0.004, -0.016]} scale={[1.2, 0.35, 0.55]} rotation={[0, -0.2, 0]}>
+            <sphereGeometry args={[0.032, 16, 16]} />
+            <meshStandardMaterial color="#160804" roughness={0.92} />
+          </mesh>
+          <mesh position={[0.008, 0.005, -0.045]} scale={[0.55, 0.35, 1.15]}>
+            <sphereGeometry args={[0.026, 16, 16]} />
+            <meshStandardMaterial color="#1A0A05" roughness={0.92} />
           </mesh>
         </group>
       )}

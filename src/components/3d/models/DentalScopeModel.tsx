@@ -113,6 +113,10 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
     ) {
       return 'oral_tissue';
     }
+    // Vasos Sanguíneos (Artérias, Veias e Plexo Pterigóideo) - precisa vir antes de músculos para não colidir com 'pterygoid-plexus'
+    if (name.includes('artery') || name.includes('vein') || name.includes('plexus')) {
+      return 'vascular';
+    }
     if (
       name.includes('masseter') ||
       name.includes('temporalis') ||
@@ -122,9 +126,6 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
       name.includes('orbicularis')
     ) {
       return 'muscular';
-    }
-    if (name.includes('artery') || name.includes('vein') || name.includes('plexus')) {
-      return 'vascular';
     }
     // Ossos: frontal, parietal, occipital, temporal, mandíbula, maxila, seios
     return 'skeletal';
@@ -230,7 +231,7 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
     }
 
     // Vasos Sanguíneos (Artérias, Veias e Plexo Pterigóideo)
-    if (name.includes('pterygoid-plexus')) {
+    if (name.includes('pterygoid-plexus') || (name.includes('pterygoid') && name.includes('plexus')) || name.includes('plexus')) {
       return 'plexo_pterigoideo';
     }
     if (name.includes('inferior-alveolar-artery') || name.includes('inferior-alveolar-vein')) {
@@ -273,6 +274,17 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
     }
     if (name.includes('buccinator')) {
       return 'musculo_bucinador';
+    }
+
+    // Seios Paranasais (deve vir antes de maxila, frontal e esfenoide para não colidir com os ossos)
+    if (name.includes('sinus') || name.includes('seio')) {
+      if (name.includes('frontal')) {
+        return 'seio_frontal';
+      }
+      if (name.includes('sphenoid') || name.includes('esfenoid')) {
+        return 'seio_esfenoidal';
+      }
+      return 'seio_maxilar';
     }
 
     // Ossos específicos da cavidade oral, nasal e cervical (antes de maxila/nasal genéricos)
@@ -632,6 +644,16 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
         continue;
       }
 
+      // PATOLOGIAS GENGIVAIS/PERIODONTAIS (Gengivite e Periodontite):
+      // Oculta músculos (especialmente o orbicular da boca e bucinador), nervos e vasos
+      // para expor claramente as margens e papilas gengivais sem obstrução perioral
+      if (activePathologyId === 'gengivite' || activePathologyId === 'periodontite') {
+        if (category === 'muscular' || category === 'nervous' || category === 'vascular') {
+          mesh.visible = false;
+          continue;
+        }
+      }
+
       // Visibilidade da malha:
       // No modo de Sistemas Anatômicos (focusedSystem ativo) ou Anestesia,
       // as camadas do sistema alvo e referências NUNCA são desligadas por camadas ou ocultações do Atlas Geral
@@ -924,12 +946,21 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
           selectedStructureId === 'seio_maxilar' ||
           selectedStructureId === 'seio_frontal' ||
           selectedStructureId === 'seio_esfenoidal';
+        const isInternalOralSelected =
+          selectedStructureId === 'lingua' ||
+          selectedStructureId === 'assoalho_boca' ||
+          selectedStructureId === 'uvula' ||
+          selectedStructureId === 'tonsilas_palatinas';
 
         if (isTargetSystem) {
-          if (focusedSystem === 'oral_tissue' && isLpoSelected && isGingiva) {
+          if (focusedSystem === 'oral_tissue' && isInternalOralSelected && isGingiva) {
+            opacityMultiplier = 0.16; // Gengiva atenuada para revelar língua, assoalho da boca, úvula e amígdalas
+          } else if (focusedSystem === 'oral_tissue' && isLpoSelected && isGingiva) {
             opacityMultiplier = 0.22;
           } else if (focusedSystem === 'skeletal' && isSinusSelected && !isSelected && !name.includes('sinus')) {
             opacityMultiplier = 0.22;
+          } else if (focusedSystem === 'skeletal' && isSinusSelected && !isSelected && name.includes('sinus')) {
+            opacityMultiplier = 0.35; // Outros seios não selecionados ficam atenuados
           } else {
             opacityMultiplier = 1.0;
           }
@@ -947,14 +978,16 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
           // Demais sistemas no modo foco atuam como referência anatômica (ghost elegante)
           if (focusedSystem === 'oral_tissue') {
             if (category === 'dental') {
-              opacityMultiplier = isLpoSelected ? 0.40 : 0.65;
+              opacityMultiplier = isInternalOralSelected ? 0.18 : (isLpoSelected ? 0.40 : 0.65);
             } else if (category === 'skeletal') {
-              opacityMultiplier = isLpoSelected ? 0.12 : 0.22;
+              opacityMultiplier = isInternalOralSelected ? 0.14 : (isLpoSelected ? 0.12 : 0.22);
             } else {
               opacityMultiplier = 0.12;
             }
           } else if (focusedSystem === 'skeletal') {
-            opacityMultiplier = category === 'dental' ? 0.85 : 0.15;
+            opacityMultiplier = isSinusSelected
+              ? (category === 'dental' ? 0.18 : 0.15)
+              : (category === 'dental' ? 0.85 : 0.15);
           } else if (focusedSystem === 'muscular') {
             opacityMultiplier = category === 'skeletal' ? 0.25 : (category === 'dental' ? 0.20 : 0.12);
           } else if (focusedSystem === 'nervous' || focusedSystem === 'vascular') {
@@ -965,10 +998,23 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
         }
       } else {
         // Modo Normal (Atlas Geral)
-        if (activePathologyId === 'gengivite' && isGingiva) {
-          targetColor = new THREE.Color('#E11D48');
-          targetEmissive = new THREE.Color('#991B1B');
-          targetEmissiveIntensity = 0.55;
+        const isInternalOralSelected =
+          selectedStructureId === 'lingua' ||
+          selectedStructureId === 'assoalho_boca' ||
+          selectedStructureId === 'uvula' ||
+          selectedStructureId === 'tonsilas_palatinas';
+
+        if (activePathologyId === 'gengivite') {
+          if (isGingiva) {
+            targetColor = new THREE.Color('#E11D48');
+            targetEmissive = new THREE.Color('#991B1B');
+            targetEmissiveIntensity = 0.55;
+            opacityMultiplier = 1.0;
+          } else if (category === 'skeletal') {
+            opacityMultiplier = 0.35;
+          } else if (category === 'dental') {
+            opacityMultiplier = 0.90;
+          }
         } else if (isSelected) {
           targetColor = cyanColor;
           targetEmissive = cyanEmissive;
@@ -996,6 +1042,10 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
           !name.includes('sinus')
         ) {
           opacityMultiplier = 0.25;
+        } else if (isInternalOralSelected) {
+          if (isGingiva) opacityMultiplier = 0.18;
+          else if (category === 'dental') opacityMultiplier = 0.20;
+          else if (category === 'skeletal') opacityMultiplier = 0.15;
         }
       }
 
@@ -1017,10 +1067,12 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
         ? activeAnesthesia
           ? 0.28
           : isIsolated
-            ? 0.9
+            ? 0.95
             : isSelected
-              ? Math.min(0.85, effectiveOpacity)
-              : Math.min(0.68, effectiveOpacity)
+              ? 0.92
+              : (selectedStructureId === 'seio_maxilar' || selectedStructureId === 'seio_frontal' || selectedStructureId === 'seio_esfenoidal')
+                ? 0.35
+                : Math.min(0.68, effectiveOpacity)
         : effectiveOpacity;
       material.depthWrite = isSolid;
       material.side = THREE.DoubleSide;

@@ -132,10 +132,26 @@ export const PathologiesView: React.FC = () => {
   const isToothPathology = !isGingivalOrMucosal && affectedTeeth.length > 0;
 
   // Ao trocar de patologia, focar automaticamente no Dente 3D Isolado (para Cárie, Pulpite e Abscesso)
+  // e ajustar as camadas (ocultando músculos para expor a gengiva em gengivite/periodontite)
   useEffect(() => {
     if (isGingivalOrMucosal) {
-      if (layers.oral_tissue === false) toggleLayer('oral_tissue');
-      if (layers.dental === false) toggleLayer('dental');
+      if (selectedPathology?.id === 'gengivite' || selectedPathology?.id === 'periodontite') {
+        useAnatomyStore.setState((state) => ({
+          layers: {
+            ...state.layers,
+            oral_tissue: true,
+            dental: true,
+            skeletal: true,
+            muscular: false,
+            nervous: false,
+            vascular: false,
+            pathologies: false,
+          },
+        }));
+      } else {
+        if (layers.oral_tissue === false) toggleLayer('oral_tissue');
+        if (layers.dental === false) toggleLayer('dental');
+      }
     } else if (isToothPathology) {
       const primaryTooth = affectedTeeth[0] || '36';
       setActiveToothFdi(primaryTooth);

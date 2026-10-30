@@ -107,7 +107,7 @@ export const PathologyOverlays: React.FC<PathologyOverlaysProps> = ({ isSoloToot
   // ================= 1. CÁRIE DENTÁRIA (ESMALTE & DENTINA) =================
   if (activePathologyId === 'carie_dentaria' || activePathologyId === 'carie') {
     const pos: [number, number, number] = isSoloTooth
-      ? [0, 1.35, 0.05]
+      ? [-0.032, 1.45, 0.185]
       : [toothCenter[0], toothCenter[1] + 0.12, toothCenter[2] + 0.08];
 
     return (
