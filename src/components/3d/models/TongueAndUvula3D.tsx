@@ -19,6 +19,8 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
     xrayMode,
     explosionFactor,
     activeAnesthesiaId,
+    anesthesiaJawOpen,
+    jawOpen,
     activePathologyId,
     focusedSystem,
     surfaceExplorationMode,
@@ -27,13 +29,17 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
   } = useAnatomyStore();
 
   const tongueRef = useRef<THREE.Mesh>(null);
+  const tongueGroupRef = useRef<THREE.Group>(null);
+  const floorGroupRef = useRef<THREE.Group>(null);
   const anesthesiaGlowRef = useRef<THREE.Mesh>(null);
   const geographicPatchGroupRef = useRef<THREE.Group>(null);
+  const tongueJawProgressRef = useRef(0);
+  const lingualNerveGroupRef = useRef<THREE.Group>(null);
 
   const isGeographicTongue = activePathologyId === 'lingua_geografica';
 
-  // Animação de pulso para difusão anestésica ou inflamação nas bordas serpiginosas
-  useFrame(({ clock }) => {
+  // Animação de pulso e sincronização da língua/assoalho com o movimento da mandíbula aberta
+  useFrame(({ clock }, delta) => {
     const t = clock.getElapsedTime();
     if (anesthesiaGlowRef.current) {
       const pulse = 0.35 + Math.sin(t * 3.2) * 0.15;
@@ -46,6 +52,30 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
           (child.material as THREE.MeshStandardMaterial).emissiveIntensity = haloShimmer;
         }
       });
+    }
+
+    // Acompanhar o movimento de abertura bucal nos bloqueios anestésicos e no Atlas 3D
+    const isAnesthesiaActive = Boolean(activeAnesthesiaId);
+    const isMouthOpen = (isAnesthesiaActive && anesthesiaJawOpen) || jawOpen;
+    const targetJaw = isMouthOpen ? 1.0 : 0.0;
+    const currentJaw = tongueJawProgressRef.current;
+    const nextJaw = THREE.MathUtils.damp(currentJaw, targetJaw, 6, delta);
+    tongueJawProgressRef.current = nextJaw;
+
+    if (tongueGroupRef.current) {
+      tongueGroupRef.current.position.y = -2.55 * explosionFactor - 0.70 * nextJaw;
+      tongueGroupRef.current.position.z = 0.95 * explosionFactor - 0.50 * nextJaw;
+      tongueGroupRef.current.rotation.x = 0.10 * nextJaw;
+    }
+    if (floorGroupRef.current) {
+      floorGroupRef.current.position.y = -2.55 * explosionFactor - 0.78 * nextJaw;
+      floorGroupRef.current.position.z = 0.95 * explosionFactor - 0.55 * nextJaw;
+      floorGroupRef.current.rotation.x = 0.12 * nextJaw;
+    }
+    if (lingualNerveGroupRef.current) {
+      lingualNerveGroupRef.current.position.y = -2.55 * explosionFactor - 0.70 * nextJaw;
+      lingualNerveGroupRef.current.position.z = 0.95 * explosionFactor - 0.50 * nextJaw;
+      lingualNerveGroupRef.current.rotation.x = 0.10 * nextJaw;
     }
   });
 
@@ -944,7 +974,7 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
     <group name="oral_tongue_and_uvula_group">
       {/* 1. Língua (Normal ou Fissurada com Lesões Geográficas) */}
       {!isTongueHidden && isLayerVisibleOral && (
-        <group position={tongueExplosionOffset}>
+        <group ref={tongueGroupRef} position={tongueExplosionOffset}>
           <mesh
             ref={tongueRef}
             name="oral-tongue"
@@ -1018,6 +1048,7 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
       {/* 2. Assoalho da Boca (Soalho Bucal Sublingual com Frênulo Lingual e Carúnculas) */}
       {!isFloorHidden && isLayerVisibleOral && (
         <group
+          ref={floorGroupRef}
           name="oral-floor-of-mouth"
           position={floorExplosionOffset}
           onPointerOver={(e) => handlePointerOver(e, 'assoalho_boca')}
@@ -1107,6 +1138,7 @@ export const TongueAndUvula3D: React.FC<TongueAndUvula3DProps> = ({ archesOnlyMo
       {/* 3. Ramos Bilaterais do Nervo Lingual (ocultos durante Língua Geográfica para foco exclusivo na língua) */}
       {!isNerveHidden && !isGeographicTongue && (isLayerVisibleNerves || isLingualNerveSelected || isTongueAnesthetized) && (
         <group
+          ref={lingualNerveGroupRef}
           name="lingual-nerve-tongue-connections"
           position={tongueExplosionOffset}
           onPointerOver={(e) => handlePointerOver(e, 'nervo_lingual')}

@@ -25,7 +25,7 @@ export interface SavedView {
   createdAt: string;
 }
 
-export type QuizDifficulty = 'basico' | 'intermediario' | 'avancado';
+export type QuizDifficulty = 'basico' | 'intermediario' | 'avancado' | 'interativo_3d';
 
 export type QuizSceneMode = 'full_anatomy' | 'teeth_lineup' | 'instrument_3d';
 

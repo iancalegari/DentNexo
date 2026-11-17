@@ -221,11 +221,11 @@ export const DentalInstrument3D: React.FC<DentalInstrument3DProps> = ({ instrume
     const ctx = canvas.getContext('2d');
     if (ctx) {
       // Fundo em azul anodizado idêntico ao cabo
-      ctx.fillStyle = '#1D4ED8';
+      ctx.fillStyle = '#4e5568ff';
       ctx.fillRect(0, 0, 512, 128);
 
       // Logotipo e texto pad-printed / laser em branco
-      ctx.fillStyle = '#FFFFFF';
+      ctx.fillStyle = '#ffffffff';
       ctx.font = 'bold 32px "Segoe UI", Arial, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -360,11 +360,14 @@ export const DentalInstrument3D: React.FC<DentalInstrument3DProps> = ({ instrume
       metalness: 0.08,
     });
 
-    // 2m. Alumínio Anodizado Azul Royal (Cabo do Escavador de Dentina SteelMax da Imagem 1)
+    // 2m. Alumínio Anodizado Azul Royal (Cabo dos Instrumentais Colors / SteelMax)
     const blueHandle = new THREE.MeshStandardMaterial({
       color: '#1D4ED8',
-      metalness: 0.72,
-      roughness: 0.26,
+      metalness: 0.35,
+      roughness: 0.32,
+      emissive: '#1E3A8A',
+      emissiveIntensity: 0.12,
+      side: THREE.DoubleSide,
     });
 
     // 2n. Cabo Preto Anodizado do Espelho Bucal (Imagem 1)
@@ -402,7 +405,8 @@ export const DentalInstrument3D: React.FC<DentalInstrument3DProps> = ({ instrume
     const sonda5HandleLabel = new THREE.MeshStandardMaterial({
       map: sonda5LogoTexture,
       roughness: 0.35,
-      metalness: 0.15,
+      metalness: 0.20,
+      side: THREE.DoubleSide,
     });
 
     // 3. Nitreto de Titânio Dourado Antiaderente (Espátula de Resina - Imagem 1)
@@ -976,38 +980,45 @@ export const DentalInstrument3D: React.FC<DentalInstrument3DProps> = ({ instrume
       case 'sonda_exploradora':
         return (
           <group rotation={[0.12, 0.22, 0.48]}>
-            {/* 1. CABO ERGONÔMICO COLORS EM ALUMÍNIO ANODIZADO AZUL ROYAL (Imagem 1) */}
-            {/* 1a. Corpo central liso do cabo */}
+            {/* 1. CABO ERGONÔMICO COLORS EM ALUMÍNIO ANODIZADO AZUL ROYAL */}
+            {/* 1a. Tubo estrutural contínuo de ponta a ponta do cabo (Solidez 100% contínua) */}
             <mesh position={[0, 0, 0]} material={materials.blueHandle}>
-              <cylinderGeometry args={[0.138, 0.138, 0.90, 32]} />
+              <cylinderGeometry args={[0.138, 0.138, 2.05, 32]} />
             </mesh>
 
-            {/* 1b. Gravação a laser branca "✚ Colors / Sonda Exploradora Nº 05 / Aço Inox" */}
+            {/* 1b. Alma metálica interna cirúrgica de ancoragem mecânica */}
+            <mesh position={[0, 0, 0]} material={materials.surgicalSteel}>
+              <cylinderGeometry args={[0.130, 0.130, 2.25, 24]} />
+            </mesh>
+
+            {/* 1c. Gravação a laser branca 360° "✚ Colors / Sonda Exploradora Nº 05 / Aço Inox" */}
             <mesh position={[0, 0, 0]} material={materials.sonda5HandleLabel}>
-              <cylinderGeometry args={[0.139, 0.139, 0.45, 32, 1, false, -Math.PI / 2, Math.PI]} />
+              <cylinderGeometry args={[0.139, 0.139, 0.45, 32]} />
             </mesh>
 
-            {/* 1c. Zona ergonômica superior com 8 ranhuras esculpidas antiderrapantes */}
-            <mesh position={[0, 0.73, 0]} material={materials.blueHandle}>
-              <cylinderGeometry args={[0.138, 0.138, 0.58, 32]} />
+            {/* 1d. Frisos metálicos cirúrgicos que emolduram a zona central do rótulo */}
+            <mesh position={[0, 0.23, 0]} material={materials.surgicalSteel}>
+              <cylinderGeometry args={[0.140, 0.140, 0.012, 32]} />
             </mesh>
+            <mesh position={[0, -0.23, 0]} material={materials.surgicalSteel}>
+              <cylinderGeometry args={[0.140, 0.140, 0.012, 32]} />
+            </mesh>
+
+            {/* 1e. Zona ergonômica superior com 8 ranhuras esculpidas antiderrapantes */}
             {[0.48, 0.55, 0.62, 0.69, 0.76, 0.83, 0.90, 0.97].map((yGrip, idx) => (
               <mesh key={`s5-top-grip-${idx}`} position={[0, yGrip, 0]} rotation={[Math.PI / 2, 0, 0]} material={materials.darkConnector}>
                 <torusGeometry args={[0.139, 0.007, 8, 28]} />
               </mesh>
             ))}
 
-            {/* 1d. Zona ergonômica inferior com 8 ranhuras esculpidas antiderrapantes */}
-            <mesh position={[0, -0.73, 0]} material={materials.blueHandle}>
-              <cylinderGeometry args={[0.138, 0.138, 0.58, 32]} />
-            </mesh>
+            {/* 1f. Zona ergonômica inferior com 8 ranhuras esculpidas antiderrapantes */}
             {[-0.48, -0.55, -0.62, -0.69, -0.76, -0.83, -0.90, -0.97].map((yGrip, idx) => (
               <mesh key={`s5-bot-grip-${idx}`} position={[0, yGrip, 0]} rotation={[Math.PI / 2, 0, 0]} material={materials.darkConnector}>
                 <torusGeometry args={[0.139, 0.007, 8, 28]} />
               </mesh>
             ))}
 
-            {/* 1e. Colares cônicos de transição do cabo azul */}
+            {/* 1g. Colares cônicos de transição do cabo azul */}
             <mesh position={[0, 1.12, 0]} material={materials.blueHandle}>
               <cylinderGeometry args={[0.048, 0.138, 0.20, 28]} />
             </mesh>
@@ -1015,7 +1026,7 @@ export const DentalInstrument3D: React.FC<DentalInstrument3DProps> = ({ instrume
               <cylinderGeometry args={[0.138, 0.048, 0.20, 28]} />
             </mesh>
 
-            {/* 1f. Mandris cilíndricos de fixação em aço cirúrgico polido */}
+            {/* 1h. Mandris cilíndricos de fixação em aço cirúrgico polido */}
             <mesh position={[0, 1.23, 0]} material={materials.surgicalSteel}>
               <cylinderGeometry args={[0.038, 0.046, 0.04, 20]} />
             </mesh>

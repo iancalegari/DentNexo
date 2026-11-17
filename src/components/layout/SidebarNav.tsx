@@ -43,6 +43,8 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import VolunteerActivismIcon from '@mui/icons-material/VolunteerActivism';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import QrCode2Icon from '@mui/icons-material/QrCode2';
+import SecurityIcon from '@mui/icons-material/Security';
+import EmailIcon from '@mui/icons-material/Email';
 
 import { useAnatomyStore } from '@/stores/useAnatomyStore';
 import { themeTokens } from '@/theme/tokens';
@@ -304,7 +306,7 @@ export const SidebarNav: React.FC = () => {
         }}
       >
         <Divider sx={{ mb: 0.2, borderColor: themeTokens.colors.borderSubtle }} />
-        <Tooltip title={!showLabels ? 'Termos de Uso & Créditos' : ''} placement="right" arrow>
+        <Tooltip title={!showLabels ? 'Termos de Uso & Privacidade' : ''} placement="right" arrow>
           <ListItemButton
             onClick={() => {
               if (isMobileDrawer) setSidebarExpanded(false);
@@ -347,7 +349,7 @@ export const SidebarNav: React.FC = () => {
                   textOverflow: 'ellipsis',
                 }}
               >
-                Termos de Uso
+                Termos & Privacidade
               </Typography>
             )}
           </ListItemButton>
@@ -475,7 +477,7 @@ export const SidebarNav: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2 }}>
             <GavelIcon sx={{ color: themeTokens.colors.brandCyan, fontSize: 22 }} />
             <Typography variant="h6" sx={{ fontWeight: 800, color: themeTokens.colors.textPrimary }}>
-              Termos de Uso & Créditos
+              Termos de Uso, Privacidade & LGPD
             </Typography>
           </Box>
           <IconButton size="small" onClick={() => setTermsOpen(false)} sx={{ color: themeTokens.colors.textMuted }}>
@@ -493,6 +495,64 @@ export const SidebarNav: React.FC = () => {
           }}
         >
           <Stack spacing={2.2}>
+            {/* Seção LGPD & Privacidade */}
+            <Paper
+              elevation={0}
+              sx={{
+                p: 2.2,
+                backgroundColor: 'rgba(0, 201, 246, 0.04)',
+                border: '1px solid rgba(0, 201, 246, 0.25)',
+                borderRadius: 2,
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                <SecurityIcon sx={{ color: themeTokens.colors.brandCyan, fontSize: 20 }} />
+                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: themeTokens.colors.brandCyan }}>
+                  Privacidade, Proteção de Dados & LGPD
+                </Typography>
+              </Box>
+              <Typography variant="body2" sx={{ color: themeTokens.colors.textSecondary, fontSize: '0.84rem', lineHeight: 1.6, mb: 1.2 }}>
+                O <strong>DentNexo</strong> foi desenvolvido sob os princípios de <em>Privacy by Design</em> e <em>Privacy by Default</em> (Art. 46 da LGPD):
+              </Typography>
+              <Box component="ul" sx={{ pl: 2.5, m: 0, color: themeTokens.colors.textSecondary, fontSize: '0.82rem', lineHeight: 1.6 }}>
+                <li>
+                  <strong>100% Client-Side & Sem Banco Centralizado</strong>: Não realizamos coleta de cadastros e não possuímos servidores de banco de dados em nuvem com informações dos estudantes.
+                </li>
+                <li>
+                  <strong>Armazenamento Estritamente Local</strong>: Suas anotações clínicas, estruturas favoritas e resultados de questionários residem exclusivamente no <code>localStorage</code> do seu próprio navegador.
+                </li>
+                <li>
+                  <strong>Ausência de Rastreamento</strong>: Não utilizamos Google Analytics, Meta Pixel, Hotjar ou rastreadores invasivos de comportamento.
+                </li>
+                <li>
+                  <strong>Enquadramento Legal</strong>: Projeto acadêmico sem fins lucrativos classificado como Agente de Tratamento de Pequeno Porte (Resolução CD/ANPD nº 2/2022) e compatível por design com o ECA Digital (Lei nº 15.211/2025).
+                </li>
+              </Box>
+              <Box
+                sx={{
+                  mt: 1.5,
+                  p: 1.2,
+                  borderRadius: 1.5,
+                  backgroundColor: 'rgba(0, 0, 0, 0.25)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                }}
+              >
+                <EmailIcon sx={{ fontSize: 16, color: themeTokens.colors.brandCyan }} />
+                <Typography sx={{ fontSize: '0.78rem', color: themeTokens.colors.textSecondary }}>
+                  Canal de Privacidade & Atendimento ao Titular:{' '}
+                  <Box
+                    component="a"
+                    href="mailto:insprompts@gmail.com"
+                    sx={{ color: themeTokens.colors.brandCyan, fontWeight: 700, textDecoration: 'underline' }}
+                  >
+                    insprompts@gmail.com
+                  </Box>
+                </Typography>
+              </Box>
+            </Paper>
+
             <Paper
               elevation={0}
               sx={{

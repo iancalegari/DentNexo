@@ -96,21 +96,28 @@ export const SystemFocusView: React.FC<SystemFocusViewProps> = ({
     // Garantir que nenhuma patologia continue ativa no sistema anatômico
     setActivePathology(null);
 
-    // Limpar isolamentos ou ocultações residuais do Atlas 3D e garantir que o sistema focado esteja sempre 100% ativo
-    useAnatomyStore.setState((state) => ({
+    // Limpar isolamentos ou ocultações residuais do Atlas 3D e garantir que todas as camadas estejam 100% visíveis
+    useAnatomyStore.setState({
       isolatedStructureId: null,
       hiddenStructureIds: [],
       layers: {
-        ...state.layers,
-        [systemType]: true,
-        dental: true,
         skeletal: true,
+        dental: true,
+        muscular: true,
+        nervous: true,
+        vascular: true,
+        oral_tissue: true,
+        pathologies: false,
       },
       opacities: {
-        ...state.opacities,
-        [systemType]: 1.0,
+        skeletal: 1.0,
+        dental: 1.0,
+        muscular: 1.0,
+        nervous: 1.0,
+        vascular: 1.0,
+        oral_tissue: 1.0,
       },
-    }));
+    });
 
     // Ativar modo de isolamento e foco anatômico do sistema selecionado
     setFocusedSystem(systemType);
@@ -209,8 +216,8 @@ export const SystemFocusView: React.FC<SystemFocusViewProps> = ({
       {/* Visualizador 3D com a câmera livre e iluminação clínica */}
       <AnatomyViewer3D />
 
-      {/* Controles Flutuantes de Camadas (alinhados no topo junto à barra Focar, recolhidos por padrão) */}
-      <LayerControls top={12} defaultExpanded={false} />
+      {/* Controles Flutuantes de Camadas (alinhados no topo junto à barra Focar, recolhidos por padrão, sem controle de mandíbula aberta) */}
+      <LayerControls top={12} defaultExpanded={false} showJawControl={false} />
 
       {/* Controle Rápido Dedicado de Dissecação 3D (Vista Explodida) no Sistema Esquelético (em telas compactas/mobile fica apenas dentro de Camadas Anatômicas) */}
       {systemType === 'skeletal' && (

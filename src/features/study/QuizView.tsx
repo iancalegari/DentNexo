@@ -147,6 +147,18 @@ export const QuizView: React.FC = () => {
                 pathologies: false,
               },
             });
+          } else if (struct.category === 'vascular') {
+            useAnatomyStore.setState({
+              layers: {
+                skeletal: true,
+                dental: true,
+                muscular: false,
+                nervous: false,
+                vascular: true,
+                oral_tissue: false,
+                pathologies: false,
+              },
+            });
           } else if (struct.id === 'lingua' || struct.category === 'oral_tissue') {
             useAnatomyStore.setState({
               layers: {
@@ -338,9 +350,9 @@ export const QuizView: React.FC = () => {
                 </Typography>
               </Box>
               <Typography variant="body2" sx={{ color: themeTokens.colors.textSecondary, mt: 0.8, lineHeight: 1.5 }}>
-                Escolha um nível abaixo para iniciar. Cada rodada sorteia <strong>5 desafios dinâmicos e balanceados</strong> —
-                incluindo <strong>Instrumentais 3D Interativos</strong>, <strong>Ossos, Músculos & Nervos no Crânio 3D</strong>,
-                <strong>Língua & Mucosa Oral</strong> e <strong>Dentes Enfileirados 3D</strong>, a partir de um banco com mais de <strong>90 questões</strong>.
+                Escolha uma modalidade abaixo para iniciar. Cada rodada sorteia <strong>5 desafios dinâmicos</strong> —
+                incluindo o novo modo <strong>100% Interativo 3D</strong> (clique direto nas estruturas anatômicas e dentes),
+                além dos níveis Básico, Intermediário e Avançado a partir de um banco com mais de <strong>{quizQuestions.length} questões</strong>.
               </Typography>
 
               <Stack direction="row" spacing={1} sx={{ mt: 1.5 }} flexWrap="wrap" useFlexGap>
@@ -372,12 +384,17 @@ export const QuizView: React.FC = () => {
             <Divider sx={{ borderColor: themeTokens.colors.borderSubtle }} />
 
             <Stack spacing={2}>
-              {(['basico', 'intermediario', 'avancado'] as QuizDifficulty[]).map((lvlKey) => {
+              {(['basico', 'intermediario', 'avancado', 'interativo_3d'] as QuizDifficulty[]).map((lvlKey) => {
                 const meta = QUIZ_LEVEL_META[lvlKey];
-                const totalInLevel = quizQuestions.filter((q) => q.difficulty === lvlKey).length;
-                const interactiveInLevel = quizQuestions.filter(
-                  (q) => q.difficulty === lvlKey && q.type === 'structure_identification'
-                ).length;
+                const is3DOnly = lvlKey === 'interativo_3d';
+                const totalInLevel = is3DOnly
+                  ? quizQuestions.filter((q) => q.type === 'structure_identification').length
+                  : quizQuestions.filter((q) => q.difficulty === lvlKey).length;
+                const interactiveInLevel = is3DOnly
+                  ? totalInLevel
+                  : quizQuestions.filter(
+                      (q) => q.difficulty === lvlKey && q.type === 'structure_identification'
+                    ).length;
                 const bestPct = getBestScoreForLevel(lvlKey);
 
                 return (
@@ -388,32 +405,58 @@ export const QuizView: React.FC = () => {
                     sx={{
                       p: 2.2,
                       backgroundColor: themeTokens.colors.bgElevated,
-                      border: `1px solid ${themeTokens.colors.borderSubtle}`,
+                      border: is3DOnly
+                        ? '1px solid rgba(0, 201, 246, 0.4)'
+                        : `1px solid ${themeTokens.colors.borderSubtle}`,
                       borderLeft: `4px solid ${meta.badgeColor}`,
                       borderRadius: 2,
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
+                      position: 'relative',
+                      overflow: 'hidden',
+                      ...(is3DOnly && {
+                        background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(0, 201, 246, 0.08) 100%)',
+                      }),
                       '&:hover': {
                         borderColor: meta.badgeColor,
                         transform: 'translateY(-2px)',
-                        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.45)',
+                        boxShadow: is3DOnly
+                          ? '0 8px 28px rgba(0, 201, 246, 0.28)'
+                          : '0 8px 24px rgba(0, 0, 0, 0.45)',
                       },
                     }}
                   >
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 1 }}>
                       <Box>
-                        <Typography
-                          variant="overline"
-                          sx={{
-                            color: meta.badgeColor,
-                            fontWeight: 800,
-                            letterSpacing: '0.08em',
-                            lineHeight: 1.2,
-                            display: 'block',
-                          }}
-                        >
-                          {meta.title}
-                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8, mb: 0.2 }}>
+                          <Typography
+                            variant="overline"
+                            sx={{
+                              color: meta.badgeColor,
+                              fontWeight: 800,
+                              letterSpacing: '0.08em',
+                              lineHeight: 1.2,
+                              display: 'block',
+                            }}
+                          >
+                            {meta.title}
+                          </Typography>
+                          {is3DOnly && (
+                            <Chip
+                              icon={<ViewInArIcon sx={{ fontSize: '13px !important', color: '#00C9F6 !important' }} />}
+                              label="100% Interativo 3D"
+                              size="small"
+                              sx={{
+                                height: 18,
+                                fontWeight: 800,
+                                fontSize: '0.62rem',
+                                backgroundColor: 'rgba(0, 201, 246, 0.16)',
+                                color: themeTokens.colors.brandCyan,
+                                border: '1px solid rgba(0, 201, 246, 0.35)',
+                              }}
+                            />
+                          )}
+                        </Box>
                         <Typography variant="h6" sx={{ fontWeight: 800, color: themeTokens.colors.textPrimary, mt: 0.2 }}>
                           {meta.subtitle}
                         </Typography>
@@ -465,8 +508,17 @@ export const QuizView: React.FC = () => {
                       }}
                     >
                       <Typography variant="caption" sx={{ color: themeTokens.colors.textMuted, fontWeight: 600 }}>
-                        Banco: <strong>{totalInLevel} perguntas</strong> ({interactiveInLevel} no 3D) • Sorteia{' '}
-                        <strong>{QUIZ_QUESTIONS_PER_ROUND}</strong>
+                        {is3DOnly ? (
+                          <>
+                            Banco: <strong>{totalInLevel} desafios práticos 3D</strong> • Sorteia{' '}
+                            <strong>{QUIZ_QUESTIONS_PER_ROUND} a cada clique</strong>
+                          </>
+                        ) : (
+                          <>
+                            Banco: <strong>{totalInLevel} perguntas</strong> ({interactiveInLevel} no 3D) • Sorteia{' '}
+                            <strong>{QUIZ_QUESTIONS_PER_ROUND}</strong>
+                          </>
+                        )}
                       </Typography>
 
                       <Button
@@ -501,19 +553,21 @@ export const QuizView: React.FC = () => {
           /* ==================== TELA 2 & 3: RODADA ATIVA OU RESULTADO ==================== */
           <>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Button
-                size="small"
-                startIcon={<ArrowBackIcon fontSize="small" />}
-                onClick={handleReturnToLevels}
-                sx={{
-                  color: themeTokens.colors.textSecondary,
-                  textTransform: 'none',
-                  fontWeight: 700,
-                  fontSize: '0.78rem',
-                }}
-              >
-                Trocar Nível
-              </Button>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
+                <Button
+                  size="small"
+                  startIcon={<ArrowBackIcon fontSize="small" />}
+                  onClick={handleReturnToLevels}
+                  sx={{
+                    color: themeTokens.colors.textSecondary,
+                    textTransform: 'none',
+                    fontWeight: 700,
+                    fontSize: '0.78rem',
+                  }}
+                >
+                  Trocar Nível
+                </Button>
+              </Box>
 
               <Stack direction="row" spacing={1} alignItems="center">
                 <Chip
@@ -831,9 +885,22 @@ export const QuizView: React.FC = () => {
                     startIcon={<RestartAltIcon />}
                     onClick={() => startLevel(activeLevel)}
                     size="small"
-                    sx={{ fontWeight: 700, textTransform: 'none' }}
+                    sx={{
+                      fontWeight: 700,
+                      textTransform: 'none',
+                      ...(activeLevel === 'interativo_3d' && {
+                        backgroundColor: themeTokens.colors.brandCyan,
+                        color: '#0B0F14',
+                        '&:hover': {
+                          backgroundColor: themeTokens.colors.brandCyan,
+                          filter: 'brightness(1.1)',
+                        },
+                      }),
+                    }}
                   >
-                    Sortear Novas 5 deste Nível
+                    {activeLevel === 'interativo_3d'
+                      ? 'Sortear Novas 5 Questões 3D'
+                      : 'Sortear Novas 5 deste Nível'}
                   </Button>
                   <Button
                     variant="outlined"

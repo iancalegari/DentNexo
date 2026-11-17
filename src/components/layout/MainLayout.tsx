@@ -20,6 +20,7 @@ export const MainLayout: React.FC = () => {
     setInfoPanelOpen,
     isolateStructure,
     setActiveAnesthesia,
+    setJawOpen,
     setExplosionFactor,
     resetCamera,
   } = useAnatomyStore();
@@ -40,11 +41,38 @@ export const MainLayout: React.FC = () => {
       }
       setExplosionFactor(0);
 
+      // Ao trocar para qualquer Sistema Anatômico, restaurar camadas para que nunca venham ocultas do Atlas 3D
+      const isSystemPath = ['/skeletal', '/muscular', '/nervous', '/vascular', '/periodontal'].includes(location.pathname);
+      if (isSystemPath) {
+        useAnatomyStore.setState({
+          isolatedStructureId: null,
+          hiddenStructureIds: [],
+          layers: {
+            skeletal: true,
+            dental: true,
+            muscular: true,
+            nervous: true,
+            vascular: true,
+            oral_tissue: true,
+            pathologies: false,
+          },
+          opacities: {
+            skeletal: 1.0,
+            dental: 1.0,
+            muscular: 1.0,
+            nervous: 1.0,
+            vascular: 1.0,
+            oral_tissue: 1.0,
+          },
+        });
+      }
+
       if (location.pathname !== '/dental') {
         setSurfaceExplorationMode(false);
       }
       if (location.pathname !== '/anesthesia') {
         setActiveAnesthesia(null);
+        setJawOpen(false);
       }
 
       if (!preserveIsolation) {
@@ -60,6 +88,7 @@ export const MainLayout: React.FC = () => {
     setInfoPanelOpen,
     setSurfaceExplorationMode,
     setActiveAnesthesia,
+    setJawOpen,
     setExplosionFactor,
     resetCamera,
   ]);

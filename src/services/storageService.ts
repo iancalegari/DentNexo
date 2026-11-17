@@ -125,4 +125,26 @@ export const storageService = {
     const history = this.getQuizHistory();
     localStorage.setItem(STORAGE_KEYS.QUIZ_RESULTS, JSON.stringify([result, ...history]));
   },
+
+  // Direito de Eliminação de Dados (LGPD Art. 18, VI)
+  clearNotesAndFavorites(): void {
+    try {
+      localStorage.removeItem(STORAGE_KEYS.FAVORITES);
+      localStorage.removeItem(STORAGE_KEYS.NOTES);
+      localStorage.removeItem(STORAGE_KEYS.RECENT_STRUCTURES);
+      localStorage.removeItem(STORAGE_KEYS.SAVED_VIEWS);
+    } catch (e) {
+      console.error('Erro ao limpar favoritos e anotações:', e);
+    }
+  },
+
+  clearAllUserData(): void {
+    try {
+      Object.values(STORAGE_KEYS).forEach((key) => {
+        localStorage.removeItem(key);
+      });
+    } catch (e) {
+      console.error('Erro ao limpar dados locais do usuário:', e);
+    }
+  },
 };

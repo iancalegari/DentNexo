@@ -22,3 +22,7 @@ yarn-error.log*
 kokoro_weights/
 *.onnx
 *.psd
+
+# LGPD Governance local artifacts
+.lgpd/
+

@@ -32,11 +32,11 @@ export const AnesthesiaOverlay3D: React.FC = () => {
     );
 
     const needleMid = new THREE.Vector3().addVectors(hub, target).multiplyScalar(0.5);
-    const barrelLength = 2.15;
+    const barrelLength = 3.35;
     // Corpo da seringa estende-se para trás do canhão (sentido -dirNorm)
-    const barrelCenter = hub.clone().addScaledVector(dirNorm, -barrelLength * 0.5 - 0.14);
-    const plungerCenter = hub.clone().addScaledVector(dirNorm, -barrelLength - 0.55);
-    const thumbRingPos = hub.clone().addScaledVector(dirNorm, -barrelLength - 0.98);
+    const barrelCenter = hub.clone().addScaledVector(dirNorm, -barrelLength * 0.5 - 0.22);
+    const plungerCenter = hub.clone().addScaledVector(dirNorm, -barrelLength - 0.75);
+    const thumbRingPos = hub.clone().addScaledVector(dirNorm, -barrelLength - 1.35);
 
     return {
       hub,
@@ -90,7 +90,7 @@ export const AnesthesiaOverlay3D: React.FC = () => {
     <group name="anesthesia_3d_overlay">
       {/* 1. HASTE METÁLICA DA AGULHA ODONTOLÓGICA */}
       <mesh position={needleMid} quaternion={quaternion} raycast={noopRaycast}>
-        <cylinderGeometry args={[0.022, 0.028, needleLength, 16]} />
+        <cylinderGeometry args={[0.030, 0.038, needleLength, 16]} />
         <meshStandardMaterial
           color="#E2E8F0"
           metalness={0.88}
@@ -102,7 +102,7 @@ export const AnesthesiaOverlay3D: React.FC = () => {
 
       {/* Canhão da Agulha (Hub rosqueável) */}
       <mesh position={hub} quaternion={quaternion} raycast={noopRaycast}>
-        <cylinderGeometry args={[0.085, 0.13, 0.28, 20]} />
+        <cylinderGeometry args={[0.12, 0.18, 0.38, 20]} />
         <meshStandardMaterial
           color="#F59E0B"
           metalness={0.65}
@@ -116,7 +116,7 @@ export const AnesthesiaOverlay3D: React.FC = () => {
       <group position={barrelCenter} quaternion={quaternion}>
         {/* Camisa metálica vazada / estrutura externa */}
         <mesh raycast={noopRaycast}>
-          <cylinderGeometry args={[0.21, 0.21, barrelLength, 24, 1, true]} />
+          <cylinderGeometry args={[0.29, 0.29, barrelLength, 24, 1, true]} />
           <meshStandardMaterial
             color="#CBD5E1"
             metalness={0.85}
@@ -129,7 +129,7 @@ export const AnesthesiaOverlay3D: React.FC = () => {
 
         {/* Tubete de vidro com solução anestésica verde-água / ciano */}
         <mesh raycast={noopRaycast}>
-          <cylinderGeometry args={[0.165, 0.165, barrelLength * 0.88, 20]} />
+          <cylinderGeometry args={[0.23, 0.23, barrelLength * 0.88, 20]} />
           <meshStandardMaterial
             color="#10B981"
             emissive="#059669"
@@ -143,20 +143,20 @@ export const AnesthesiaOverlay3D: React.FC = () => {
 
         {/* Colar superior e apoio digital (asas da Carpule) */}
         <mesh position={[0, -barrelLength * 0.5, 0]} raycast={noopRaycast}>
-          <boxGeometry args={[0.92, 0.1, 0.28]} />
+          <boxGeometry args={[1.30, 0.14, 0.38]} />
           <meshStandardMaterial color="#94A3B8" metalness={0.85} roughness={0.22} />
         </mesh>
       </group>
 
       {/* Haste do êmbolo aspirador */}
       <mesh position={plungerCenter} quaternion={quaternion} raycast={noopRaycast}>
-        <cylinderGeometry args={[0.045, 0.045, 0.85, 14]} />
+        <cylinderGeometry args={[0.065, 0.065, 1.20, 14]} />
         <meshStandardMaterial color="#CBD5E1" metalness={0.85} roughness={0.2} />
       </mesh>
 
       {/* Anel do polegar para aspiração (Carpule com refluxo) */}
       <mesh position={thumbRingPos} quaternion={quaternion} raycast={noopRaycast}>
-        <torusGeometry args={[0.24, 0.042, 14, 28]} />
+        <torusGeometry args={[0.34, 0.055, 16, 32]} />
         <meshStandardMaterial color="#E2E8F0" metalness={0.88} roughness={0.18} />
       </mesh>
 

@@ -22,6 +22,7 @@ import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
 import FormatListNumberedIcon from '@mui/icons-material/FormatListNumbered';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import StopIcon from '@mui/icons-material/Stop';
+import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 
 import { useAnatomyStore } from '@/stores/useAnatomyStore';
 import { ANESTHESIA_TECHNIQUES, ANESTHESIA_MAP } from '@/data/clinical/anesthesiaData';
@@ -34,6 +35,8 @@ export const AnesthesiaView: React.FC = () => {
   const {
     activeAnesthesiaId,
     setActiveAnesthesia,
+    anesthesiaJawOpen,
+    toggleAnesthesiaJaw,
     triggerAnesthesiaFocus,
     setInfoPanelOpen,
     setSurfaceExplorationMode,
@@ -698,6 +701,31 @@ export const AnesthesiaView: React.FC = () => {
               Mucosa & Difusão
             </Typography>
           </Box>
+
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<UnfoldMoreIcon sx={{ fontSize: '0.9rem !important' }} />}
+            onClick={toggleAnesthesiaJaw}
+            title={anesthesiaJawOpen ? 'Fechar mandíbula' : 'Abrir mandíbula para punção'}
+            sx={{
+              borderRadius: '999px',
+              textTransform: 'none',
+              fontSize: { xs: '0.68rem', sm: '0.72rem' },
+              fontWeight: 700,
+              py: 0.2,
+              px: { xs: 1, sm: 1.2 },
+              color: anesthesiaJawOpen ? '#34D399' : '#94A3B8',
+              borderColor: anesthesiaJawOpen ? 'rgba(16, 185, 129, 0.5)' : 'rgba(148, 163, 184, 0.3)',
+              backgroundColor: anesthesiaJawOpen ? 'rgba(16, 185, 129, 0.12)' : 'transparent',
+              '&:hover': {
+                borderColor: '#10B981',
+                backgroundColor: 'rgba(16, 185, 129, 0.22)',
+              },
+            }}
+          >
+            {anesthesiaJawOpen ? 'Boca Aberta' : 'Abrir Boca'}
+          </Button>
 
           <Button
             size="small"

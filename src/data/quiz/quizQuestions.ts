@@ -44,6 +44,16 @@ export const QUIZ_LEVEL_META: Record<
     badgeColor: '#EF4444',
     topics: ['Língua Geográfica (Munro)', 'Espátula Titânio & Compósitos', 'LED & Canforoquinona', 'Lesão NC XII & Cirurgia'],
   },
+  interativo_3d: {
+    id: 'interativo_3d',
+    step: 4,
+    title: 'Desafio Prático • 100% Interativo 3D',
+    subtitle: 'Reconhecimento Visual Direto no Modelo 3D',
+    description:
+      'Identificação tátil e espacial em tempo real: clique diretamente nos ossos craniofaciais, músculos, nervos cranianos, língua, vasos e dentes FDI 3D. 5 desafios aleatorizados a cada clique.',
+    badgeColor: '#00C9F6',
+    topics: ['Clique Direto no 3D', 'Dentes FDI 3D', 'Ossos & Crânio', 'Músculos da Face', 'Nervos & Vasos'],
+  },
 };
 
 export const quizQuestions: QuizQuestion[] = [
@@ -193,6 +203,46 @@ export const quizQuestions: QuizQuestion[] = [
     explanation:
       'A Sonda Periodontal Milimetrada é o instrumento exclusivo para o exame do periodonto e periograma, com corpo cilíndrico calibrado a cada milímetro e ponta arredondada atraumática.',
     referenceTitle: 'Newman, Takei, Klokkevold, Carranza — Periodontia Clínica',
+  },
+  {
+    id: 'b_3d_inst_espelho',
+    question:
+      'Analise o instrumento odontológico exibido em 3D ao lado. Com cabeça circular espelhada plana e haste metálica rosqueável, qual é sua função primordial no exame clínico?',
+    category: 'instrumentos',
+    difficulty: 'basico',
+    type: 'multiple_choice',
+    sceneMode: 'instrument_3d',
+    instrumentId: 'espelho_bucal',
+    options: [
+      { id: 'a', text: 'Visão indireta de superfícies dentárias ocultas, iluminação por reflexão e afastamento de lábios e língua' },
+      { id: 'b', text: 'Curetagem e remoção de tecido cariado amolecido em dentina profunda' },
+      { id: 'c', text: 'Medição milimétrica da profundidade de sondagem do sulco gengival' },
+      { id: 'd', text: 'Apreensão de brocas e instrumentos rotatórios de baixa rotação' },
+    ],
+    correctOptionId: 'a',
+    explanation:
+      'O Espelho Bucal Clínico é indispensável na tríade de exame clínico: permite visão indireta (faces linguais e distais), reflete o foco de luz e atua como anteparo seguro para afastar mucosa jugal e língua.',
+    referenceTitle: 'Baratieri — Odontologia Restauradora & Exame Clínico',
+  },
+  {
+    id: 'b_3d_inst_sonda_exp',
+    question:
+      'Observe o instrumento clínico exibido em 3D ao lado com ponta afilada em formato de gancho curvo (Shepherd\'s Hook nº 5). Qual é a sua finalidade principal?',
+    category: 'instrumentos',
+    difficulty: 'basico',
+    type: 'multiple_choice',
+    sceneMode: 'instrument_3d',
+    instrumentId: 'sonda_exploradora',
+    options: [
+      { id: 'a', text: 'Avaliação tátil de irregularidades em esmalte, fendas oclusais, integridade de margens restauradoras e remoção de placa' },
+      { id: 'b', text: 'Determinação da perda de inserção clínica periodontal em milímetros' },
+      { id: 'c', text: 'Inserção e condensação de amálgama ou resina composta' },
+      { id: 'd', text: 'Condicionamento ácido do esmalte dental antes da restauração' },
+    ],
+    correctOptionId: 'a',
+    explanation:
+      'A Sonda Exploradora nº 5 transmite vibrações táteis pelo cabo metálico para avaliar a lisura do esmalte, integridade marginal de restaurações e detectar fendas e descontinuidades anatômicas.',
+    referenceTitle: 'Fejerskov & Kidd — Cárie Dentária: A Doença e seu Tratamento Clínico',
   },
   {
     id: 'b_mc_1',
@@ -547,6 +597,46 @@ export const quizQuestions: QuizQuestion[] = [
     explanation:
       'A Sonda Exploradora nº 5 avalia descontinuidades tácteis no esmalte e margens restauradoras. A Sonda Periodontal é calibrada milimetricamente com ponta arredondada atraumática (0,5 mm) para periograma e exame do periodonto.',
     referenceTitle: 'Newman, Takei, Klokkevold, Carranza — Periodontia Clínica',
+  },
+  {
+    id: 'b_3d_inst_espelho',
+    question:
+      'Analise o instrumento odontológico exibido em 3D ao lado. Com cabeça circular espelhada plana e haste metálica rosqueável, qual é sua função primordial no exame clínico?',
+    category: 'instrumentos',
+    difficulty: 'basico',
+    type: 'multiple_choice',
+    sceneMode: 'instrument_3d',
+    instrumentId: 'espelho_bucal',
+    options: [
+      { id: 'a', text: 'Visão indireta de superfícies dentárias ocultas, iluminação por reflexão e afastamento de lábios e língua' },
+      { id: 'b', text: 'Curetagem e remoção de tecido cariado amolecido em dentina profunda' },
+      { id: 'c', text: 'Medição milimétrica da profundidade de sondagem do sulco gengival' },
+      { id: 'd', text: 'Apreensão de brocas e instrumentos rotatórios de baixa rotação' },
+    ],
+    correctOptionId: 'a',
+    explanation:
+      'O Espelho Bucal Clínico é indispensável na tríade de exame clínico: permite visão indireta (faces linguais e distais), reflete o foco de luz e atua como anteparo seguro para afastar mucosa jugal e língua.',
+    referenceTitle: 'Baratieri — Odontologia Restauradora & Exame Clínico',
+  },
+  {
+    id: 'b_3d_inst_sonda_exp',
+    question:
+      'Observe o instrumento clínico exibido em 3D ao lado com ponta afilada em formato de gancho curvo (Shepherd\'s Hook nº 5). Qual é a sua finalidade principal?',
+    category: 'instrumentos',
+    difficulty: 'basico',
+    type: 'multiple_choice',
+    sceneMode: 'instrument_3d',
+    instrumentId: 'sonda_exploradora',
+    options: [
+      { id: 'a', text: 'Avaliação tátil de irregularidades em esmalte, fendas oclusais, integridade de margens restauradoras e remoção de placa' },
+      { id: 'b', text: 'Determinação da perda de inserção clínica periodontal em milímetros' },
+      { id: 'c', text: 'Inserção e condensação de amálgama ou resina composta' },
+      { id: 'd', text: 'Condicionamento ácido do esmalte dental antes da restauração' },
+    ],
+    correctOptionId: 'a',
+    explanation:
+      'A Sonda Exploradora nº 5 transmite vibrações táteis pelo cabo metálico para avaliar a lisura do esmalte, integridade marginal de restaurações e detectar fendas e descontinuidades anatômicas.',
+    referenceTitle: 'Fejerskov & Kidd — Cárie Dentária: A Doença e seu Tratamento Clínico',
   },
   {
     id: 'b_mc_inst_3',
@@ -1639,6 +1729,576 @@ export const quizQuestions: QuizQuestion[] = [
       'A canforoquinona absorve fótons de luz prioritariamente entre 450 e 480 nm com pico máximo em 468 nm. O LED na faixa azul adequada assegura alta taxa de conversão de monômeros em polímeros, evitando falhas adesivas e toxicidade pulpar.',
     referenceTitle: 'Rueggeberg et al. — Light-curing in dentistry and photoinitiator chemistry',
   },
+  // ============================================================================
+  // DESAFIOS INTERATIVOS 3D COMPLEMENTARES (LÍNGUA, OSSOS, NERVOS, VASOS & DENTES)
+  // ============================================================================
+  {
+    id: 'int_3d_lingua',
+    question:
+      'No modelo 3D ao lado, localize e clique no corpo da Língua (órgão muscular especializado na gustação, fonação e mastigação):',
+    category: 'lingua',
+    difficulty: 'basico',
+    type: 'structure_identification',
+    sceneMode: 'full_anatomy',
+    targetStructureId: 'lingua',
+    explanation:
+      'A Língua é um órgão muscular ímpar e mediano fixado ao assoalho bucal e ao osso hioide, revestido por mucosa especializada rica em papilas gustativas e inervado pelo NC XII (motor) e NC V3/VII/IX (sensorial e gustativo).',
+    referenceTitle: 'Sobotta Atlas de Anatomia Humana & Moore Anatomia Orientada para Clínica',
+  },
+  {
+    id: 'int_3d_assoalho',
+    question:
+      'Na cavidade oral em 3D, identifique e clique no Assoalho da Boca (região sublingual com carúnculas linguais e ductos salivares):',
+    category: 'lingua',
+    difficulty: 'intermediario',
+    type: 'structure_identification',
+    sceneMode: 'full_anatomy',
+    targetStructureId: 'assoalho_boca',
+    explanation:
+      'O assoalho bucal é delimitado inferiormente pelos músculos milo-hióideos e revestido por mucosa frouxa e delgada, contendo o frênulo lingual, as carúnculas sublinguais e a emergência dos ductos das glândulas submandibular e sublingual.',
+    referenceTitle: 'Rouvière — Anatomie Humaine Descriptive, Topographique et Fonctionnelle',
+  },
+  {
+    id: 'int_3d_tonsilas',
+    question:
+      'Na orofaringe em 3D, localize e clique nas Tonsilas Palatinas (Amígdalas situadas entre os pilares amigdalianos):',
+    category: 'lingua',
+    difficulty: 'intermediario',
+    type: 'structure_identification',
+    sceneMode: 'full_anatomy',
+    targetStructureId: 'tonsilas_palatinas',
+    explanation:
+      'As tonsilas palatinas (amígdalas) são massas bilaterais de tecido linfoide associado à mucosa situadas na fossa tonsilar, entre o arco palatoglosso (anterior) e o arco palatofaríngeo (posterior), integrando o Anel Linfático de Waldeyer.',
+    referenceTitle: 'Netter Atlas de Anatomia Humana',
+  },
+  {
+    id: 'int_3d_uvula',
+    question:
+      'No palato mole em 3D, selecione e clique na Úvula Palatina (projeção fibromuscular medial suspensa na borda livre posterior):',
+    category: 'lingua',
+    difficulty: 'intermediario',
+    type: 'structure_identification',
+    sceneMode: 'full_anatomy',
+    targetStructureId: 'uvula',
+    explanation:
+      'A úvula palatina é uma estrutura cônica muscular medial revestida por epitélio estratificado pavimentoso que se eleva durante a deglutição para ocluir a nasofaringe, impedindo o refluxo de alimentos.',
+    referenceTitle: 'Moore — Anatomia Orientada para a Clínica',
+  },
+  {
+    id: 'int_3d_nervo_lingual',
+    question:
+      'Na inervação trigeminal em 3D, localize e clique no Nervo Lingual (ramo de V3 que conduz a sensibilidade geral dos 2/3 anteriores da língua):',
+    category: 'nervos_vasos',
+    difficulty: 'avancado',
+    type: 'structure_identification',
+    sceneMode: 'full_anatomy',
+    targetStructureId: 'nervo_lingual',
+    explanation:
+      'O Nervo Lingual é um ramo anterior da divisão mandibular do trigêmeo (V3). Transporta fibras sensoriais somáticas da língua e mucosa gengival lingual, além de fibras parassimpáticas secretomotoras e gustativas acopladas via corda do tímpano (NC VII).',
+    referenceTitle: 'Malamed — Manual de Anestesia Local',
+  },
+  {
+    id: 'int_3d_nervo_facial',
+    question:
+      'Examine o trajeto neurovascular periférico em 3D e clique no Nervo Facial (NC VII e seus ramos motores da mímica facial):',
+    category: 'nervos_vasos',
+    difficulty: 'avancado',
+    type: 'structure_identification',
+    sceneMode: 'full_anatomy',
+    targetStructureId: 'nervo_facial',
+    explanation:
+      'O Nervo Facial (VII par) emerge pelo forame estilomastóideo e ramifica-se no interior da glândula parótida nos ramos temporal, zigomático, bucal, marginal mandibular e cervical, suprindo todos os músculos da expressão facial.',
+    referenceTitle: 'Gray\'s Anatomy — The Anatomical Basis of Clinical Practice',
+  },
+  {
+    id: 'int_3d_arteria_facial',
+    question:
+      'Na vascularização orofacial 3D, identifique e clique na Artéria Facial (ramo da carótida externa que cruza a base da mandíbula):',
+    category: 'nervos_vasos',
+    difficulty: 'intermediario',
+    type: 'structure_identification',
+    sceneMode: 'full_anatomy',
+    targetStructureId: 'arteria_facial',
+    explanation:
+      'A Artéria Facial ascende pelo trígono carotídeo, passa sob a glândula submandibular, contorna a borda inferior da mandíbula anterior ao músculo masseter (ponto clássico de palpação de pulso facial) e segue tortuosa até a comissura labial.',
+    referenceTitle: 'Rouvière & Delmas — Anatomia Humana',
+  },
+  {
+    id: 'int_3d_arteria_maxilar',
+    question:
+      'Examine a irrigação arterial profunda em 3D e clique na Artéria Maxilar (ramo terminal profundo da carótida externa):',
+    category: 'nervos_vasos',
+    difficulty: 'avancado',
+    type: 'structure_identification',
+    sceneMode: 'full_anatomy',
+    targetStructureId: 'arteria_maxilar',
+    explanation:
+      'A Artéria Maxilar atravessa a fossa infratemporal e a fissura pterigomaxilar, emitindo ramos fundamentais como a artéria meníngea média, artéria alveolar inferior, artérias alveolares superiores e artéria esfenopalatina.',
+    referenceTitle: 'Sobotta — Atlas de Anatomia Humana',
+  },
+  {
+    id: 'int_3d_plexo_pterigoideo',
+    question:
+      'Na fossa infratemporal em 3D, localize e selecione o Plexo Venoso Pterigóideo (rede venosa avalvular que envolve os pterigóideos):',
+    category: 'nervos_vasos',
+    difficulty: 'avancado',
+    type: 'structure_identification',
+    sceneMode: 'full_anatomy',
+    targetStructureId: 'plexo_pterigoideo',
+    explanation:
+      'O Plexo Venoso Pterigóideo é uma rica trama vascular desprovida de válvulas situada entre os músculos temporal e pterigóideo lateral. Sua punção acidental durante o Bloqueio ASP pode provocar hematomas exuberantes e imediatos na bochecha.',
+    referenceTitle: 'Malamed — Manual de Anestesia Local Odontológica',
+  },
+  {
+    id: 'int_3d_pterigoideo_lateral',
+    question:
+      'Na musculatura mastigatória em 3D, clique no Músculo Pterigóideo Lateral (principal músculo promotor da abertura e lateralidade da mandíbula):',
+    category: 'anatomia_geral',
+    difficulty: 'intermediario',
+    type: 'structure_identification',
+    sceneMode: 'full_anatomy',
+    targetStructureId: 'pterigoideo_lateral',
+    explanation:
+      'O Músculo Pterigóideo Lateral possui dois feixes (superior e inferior) que se inserem na fóvea pterigóidea do colo condilar e no disco articular da ATM. É o único músculo da mastigação que atua ativamente na abertura (depressão e protusão) da boca.',
+    referenceTitle: 'Okeson — Tratamento das Desordens Temporomandibulares e Oclusão',
+  },
+  {
+    id: 'int_3d_pterigoideo_medial',
+    question:
+      'No ângulo interno da mandíbula em 3D, identifique e clique no Músculo Pterigóideo Medial (elevador potente da mandíbula):',
+    category: 'anatomia_geral',
+    difficulty: 'intermediario',
+    type: 'structure_identification',
+    sceneMode: 'full_anatomy',
+    targetStructureId: 'pterigoideo_medial',
+    explanation:
+      'O Músculo Pterigóideo Medial origina-se na fossa pterigoide do osso esfenoide e insere-se na face medial do ângulo mandibular, formando com o masseter uma robusta alça muscular de fechamento potente da mandíbula.',
+    referenceTitle: 'Wheeler\'s Dental Anatomy and Occlusion',
+  },
+  {
+    id: 'int_3d_osso_temporal',
+    question:
+      'No neurocrânio em 3D, localize e clique no Osso Temporal (osso lateral da calvária que aloja a fossa articular da ATM e o meato acústico):',
+    category: 'anatomia_geral',
+    difficulty: 'basico',
+    type: 'structure_identification',
+    sceneMode: 'full_anatomy',
+    targetStructureId: 'osso_temporal',
+    explanation:
+      'O Osso Temporal compõe-se pelas porções escamosa, timpânica, estiloide e petromastoidea, contendo a fossa mandibular e o tubérculo articular onde o côndilo mandibular se articula funcionalmente.',
+    referenceTitle: 'Moore Anatomia Orientada para Clínica',
+  },
+  {
+    id: 'int_3d_osso_occipital',
+    question:
+      'Na região posterior e base do crânio em 3D, identifique e clique no Osso Occipital (osso que delimita o forame magno):',
+    category: 'anatomia_geral',
+    difficulty: 'basico',
+    type: 'structure_identification',
+    sceneMode: 'full_anatomy',
+    targetStructureId: 'osso_occipital',
+    explanation:
+      'O Osso Occipital forma a parede póstero-inferior da caixa craniana, apresentando a protuberância occipital externa e o forame magno para passagem da medula espinhal, além dos côndilos occipitais que articulam com o atlas (C1).',
+    referenceTitle: 'Sobotta Atlas de Anatomia',
+  },
+  {
+    id: 'int_3d_osso_hioide',
+    question:
+      'Na região cervical anterior superior em 3D, clique no Osso Hioide (osso em forma de U ímpar e flutuante de ancoragem lingual):',
+    category: 'anatomia_geral',
+    difficulty: 'intermediario',
+    type: 'structure_identification',
+    sceneMode: 'full_anatomy',
+    targetStructureId: 'osso_hioide',
+    explanation:
+      'O Osso Hioide não possui articulação óssea direta com nenhum outro osso do esqueleto, sendo mantido suspenso por ligamentos estilohióideos e músculos supra e infra-hióideos, desempenhando papel crucial na deglutição e estabilização da via aérea.',
+    referenceTitle: 'Gray\'s Anatomy',
+  },
+  {
+    id: 'int_3d_vomer',
+    question:
+      'No septo nasal ósseo em 3D, localize e clique no Vômer (osso ímpar e plano que forma o terço póstero-inferior do septo nasal):',
+    category: 'anatomia_geral',
+    difficulty: 'avancado',
+    type: 'structure_identification',
+    sceneMode: 'full_anatomy',
+    targetStructureId: 'osso_vomer',
+    explanation:
+      'O Vômer articula-se superiormente com a lâmina perpendicular do etmoide e esfenoide, e inferiormente com as cristas nasais das maxilas e ossos palatinos, dividindo a cavidade nasal em duas fossas.',
+    referenceTitle: 'Moore Anatomia Clínica',
+  },
+  {
+    id: 'int_3d_concha_nasal',
+    question:
+      'Na cavidade nasal lateral em 3D, selecione e clique na Concha Nasal Inferior (osso esponjoso independente do viscerocrânio):',
+    category: 'anatomia_geral',
+    difficulty: 'avancado',
+    type: 'structure_identification',
+    sceneMode: 'full_anatomy',
+    targetStructureId: 'concha_nasal_inferior',
+    explanation:
+      'A Concha Nasal Inferior é um osso par independente inserido na parede lateral da cavidade nasal. O meato nasal inferior, situado abaixo desta concha, recebe a drenagem do ducto nasolacrimal.',
+    referenceTitle: 'Netter Atlas de Anatomia Humana',
+  },
+  {
+    id: 'int_3d_seio_maxilar',
+    question:
+      'No interior do corpo maxilar em 3D, localize e clique no Seio Maxilar (maior seio paranasal com íntima relação com os molares superiores):',
+    category: 'anatomia_geral',
+    difficulty: 'intermediario',
+    type: 'structure_identification',
+    sceneMode: 'full_anatomy',
+    targetStructureId: 'seio_maxilar',
+    explanation:
+      'O Seio Maxilar (Antro de Highmore) é uma cavidade pneumática piramidal cujo assoalho relaciona-se intimamente com os ápices dos pré-molares e molares superiores, sendo sítio frequente de cirurgias de sinus lift.',
+    referenceTitle: 'Lindhe — Tratado de Periodontia Clínica e Implantologia Oral',
+  },
+  {
+    id: 'int_3d_dente_21',
+    question:
+      'Nos dentes enfileirados em 3D ao lado, clique no Incisivo Central Superior Esquerdo (FDI 21):',
+    category: 'dentes',
+    difficulty: 'basico',
+    type: 'structure_identification',
+    sceneMode: 'teeth_lineup',
+    targetStructureId: 'dente_21',
+    explanation:
+      'O dente 21 é o incisivo central superior do lado esquerdo do paciente (Quadrante 2, posição 1), simétrico ao dente 11 em relação à linha média superior da face.',
+    referenceTitle: 'FDI World Dental Federation Two-Digit System (ISO 3950)',
+  },
+  {
+    id: 'int_3d_dente_31',
+    question:
+      'Na fileira inferior de dentes 3D, selecione e clique no Incisivo Central Inferior Esquerdo (FDI 31):',
+    category: 'dentes',
+    difficulty: 'basico',
+    type: 'structure_identification',
+    sceneMode: 'teeth_lineup',
+    targetStructureId: 'dente_31',
+    explanation:
+      'O dente 31 é o incisivo central mandibular esquerdo. Os incisivos centrais inferiores são os menores dentes da dentição permanente humana e apresentam coroas simétricas estreitas.',
+    referenceTitle: 'Wheeler Dental Anatomy, Physiology and Occlusion',
+  },
+  {
+    id: 'int_3d_dente_41',
+    question:
+      'Nos dentes enfileirados em 3D, identifique e clique no Incisivo Central Inferior Direito (FDI 41):',
+    category: 'dentes',
+    difficulty: 'basico',
+    type: 'structure_identification',
+    sceneMode: 'teeth_lineup',
+    targetStructureId: 'dente_41',
+    explanation:
+      'O dente 41 situa-se no Quadrante 4 (hemiarco inferior direito), imediatamente adjacente à linha média mandibular humana.',
+    referenceTitle: 'ISO 3950 Dental Designation System',
+  },
+
+  // ============================================================================
+  // EXPANSÃO INTERATIVOS 3D PRÁTICOS (20 NOVOS DESAFIOS CLÍNICOS E ESPACIAIS)
+  // ============================================================================
+
+  // --- 1. +5 INSTRUMENTAIS ODONTOLÓGICOS 3D ---
+  {
+    id: 'int_3d_inst_alta_rotacao',
+    question:
+      'Analise a peça de mão odontológica de alta velocidade exibida em 3D ao lado. Dotada de rotor pneumático até 400.000 RPM, pinça push-button e spray aquoso, qual é este equipamento?',
+    category: 'instrumentos',
+    difficulty: 'basico',
+    type: 'multiple_choice',
+    sceneMode: 'instrument_3d',
+    instrumentId: 'alta_rotacao',
+    options: [
+      { id: 'a', text: 'Peça de Mão de Alta Rotação (Turbina Pneumática de alta velocidade)' },
+      { id: 'b', text: 'Contra-Ângulo Multiplicador para acabamento protético lento' },
+      { id: 'c', text: 'Peça Reta para procedimentos cirúrgicos extrabucais' },
+      { id: 'd', text: 'Micromotor elétrico de laboratório' },
+    ],
+    correctOptionId: 'a',
+    explanation:
+      'A Turbina de Alta Rotação opera entre 300.000 e 400.000 RPM movida a ar comprimido sobre o rotor, indicada para corte de esmalte e preparos cavitários sob farta refrigeração por spray aquoso.',
+    referenceTitle: 'Conceição — Dentística: Saúde e Estética',
+  },
+  {
+    id: 'int_3d_inst_contra_angulo',
+    question:
+      'Observe o instrumento rotatório acoplado ao micromotor exibido em 3D ao lado, com cabeça angulada e rotação de 5.000 a 40.000 RPM de alto torque. Qual é este instrumento?',
+    category: 'instrumentos',
+    difficulty: 'intermediario',
+    type: 'multiple_choice',
+    sceneMode: 'instrument_3d',
+    instrumentId: 'contra_angulo',
+    options: [
+      { id: 'a', text: 'Contra-Ângulo Odontológico para Micromotor (Baixa Rotação)' },
+      { id: 'b', text: 'Caneta de Alta Rotação com turbina cerâmica' },
+      { id: 'c', text: 'Aparador de Margem Gengival de Black' },
+      { id: 'd', text: 'Fotopolimerizador LED sem fio' },
+    ],
+    correctOptionId: 'a',
+    explanation:
+      'O Contra-Ângulo de baixa rotação conectado ao micromotor proporciona alto torque para remoção de tecido cariado dentinário, profilaxia com taça de borracha e acabamento restaurador.',
+    referenceTitle: 'Anusavice — Phillips Materiais Dentários',
+  },
+  {
+    id: 'int_3d_inst_perfurador',
+    question:
+      'No conjunto de isolamento absoluto exibido em 3D ao lado, observe o alicate com tambor giratório de orifícios calibrados (1 a 5) e ponta perfurante em aço cônico. Qual é este dispositivo?',
+    category: 'instrumentos',
+    difficulty: 'intermediario',
+    type: 'multiple_choice',
+    sceneMode: 'instrument_3d',
+    instrumentId: 'perfurador_ainsworth',
+    options: [
+      { id: 'a', text: 'Perfurador de Lençol de Borracha de Ainsworth' },
+      { id: 'b', text: 'Pinça Porta-Grampos de Palmer' },
+      { id: 'c', text: 'Grampo de Isolamento nº 212 de Ferrier' },
+      { id: 'd', text: 'Pinça de Miller para carbono oclusal' },
+    ],
+    correctOptionId: 'a',
+    explanation:
+      'O Perfurador de Ainsworth dispõe de disco giratório com orifícios de 1 a 5 calibrados para cada grupo dentário (do orifício 1 para incisivos inferiores até o orifício 5 para molares ancorados com grampo).',
+    referenceTitle: 'Mondelli — Procedimentos Pré-Clínicos em Dentística',
+  },
+  {
+    id: 'int_3d_inst_fotopolimerizador',
+    question:
+      'Analise o dispositivo odontológico com ponteira óptica emissora de luz azul e display digital exibido em 3D ao lado. Qual é a faixa de comprimento de onda emitida para ativar a canforoquinona?',
+    category: 'instrumentos',
+    difficulty: 'avancado',
+    type: 'multiple_choice',
+    sceneMode: 'instrument_3d',
+    instrumentId: 'fotopolimerizador',
+    options: [
+      { id: 'a', text: '450 nm a 480 nm (espectro da luz azul visível de alta intensidade)' },
+      { id: 'b', text: '200 nm a 280 nm (faixa ultravioleta C bactericida)' },
+      { id: 'c', text: '700 nm a 900 nm (faixa do infravermelho térmico)' },
+      { id: 'd', text: '600 nm a 650 nm (luz vermelha de baixa frequência)' },
+    ],
+    correctOptionId: 'a',
+    explanation:
+      'O Fotopolimerizador LED emite luz visível azul no pico de absorção da canforoquinona (~468 nm), deflagrando a reação de polimerização dos monômeros resinosos em matriz polimérica sólida.',
+    referenceTitle: 'Rueggeberg — Contemporary Light Curing in Dentistry & Phillips',
+  },
+  {
+    id: 'int_3d_inst_espatula_24',
+    question:
+      'Observe o instrumento manual metálico exibido em 3D ao lado, dotado de lâmina longa, reta e flexível com empunhadura metálica central. Qual é este instrumental clássico de prótese e dentística?',
+    category: 'instrumentos',
+    difficulty: 'basico',
+    type: 'multiple_choice',
+    sceneMode: 'instrument_3d',
+    instrumentId: 'espatula_24_placa',
+    options: [
+      { id: 'a', text: 'Espátula nº 24 para manipulação e aglutinação ampla em placa de vidro' },
+      { id: 'b', text: 'Sonda Exploradora nº 5 em gancho curvo' },
+      { id: 'c', text: 'Pinça Clínica Odontológica estriada' },
+      { id: 'd', text: 'Colher de Dentina afiada de Black' },
+    ],
+    correctOptionId: 'a',
+    explanation:
+      'A Espátula nº 24 possui lâmina ampla e flexível ideal para espalhar e dissipar calor na manipulação de Cimento de Fosfato de Zinco e Ionômero de Vidro sobre placa de vidro resfriada.',
+    referenceTitle: 'Baratieri — Odontologia Restauradora & Materiais Dentários',
+  },
+
+  // --- 2. +5 OSSOS DO CRÂNIO & CAVIDADES 3D ---
+  {
+    id: 'int_3d_osso_hioide',
+    question:
+      'No modelo anatômico 3D ao lado, localize e clique no Osso Hioide (único osso do corpo humano que não se articula com nenhum outro osso, ancorando a língua e músculos supra-hioideos):',
+    category: 'anatomia_geral',
+    difficulty: 'intermediario',
+    type: 'structure_identification',
+    sceneMode: 'full_anatomy',
+    targetStructureId: 'osso_hioide',
+    explanation:
+      'O osso hioide em formato de ferradura situa-se na região anterior do pescoço abaixo da mandíbula, servindo de inserção aos músculos supra-hioideos e infra-hioideos e ancorando a raiz da língua.',
+    referenceTitle: 'Sobotta Atlas de Anatomia Humana',
+  },
+  {
+    id: 'int_3d_osso_palatino',
+    question:
+      'Gire o crânio 3D para a base posterior do palato duro e clique no Osso Palatino (responsável pelo terço posterior do palato ósseo e margem do forame palatino maior):',
+    category: 'anatomia_geral',
+    difficulty: 'avancado',
+    type: 'structure_identification',
+    sceneMode: 'full_anatomy',
+    targetStructureId: 'osso_palatino',
+    explanation:
+      'O osso palatino em formato de L é composto por lâmina horizontal (formando o 1/3 posterior do palato duro) e lâmina perpendicular que delimita a parede lateral da cavidade nasal e fossa pterigopalatina.',
+    referenceTitle: 'Madeira — Anatomia da Face',
+  },
+  {
+    id: 'int_3d_osso_lacrimal',
+    question:
+      'Na parede medial da órbita em 3D, identifique e clique no Osso Lacrimal (menor e mais frágil osso da face, contendo a fossa do saco lacrimal):',
+    category: 'anatomia_geral',
+    difficulty: 'avancado',
+    type: 'structure_identification',
+    sceneMode: 'full_anatomy',
+    targetStructureId: 'osso_lacrimal',
+    explanation:
+      'O osso lacrimal é uma fina lâmina óssea quadrangular situada na parede medial da cavidade orbitária, posterior ao processo frontal da maxila, abrigando o saco lacrimal.',
+    referenceTitle: 'Netter — Atlas de Anatomia Humana',
+  },
+  {
+    id: 'int_3d_osso_esfenoide',
+    question:
+      'Localize e clique no Osso Esfenoide em 3D (osso fundamental em formato de borboleta que ancora os ossos do neurocrânio e contém os forames oval e redondo de V3 e V2):',
+    category: 'anatomia_geral',
+    difficulty: 'intermediario',
+    type: 'structure_identification',
+    sceneMode: 'full_anatomy',
+    targetStructureId: 'osso_esfenoide',
+    explanation:
+      'O esfenoide ocupa o centro da base do crânio, articulando-se com todos os demais ossos cranianos e abrigando a sela turca (glândula hipófise), as asas maiores e menores e os processos pterigóideos.',
+    referenceTitle: 'Moore — Anatomia Orientada para a Clínica',
+  },
+  {
+    id: 'int_3d_seio_esfenoidal',
+    question:
+      'Na profundidade da base do crânio em 3D, selecione e clique no Seio Esfenoidal (seio paranasal situado no corpo do osso esfenoide abaixo da sela turca):',
+    category: 'anatomia_geral',
+    difficulty: 'avancado',
+    type: 'structure_identification',
+    sceneMode: 'full_anatomy',
+    targetStructureId: 'seio_esfenoidal',
+    explanation:
+      'Os seios esfenoidais são cavidades pneumáticas pares situadas no corpo do esfenoide, drenando no recesso esfenoetmoidal e intimamente relacionados à sela turca e quiasma óptico.',
+    referenceTitle: 'Rouvière & Delmas — Anatomie Humaine',
+  },
+
+  // --- 3. +5 MÚSCULOS, NERVOS & ESTRUTURAS ORAIS 3D ---
+  {
+    id: 'int_3d_pterigoideo_medial',
+    question:
+      'No compartimento mastigatório medial em 3D, identifique e clique no Músculo Pterigóideo Medial (elevador potente da mandíbula que forma a cinta mastigatória com o masseter):',
+    category: 'anatomia_geral',
+    difficulty: 'intermediario',
+    type: 'structure_identification',
+    sceneMode: 'full_anatomy',
+    targetStructureId: 'pterigoideo_medial',
+    explanation:
+      'O pterigóideo medial origina-se na fossa pterigoide do esfenoide e insere-se na tuberosidade pterigóidea na face medial do ângulo mandibular, promovendo elevação e fechamento mandibular potente.',
+    referenceTitle: 'Okeson — Tratamento das Desordens Temporomandibulares e Oclusão',
+  },
+  {
+    id: 'int_3d_musculo_bucinador',
+    question:
+      'Na parede lateral da cavidade bucal (bochecha) em 3D, clique no Músculo Bucinador (músculo chave que mantém o bolo alimentar sobre as superfícies oclusais durante a mastigação):',
+    category: 'anatomia_geral',
+    difficulty: 'intermediario',
+    type: 'structure_identification',
+    sceneMode: 'full_anatomy',
+    targetStructureId: 'musculo_bucinador',
+    explanation:
+      'O bucinador forma a parede muscular da bochecha, originando-se nos processos alveolares da maxila e mandíbula e na rafe pterigomandibular, inervado motoramente pelo NC VII (Facial).',
+    referenceTitle: 'Liebgott — Anatomia das Estruturas Orofaciais',
+  },
+  {
+    id: 'int_3d_assoalho_boca',
+    question:
+      'No interior da arcada mandibular em 3D, identifique e clique no Assoalho da Boca (região sublingual com carúnculas submandibulares e frênulo lingual):',
+    category: 'lingua',
+    difficulty: 'basico',
+    type: 'structure_identification',
+    sceneMode: 'full_anatomy',
+    targetStructureId: 'assoalho_boca',
+    explanation:
+      'O assoalho da boca é constituído pelo músculo milo-hioideo recoberto por mucosa delgada vascularizada e abriga as glândulas sublinguais e carúnculas dos ductos de Wharton.',
+    referenceTitle: 'Neville — Patologia Oral e Maxilofacial',
+  },
+  {
+    id: 'int_3d_uvula',
+    question:
+      'No palato mole posterior em 3D, identifique e clique na Úvula Palatina (projeção muscular mediana cônica que oclui a nasofaringe durante a deglutição):',
+    category: 'lingua',
+    difficulty: 'basico',
+    type: 'structure_identification',
+    sceneMode: 'full_anatomy',
+    targetStructureId: 'uvula',
+    explanation:
+      'A úvula palatina é uma projeção muscular suspensa no bordo livre do palato mole, inervada pelo plexo faríngeo (NC IX e X), auxiliando no selamento velofaríngeo e articulação de fonemas.',
+    referenceTitle: 'Terminologia Anatomica & Sobotta',
+  },
+  {
+    id: 'int_3d_tonsilas_palatinas',
+    question:
+      'Entre os pilares amigdalianos anterior e posterior em 3D, localize e clique nas Tonsilas Palatinas (Amígdalas - tecido linfoide do anel de Waldeyer):',
+    category: 'lingua',
+    difficulty: 'intermediario',
+    type: 'structure_identification',
+    sceneMode: 'full_anatomy',
+    targetStructureId: 'tonsilas_palatinas',
+    explanation:
+      'As tonsilas palatinas (amígdalas) situam-se na fossa tonsilar entre os arcos palatoglosso e palatofaríngeo, constituindo a principal linha de defesa imunológica da orofaringe.',
+    referenceTitle: 'Rohen & Yokochi — Anatomia Humana Atlas Fotográfico',
+  },
+
+  // --- 4. +5 DENTES FDI 3D NA VITRINE ENFILEIRADA ---
+  {
+    id: 'int_3d_dente_12',
+    question:
+      'Na vitrine 3D de 32 dentes enfileirados, identifique e clique no Incisivo Lateral Superior Direito (FDI 12):',
+    category: 'dentes',
+    difficulty: 'basico',
+    type: 'structure_identification',
+    sceneMode: 'teeth_lineup',
+    targetStructureId: 'dente_12',
+    explanation:
+      'O dente 12 localiza-se no Quadrante 1, em segunda posição a partir da linha média superior, exibindo coroa trapezoidal menor que o incisivo central e ângulo disto-incisal arredondado.',
+    referenceTitle: 'FDI World Dental Federation (ISO 3950)',
+  },
+  {
+    id: 'int_3d_dente_14',
+    question:
+      'Nos dentes enfileirados em 3D ao lado, encontre e clique no Primeiro Pré-Molar Superior Direito (FDI 14):',
+    category: 'dentes',
+    difficulty: 'basico',
+    type: 'structure_identification',
+    sceneMode: 'teeth_lineup',
+    targetStructureId: 'dente_14',
+    explanation:
+      'O dente 14 (Quadrante 1, posição 4) caracteriza-se por duas cúspides pontiagudas (vestibular maior e palatina menor) e bifurcação radicular frequente (raiz vestibular e palatina).',
+    referenceTitle: 'Wheeler Dental Anatomy',
+  },
+  {
+    id: 'int_3d_dente_27',
+    question:
+      'Na vitrine 3D, localize e clique no Segundo Molar Superior Esquerdo (FDI 27):',
+    category: 'dentes',
+    difficulty: 'intermediario',
+    type: 'structure_identification',
+    sceneMode: 'teeth_lineup',
+    targetStructureId: 'dente_27',
+    explanation:
+      'O dente 27 é o penúltimo dente posterior do Quadrante 2 (hemiarco superior esquerdo), dotado de três raízes volumosas (duas vestibulares e uma palatina) e quatro cúspides oclusais.',
+    referenceTitle: 'ISO 3950 Two-Digit System',
+  },
+  {
+    id: 'int_3d_dente_33',
+    question:
+      'Na fileira inferior de dentes 3D, selecione e clique no Canino Inferior Esquerdo (FDI 33):',
+    category: 'dentes',
+    difficulty: 'basico',
+    type: 'structure_identification',
+    sceneMode: 'teeth_lineup',
+    targetStructureId: 'dente_33',
+    explanation:
+      'O dente 33 situa-se no Quadrante 3 em terceira posição a partir da linha média, com coroa longa, borda incisal com cúspide saliente e raiz única potente de secção ovalada.',
+    referenceTitle: 'Ash & Nelson — Wheeler\'s Dental Anatomy',
+  },
+  {
+    id: 'int_3d_dente_45',
+    question:
+      'Nos dentes enfileirados em 3D ao lado, clique no Segundo Pré-Molar Inferior Direito (FDI 45):',
+    category: 'dentes',
+    difficulty: 'basico',
+    type: 'structure_identification',
+    sceneMode: 'teeth_lineup',
+    targetStructureId: 'dente_45',
+    explanation:
+      'O dente 45 situa-se no Quadrante 4 (posição 5). É o único pré-molar que exibe com frequência três cúspides (uma vestibular e duas linguais: mesiolingual e distolingual), com sulco oclusal em Y.',
+    referenceTitle: 'Madeira — Anatomia do Dente Humano',
+  },
 ];
 
 function shuffleArray<T>(items: T[]): T[] {
@@ -1662,6 +2322,57 @@ export function drawQuizQuestionsByLevel(
   difficulty: QuizDifficulty,
   count: number = QUIZ_QUESTIONS_PER_ROUND
 ): QuizQuestion[] {
+  // MODO 100% INTERATIVO 3D:
+  // Une todos os desafios práticos 3D existentes no banco de dados (Instrumentais 3D, Dentes FDI 3D e Anatomia 3D)
+  // e sorteia 5 a cada clique com equilíbrio e alta variedade sem repetições
+  if (difficulty === 'interativo_3d') {
+    // 1. Desafios 3D de Instrumentais e Ferramentas Odontológicas
+    const allInstruments3d = shuffleArray(
+      quizQuestions.filter((q) => q.sceneMode === 'instrument_3d')
+    );
+
+    // 2. Desafios 3D de Dentes Enfileirados FDI
+    const allTeethLineup = shuffleArray(
+      quizQuestions.filter((q) => q.type === 'structure_identification' && q.sceneMode === 'teeth_lineup')
+    );
+
+    // 3. Desafios 3D de Anatomia Completa (Ossos, Crânio, Músculos, Nervos, Vasos, Língua)
+    const allAnatomy3d = shuffleArray(
+      quizQuestions.filter((q) => q.type === 'structure_identification' && q.sceneMode === 'full_anatomy')
+    );
+
+    const selected: QuizQuestion[] = [];
+
+    // Regra 1: Garante SEMPRE 1 ou 2 desafios 3D de Instrumentais Odontológicos
+    if (allInstruments3d.length > 0) {
+      selected.push(allInstruments3d[0]);
+    }
+    if (allInstruments3d.length > 1 && Math.random() < 0.60) {
+      selected.push(allInstruments3d[1]);
+    }
+
+    // Regra 2: Garante SEMPRE 1 desafio 3D de Dentes Enfileirados (FDI)
+    if (allTeethLineup.length > 0) {
+      selected.push(allTeethLineup[0]);
+    }
+
+    // Regra 3: Adiciona desafios anatômicos 3D (Crânio, Músculos, Nervos, Língua) até completar a rodada
+    for (const item of allAnatomy3d) {
+      if (selected.length >= count) break;
+      selected.push(item);
+    }
+
+    // Regra 4: Se ainda faltar para completar 5, preenche com qualquer desafio 3D restante
+    if (selected.length < count) {
+      const remaining3d = shuffleArray(
+        quizQuestions.filter((q) => q.sceneMode === 'instrument_3d' || q.type === 'structure_identification')
+      ).filter((q) => !selected.some((s) => s.id === q.id));
+      selected.push(...remaining3d.slice(0, count - selected.length));
+    }
+
+    return shuffleArray(selected).slice(0, count);
+  }
+
   const levelPool = quizQuestions.filter((q) => q.difficulty === difficulty);
 
   // 1. Desafios 3D de Ossos, Músculos, Língua, Nervos e Estruturas Craniofaciais

@@ -35,11 +35,13 @@ import { themeTokens } from '@/theme/tokens';
 interface LayerControlsProps {
   top?: number | string;
   defaultExpanded?: boolean;
+  showJawControl?: boolean;
 }
 
 export const LayerControls: React.FC<LayerControlsProps> = ({
   top = 12,
   defaultExpanded = true,
+  showJawControl,
 }) => {
   const [expanded, setExpanded] = useState<boolean>(() => {
     if (!defaultExpanded) return false;
@@ -52,10 +54,16 @@ export const LayerControls: React.FC<LayerControlsProps> = ({
     layers,
     opacities,
     explosionFactor,
+    jawOpen,
+    focusedSystem,
     toggleLayer,
     setLayerOpacity,
     setExplosionFactor,
+    toggleJawOpen,
   } = useAnatomyStore();
+
+  // A opção de abrir a boca fica disponível no Atlas 3D, mas é desativada nos Sistemas Anatômicos
+  const isJawControlAllowed = showJawControl !== undefined ? showJawControl : !focusedSystem;
 
   const layerItems: {
     key: keyof LayerVisibility;
@@ -204,6 +212,74 @@ export const LayerControls: React.FC<LayerControlsProps> = ({
             );
           })}
         </Stack>
+
+        {/* Controle Anatômico: Abertura Bucal (Mandíbula / Boca do Esqueleto) — Ativo apenas no Atlas 3D, oculto nos Sistemas Anatômicos */}
+        {isJawControlAllowed && (
+          <>
+            <Divider sx={{ my: 1.2, borderColor: themeTokens.colors.borderSubtle }} />
+            <Box
+              sx={{
+                px: 0.8,
+                py: 0.6,
+                borderRadius: '8px',
+                backgroundColor:
+                  jawOpen ? 'rgba(0, 201, 246, 0.08)' : 'rgba(255, 255, 255, 0.02)',
+                border:
+                  jawOpen
+                    ? `1px solid ${themeTokens.colors.brandCyan}`
+                    : '1px solid transparent',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
+                  <AccessibilityNewIcon
+                    sx={{
+                      fontSize: '0.95rem',
+                      color: jawOpen ? themeTokens.colors.brandCyan : '#94A3B8',
+                    }}
+                  />
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontSize: '0.76rem',
+                      fontWeight: 700,
+                      color: jawOpen ? themeTokens.colors.brandCyan : themeTokens.colors.textPrimary,
+                    }}
+                  >
+                    Abrir Boca (Esqueleto)
+                  </Typography>
+                </Box>
+
+                <Switch
+                  size="small"
+                  checked={jawOpen}
+                  onChange={() => toggleJawOpen()}
+                  sx={{
+                    '& .MuiSwitch-switchBase.Mui-checked': {
+                      color: themeTokens.colors.brandCyan,
+                    },
+                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                      backgroundColor: themeTokens.colors.brandCyan,
+                    },
+                  }}
+                />
+              </Box>
+              <Typography
+                sx={{
+                  fontSize: '0.66rem',
+                  color: themeTokens.colors.textMuted,
+                  lineHeight: 1.25,
+                  px: 0.4,
+                }}
+              >
+                {jawOpen
+                  ? 'Mandíbula aberta com rotação na ATM.'
+                  : 'Mandíbula fechada (em oclusão cêntrica).'}
+              </Typography>
+            </Box>
+          </>
+        )}
 
         {/* Controle de Dissecação 3D — Modo Vista Explodida do Crânio (0% a 100%) */}
         <Divider sx={{ my: 1.2, borderColor: themeTokens.colors.borderSubtle }} />

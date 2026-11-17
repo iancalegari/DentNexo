@@ -34,6 +34,8 @@ interface AnatomyState {
   activePathologyId: string | null;
   activeAnesthesiaId: string | null;
   anesthesiaFocusKey: number;
+  anesthesiaJawOpen: boolean;
+  jawOpen: boolean;
   focusedSystem: AnatomicalCategory | null;
   
   // Módulo Dental Específico
@@ -72,6 +74,10 @@ interface AnatomyState {
   setActivePathology: (id: string | null) => void;
   setActiveAnesthesia: (id: string | null) => void;
   triggerAnesthesiaFocus: () => void;
+  setAnesthesiaJawOpen: (open: boolean) => void;
+  toggleAnesthesiaJaw: () => void;
+  setJawOpen: (open: boolean) => void;
+  toggleJawOpen: () => void;
   
   // Ações Dentais
   setActiveToothFdi: (fdi: string) => void;
@@ -126,6 +132,8 @@ export const useAnatomyStore = create<AnatomyState>((set, get) => ({
   activePathologyId: null,
   activeAnesthesiaId: null,
   anesthesiaFocusKey: 0,
+  anesthesiaJawOpen: false,
+  jawOpen: false,
   focusedSystem: null,
   
   activeToothFdi: '36',
@@ -222,6 +230,8 @@ export const useAnatomyStore = create<AnatomyState>((set, get) => ({
       cameraPreset: 'isometric',
       xrayMode: false,
       explosionFactor: 0,
+      jawOpen: false,
+      anesthesiaJawOpen: false,
       activePathologyId: null,
       surfaceExplorationMode: false,
       activeToothFace: null,
@@ -271,11 +281,21 @@ export const useAnatomyStore = create<AnatomyState>((set, get) => ({
   setActiveAnesthesia: (id) => set((state) => ({
     activeAnesthesiaId: id,
     anesthesiaFocusKey: id ? state.anesthesiaFocusKey + 1 : state.anesthesiaFocusKey,
+    anesthesiaJawOpen: Boolean(id),
+    jawOpen: false,
   })),
 
   triggerAnesthesiaFocus: () => set((state) => ({
     anesthesiaFocusKey: state.anesthesiaFocusKey + 1,
   })),
+
+  setAnesthesiaJawOpen: (open) => set({ anesthesiaJawOpen: open, jawOpen: open }),
+  
+  toggleAnesthesiaJaw: () => set((state) => ({ anesthesiaJawOpen: !state.anesthesiaJawOpen, jawOpen: !state.anesthesiaJawOpen })),
+
+  setJawOpen: (open) => set({ jawOpen: open, anesthesiaJawOpen: open }),
+
+  toggleJawOpen: () => set((state) => ({ jawOpen: !state.jawOpen, anesthesiaJawOpen: !state.jawOpen })),
   
   setActiveToothFdi: (fdi) => set({ activeToothFdi: fdi }),
   

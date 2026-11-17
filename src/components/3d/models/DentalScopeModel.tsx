@@ -1,6 +1,7 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
+import { useFrame } from '@react-three/fiber';
 import { useAnatomyStore } from '@/stores/useAnatomyStore';
 import { themeTokens } from '@/theme/tokens';
 import {
@@ -43,6 +44,8 @@ interface MeshItem {
   defaultEmissiveIntensity: number;
   initialPosition: THREE.Vector3;
   initialRotation: THREE.Euler;
+  isMandibular: boolean;
+  isCondyle: boolean;
 }
 
 interface DentalScopeModelProps {
@@ -73,6 +76,8 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
     activeToothFdi,
     activePathologyId,
     activeAnesthesiaId,
+    anesthesiaJawOpen,
+    jawOpen,
     focusedSystem,
     setSelectedStructure,
     setHoveredStructure,
@@ -519,6 +524,51 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
         origRaycast(raycaster, intersects);
       };
 
+      // Inicializar atributo de cores de vértice na gengiva inferior e superior para coloração unilateral em anestesia
+      if (name === 'gingiva-lower' || name === 'gingiva-upper') {
+        const posAttr = child.geometry.attributes.position;
+        if (posAttr && !child.geometry.attributes.color) {
+          const count = posAttr.count;
+          const colors = new Float32Array(count * 3);
+          const pink = [0.847, 0.447, 0.482]; // Cor gengival queratinizada saudável (#D8727B)
+          const green = [0.063, 0.725, 0.506]; // Verde esmeralda anestésico (#10B981)
+
+          for (let vi = 0; vi < count; vi++) {
+            const x = posAttr.getX(vi);
+            let t = 0;
+            if (x >= 0.02) t = 1;
+            else if (x <= -0.02) t = 0;
+            else t = (x + 0.02) / 0.04;
+
+            colors[vi * 3 + 0] = pink[0] + (green[0] - pink[0]) * t;
+            colors[vi * 3 + 1] = pink[1] + (green[1] - pink[1]) * t;
+            colors[vi * 3 + 2] = pink[2] + (green[2] - pink[2]) * t;
+          }
+          child.geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        }
+      }
+
+      const lowerName = name.toLowerCase();
+      const isMandibular =
+        lowerName.startsWith('tooth-3') ||
+        lowerName.startsWith('tooth-4') ||
+        lowerName === 'gingiva-lower' ||
+        lowerName === 'mandible-body' ||
+        lowerName === 'mandibular-alveolar-process' ||
+        lowerName === 'mandibular-condyle-left' ||
+        lowerName === 'mandibular-condyle-right' ||
+        lowerName.includes('mental-nerve') ||
+        lowerName.includes('incisive-nerve') ||
+        lowerName.includes('inferior-alveolar-nerve') ||
+        lowerName.includes('mandibular-canal') ||
+        lowerName.includes('inferior-alveolar-artery') ||
+        lowerName.includes('inferior-alveolar-vein') ||
+        lowerName.includes('lingual-nerve') ||
+        lowerName === 'nervo_lingual' ||
+        lowerName.includes('mentalis');
+
+      const isCondyle = lowerName.includes('condyle');
+
       meshes.push({
         mesh: child,
         material,
@@ -532,6 +582,8 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
         defaultEmissiveIntensity: emissiveIntensity,
         initialPosition: child.position.clone(),
         initialRotation: child.rotation.clone(),
+        isMandibular,
+        isCondyle,
       });
     };
 
@@ -584,6 +636,11 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
 
       const isTooth = name.startsWith('tooth-');
       const isGingiva = name.startsWith('gingiva-');
+
+      if (!activeAnesthesia && isGingiva && material.vertexColors) {
+        material.vertexColors = false;
+        material.needsUpdate = true;
+      }
 
       const isToothMatch = (idA: string, idB: string) => {
         const cleanA = idA.replace('dente_', '').replace('tooth-', '');
@@ -640,6 +697,14 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
       // Oculta todas as malhas do DentalScopeModel (crânio, mandíbula, dentes, músculos, neurovascular)
       // para mostrar EXCLUSIVAMENTE a língua isolada em alta evidência clínica
       if (activePathologyId === 'lingua_geografica') {
+        mesh.visible = false;
+        continue;
+      }
+
+      // Quando a boca está aberta, oculta o músculo orbicular dos lábios para não formar uma "segunda boca" estática flutuando no ar
+      const isAnesthesiaActive = Boolean(activeAnesthesiaId);
+      const isMouthOpen = (isAnesthesiaActive && anesthesiaJawOpen) || jawOpen;
+      if (isMouthOpen && name.toLowerCase().includes('orbicularis')) {
         mesh.visible = false;
         continue;
       }
@@ -901,10 +966,34 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
           targetEmissiveIntensity = 0.55;
           opacityMultiplier = 0.68;
         } else if (isAffectedGingiva) {
-          targetColor = anesthesiaToothColor;
-          targetEmissive = anesthesiaToothEmissive;
-          targetEmissiveIntensity = 0.45;
-          opacityMultiplier = 0.48;
+          if (activeAnesthesia.id === 'bloqueio_nasopalatino' && lowerName === 'gingiva-upper') {
+            // No Bloqueio Nasopalatino (Scarpa), a gengiva superior fica inteiramente verde (bilateral de canino a canino)
+            if (material.vertexColors) {
+              material.vertexColors = false;
+              material.needsUpdate = true;
+            }
+            targetColor = anesthesiaToothColor;
+            targetEmissive = anesthesiaToothEmissive;
+            targetEmissiveIntensity = 0.50;
+            opacityMultiplier = 0.65;
+          } else {
+            // Bloqueios unilaterais: apenas o lado anestesiado (quadrante 3 / tela direita) fica verde esmeralda;
+            // o lado contralateral preserva a coloração original saudável rosa da mucosa gengival
+            targetColor = new THREE.Color(1, 1, 1);
+            targetEmissive = blackColor;
+            targetEmissiveIntensity = 0;
+            opacityMultiplier = 0.82;
+            if (!material.vertexColors) {
+              material.vertexColors = true;
+              material.needsUpdate = true;
+            }
+          }
+        } else if (isGingiva) {
+          if (material.vertexColors) {
+            material.vertexColors = false;
+            material.needsUpdate = true;
+          }
+          opacityMultiplier = 0.28;
         } else if (isTooth) {
           opacityMultiplier = 0.32;
           targetEmissive = blackColor;
@@ -1097,6 +1186,8 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
     activeToothFdi,
     activePathologyId,
     activeAnesthesiaId,
+    anesthesiaJawOpen,
+    jawOpen,
     focusedSystem,
     cyanColor,
     cyanEmissive,
@@ -1111,6 +1202,70 @@ export const DentalScopeModel: React.FC<DentalScopeModelProps> = ({ archesOnlyMo
     anesthesiaNerveEmissive,
     anesthesiaRefEmissive,
   ]);
+
+  // Eixo transversal bicondilar (ATM) para rotação e translação anatômica de abertura bucal
+  const tmjPivot = useMemo(() => new THREE.Vector3(0, 4.14, -5.13), []);
+  const jawProgressRef = useRef(0);
+
+  // Animação de movimento da boca aberta exclusiva do módulo de Bloqueios Anestésicos 3D
+  useFrame((_, delta) => {
+    const isAnesthesiaActive = Boolean(activeAnesthesiaId);
+    const isMouthOpen = (isAnesthesiaActive && anesthesiaJawOpen) || jawOpen;
+    const targetProgress = isMouthOpen ? 1.0 : 0.0;
+    const current = jawProgressRef.current;
+
+    // Amortecimento suave com física elástica natural (~0.7s)
+    const next = THREE.MathUtils.damp(current, targetProgress, 6, delta);
+    jawProgressRef.current = next;
+
+    const isMoving = Math.abs(next - current) > 0.0001;
+    const isOpen = next > 0.0005;
+
+    if (isMoving || isOpen) {
+      const theta = 0.14 * next;
+      const dY = -0.06 * next;
+      const dZ = 0.10 * next;
+
+      for (let i = 0; i < meshList.length; i++) {
+        const item = meshList[i];
+        if (!item.isMandibular) continue;
+
+        const { mesh, initialPosition, initialRotation, isCondyle } = item;
+        if (isCondyle) {
+          mesh.position.set(
+            initialPosition.x,
+            initialPosition.y + dY,
+            initialPosition.z + dZ
+          );
+          mesh.rotation.set(
+            initialRotation.x + theta * 0.5,
+            initialRotation.y,
+            initialRotation.z
+          );
+        } else {
+          const p = initialPosition.clone().sub(tmjPivot);
+          p.applyAxisAngle(new THREE.Vector3(1, 0, 0), theta);
+          p.add(tmjPivot);
+          p.y += dY;
+          p.z += dZ;
+
+          mesh.position.copy(p);
+          mesh.rotation.set(
+            initialRotation.x + theta,
+            initialRotation.y,
+            initialRotation.z
+          );
+        }
+      }
+    } else if (!isOpen && current > 0.0001) {
+      for (let i = 0; i < meshList.length; i++) {
+        const item = meshList[i];
+        if (!item.isMandibular) continue;
+        item.mesh.position.copy(item.initialPosition);
+        item.mesh.rotation.copy(item.initialRotation);
+      }
+    }
+  });
 
   // Handlers de interação
   const handlePointerOver = (e: any) => {

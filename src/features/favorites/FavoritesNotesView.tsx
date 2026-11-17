@@ -17,12 +17,18 @@ import {
   InputAdornment,
   Snackbar,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 
 // EXCLUSIVAMENTE ÍCONES DO MATERIAL UI
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import NoteAltIcon from '@mui/icons-material/NoteAlt';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
+import PrivacyTipIcon from '@mui/icons-material/PrivacyTip';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import AddIcon from '@mui/icons-material/Add';
 import HistoryIcon from '@mui/icons-material/History';
@@ -109,6 +115,7 @@ export const FavoritesNotesView: React.FC = () => {
   const [isExportingPdf, setIsExportingPdf] = useState<boolean>(false);
   const [exportStatusMessage, setExportStatusMessage] = useState<string>('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [clearConfirmOpen, setClearConfirmOpen] = useState<boolean>(false);
 
   useEffect(() => {
     setFavorites(storageService.getFavorites());
@@ -267,16 +274,53 @@ export const FavoritesNotesView: React.FC = () => {
     }
   };
 
+  /**
+   * Eliminação dos dados locais (LGPD Art. 18, VI)
+   */
+  const handleClearAllData = () => {
+    storageService.clearNotesAndFavorites();
+    setFavorites([]);
+    setNotes([]);
+    setRecents([]);
+    setClearConfirmOpen(false);
+    setToastMessage('Todas as suas anotações, favoritos e histórico local foram apagados.');
+  };
+
   return (
     <Box sx={{ p: { xs: 1.5, sm: 2.2, md: 3 }, maxWidth: 1200, margin: '0 auto', height: '100%', overflowY: 'auto' }}>
       {/* Cabeçalho */}
-      <Box sx={{ mb: { xs: 2, md: 3 } }}>
-        <Typography variant="h4" sx={{ fontWeight: 800, fontSize: { xs: '1.15rem', sm: '1.35rem' }, color: themeTokens.colors.textPrimary, mb: 0.5 }}>
-          Favoritos & Anotações de Estudo
-        </Typography>
-        <Typography variant="body2" sx={{ color: themeTokens.colors.textSecondary }}>
-          Gerencie suas estruturas anatômicas salvas, anotações clínicas com imagens vinculadas e histórico de navegação.
-        </Typography>
+      <Box sx={{ mb: { xs: 2, md: 3 }, display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: 2 }}>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 800, fontSize: { xs: '1.15rem', sm: '1.35rem' }, color: themeTokens.colors.textPrimary, mb: 0.5 }}>
+            Favoritos & Anotações de Estudo
+          </Typography>
+          <Typography variant="body2" sx={{ color: themeTokens.colors.textSecondary }}>
+            Gerencie suas estruturas anatômicas salvas, anotações clínicas com imagens vinculadas e histórico de navegação.
+          </Typography>
+        </Box>
+
+        {(favorites.length > 0 || notes.length > 0 || recents.length > 0) && (
+          <Button
+            variant="outlined"
+            color="error"
+            size="small"
+            startIcon={<DeleteSweepIcon fontSize="small" />}
+            onClick={() => setClearConfirmOpen(true)}
+            sx={{
+              fontWeight: 700,
+              textTransform: 'none',
+              fontSize: '0.8rem',
+              borderColor: 'rgba(239, 68, 68, 0.4)',
+              color: '#F87171',
+              '&:hover': {
+                borderColor: '#EF4444',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+              },
+            }}
+          >
+            Limpar Meus Dados Locais
+          </Button>
+        )}
       </Box>
 
       {/* Tabs de Navegação */}
@@ -391,6 +435,25 @@ export const FavoritesNotesView: React.FC = () => {
         {/* ABA: ANOTAÇÕES PESSOAIS */}
         {activeTab === 'notes' && (
           <Box>
+            {/* Aviso LGPD / Privacidade em Anotações Clínicas */}
+            <Alert
+              severity="info"
+              icon={<PrivacyTipIcon fontSize="small" />}
+              sx={{
+                mb: 2.5,
+                backgroundColor: 'rgba(0, 201, 246, 0.07)',
+                border: '1px solid rgba(0, 201, 246, 0.22)',
+                color: themeTokens.colors.textSecondary,
+                fontSize: '0.82rem',
+                borderRadius: 2,
+                '& .MuiAlert-icon': {
+                  color: themeTokens.colors.brandCyan,
+                },
+              }}
+            >
+              <strong>Privacidade & Segurança:</strong> Todas as anotações são salvas estritamente no seu navegador (armazenamento local). Para preservar o sigilo acadêmico e a LGPD, <strong>não insira nomes, prontuários ou dados identificáveis de pacientes reais</strong> nas notas de estudo.
+            </Alert>
+
             {/* Barra de Ações de Anotações */}
             <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 1.5, mb: 2.5 }}>
               <Typography variant="subtitle2" sx={{ color: themeTokens.colors.textSecondary, fontWeight: 600 }}>
@@ -797,6 +860,47 @@ export const FavoritesNotesView: React.FC = () => {
           {toastMessage}
         </Alert>
       </Snackbar>
+
+      {/* Modal de Confirmação para Eliminação de Dados (LGPD Art. 18, VI) */}
+      <Dialog
+        open={clearConfirmOpen}
+        onClose={() => setClearConfirmOpen(false)}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{
+          sx: {
+            backgroundColor: themeTokens.colors.bgSecondary,
+            border: `1px solid ${themeTokens.colors.borderSubtle}`,
+            borderRadius: 2.5,
+          },
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 800, color: themeTokens.colors.textPrimary, display: 'flex', alignItems: 'center', gap: 1 }}>
+          <DeleteSweepIcon sx={{ color: '#EF4444' }} />
+          Limpar Dados Locais
+        </DialogTitle>
+        <DialogContent dividers sx={{ borderColor: themeTokens.colors.borderSubtle }}>
+          <Typography variant="body2" sx={{ color: themeTokens.colors.textSecondary, lineHeight: 1.6 }}>
+            Tem certeza de que deseja apagar <strong>todas as suas anotações, favoritos e histórico de estudo</strong> salvos neste dispositivo?
+          </Typography>
+          <Typography variant="caption" sx={{ display: 'block', mt: 1.5, color: themeTokens.colors.textMuted }}>
+            Conforme previsto no Art. 18, VI da LGPD (Direito à Eliminação dos Dados), esta ação apagará permanentemente os registros locais do seu navegador.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setClearConfirmOpen(false)} sx={{ color: themeTokens.colors.textMuted, fontWeight: 700, textTransform: 'none' }}>
+            Cancelar
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={handleClearAllData}
+            sx={{ fontWeight: 700, textTransform: 'none' }}
+          >
+            Confirmar e Apagar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
